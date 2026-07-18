@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tafy's Actor Forge</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>⚒️ Tafy's Actor Forge</h1>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.15</p>
+      </div>
+      <button type="button" id="btn-lang" class="lang-btn" data-i18n-title="langLabel" title="Lingua">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== Colonna sinistra: il form ===== -->
+    <form id="npc-form" autocomplete="off">
+
+      <fieldset>
+        <legend><span data-i18n="sb_legend">Importa da statblock</span> <span class="hint" data-i18n="sb_legend_hint">(italiano o inglese, formato 2014 — metri convertiti in piedi)</span></legend>
+        <details id="statblock-details">
+          <summary class="hint" data-i18n="sb_summary">Incolla uno statblock e lascia che compili il form per te (poi controlla!)</summary>
+          <textarea id="statblock-input" rows="8" data-i18n-ph="sb_placeholder"
+            placeholder="Incolla qui lo statblock (dal PDF o dal template)..."></textarea>
+          <div class="row" style="margin-top:0.4rem">
+            <button type="button" id="btn-parse-statblock" class="secondary" data-i18n="sb_analyze">🔎 Analizza e compila il form</button>
+            <button type="button" id="btn-copy-template" class="secondary" data-i18n="sb_template">📋 Copia template vuoto</button>
+          </div>
+          <pre id="parse-report" hidden></pre>
+        </details>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="id_legend">Identità</legend>
+        <div class="grid-3">
+          <label><span data-i18n="f_name">Nome *</span>
+            <input type="text" id="name" data-i18n-ph="ph_name" placeholder="Diavolo delle Sabbie" />
+          </label>
+          <label><span data-i18n="f_size">Taglia</span>
+            <select id="size"></select>
+          </label>
+          <label><span data-i18n="f_type">Tipo di creatura</span>
+            <select id="creatureType"></select>
+          </label>
+          <label><span data-i18n="f_subtype">Sottotipo</span>
+            <input type="text" id="subtype" data-i18n-ph="ph_subtype" placeholder="Devil" />
+          </label>
+          <label><span data-i18n="f_alignment">Allineamento</span>
+            <input type="text" id="alignment" data-i18n-ph="ph_alignment" placeholder="Lawful Evil" list="alignments-list" />
+            <datalist id="alignments-list"></datalist>
+          </label>
+          <label><span data-i18n="f_cr">Grado Sfida (CR)</span>
+            <select id="cr"></select>
+          </label>
+          <label><span data-i18n="f_rules">Regole</span>
+            <select id="rules">
+              <option value="2014" data-i18n="rules_2014">2014 (classiche)</option>
+              <option value="2024" data-i18n="rules_2024">2024 (revised)</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span data-i18n="ab_legend">Caratteristiche</span> <span class="hint" data-i18n="ab_hint">(spunta = competenza nel tiro salvezza)</span></legend>
+        <div class="grid-6" id="abilities-grid"><!-- generato da main.js --></div>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="def_legend">Difese e velocità</legend>
+        <div class="grid-3">
+          <label><span data-i18n="f_hpmax">HP massimi *</span>
+            <input type="number" id="hpMax" min="0" data-i18n-ph="ph_hpmax" placeholder="112" />
+          </label>
+          <label><span data-i18n="f_hpformula">Formula HP</span>
+            <input type="text" id="hpFormula" data-i18n-ph="ph_hpformula" placeholder="15d10 + 30" />
+          </label>
+          <label><span data-i18n="f_ac">Classe Armatura</span>
+            <span class="row">
+              <select id="acCalc">
+                <option value="default" data-i18n="ac_default">Calcolata</option>
+                <option value="natural" data-i18n="ac_natural">Naturale</option>
+                <option value="flat" data-i18n="ac_flat">Fissa</option>
+              </select>
+              <input type="number" id="acFlat" min="0" placeholder="16" data-i18n-title="ph_acflat" title="Valore CA (per naturale/fissa)" />
+            </span>
+          </label>
+        </div>
+        <div class="grid-6">
+          <label><span data-i18n="f_walk">Cammina</span> <input type="number" id="walk" min="0" value="30" /></label>
+          <label><span data-i18n="f_fly">Vola</span> <input type="number" id="fly" min="0" /></label>
+          <label><span data-i18n="f_swim">Nuota</span> <input type="number" id="swim" min="0" /></label>
+          <label><span data-i18n="f_climb">Scala</span> <input type="number" id="climb" min="0" /></label>
+          <label><span data-i18n="f_burrow">Scava</span> <input type="number" id="burrow" min="0" /></label>
+          <label class="check"><span data-i18n="f_hover">Fluttua</span> <input type="checkbox" id="hover" /></label>
+        </div>
+        <div class="grid-6">
+          <label><span data-i18n="f_darkvision">Scurovisione</span> <input type="number" id="darkvision" min="0" placeholder="60" /></label>
+          <label><span data-i18n="f_blindsight">Vista cieca</span> <input type="number" id="blindsight" min="0" /></label>
+          <label><span data-i18n="f_tremorsense">Tremorsenso</span> <input type="number" id="tremorsense" min="0" /></label>
+          <label><span data-i18n="f_truesight">Vista pura</span> <input type="number" id="truesight" min="0" /></label>
+          <label><span data-i18n="f_telepathy">Telepatia</span> <input type="number" id="telepathy" min="0" /></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span data-i18n="sk_legend">Skill</span> <span class="hint" data-i18n="sk_hint">(— / Competenza / Expertise)</span></legend>
+        <div class="grid-3" id="skills-grid"><!-- generato da main.js --></div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span data-i18n="tr_legend">Tratti</span> <span class="hint" data-i18n="tr_hint">(clicca per selezionare; il campo libero è per le voci homebrew)</span></legend>
+        <div class="trait-group"><span class="trait-title" data-i18n="tr_dr">Resistenze ai danni</span><div id="chips-dr"></div></div>
+        <div class="trait-group"><span class="trait-title" data-i18n="tr_di">Immunità ai danni</span><div id="chips-di"></div></div>
+        <div class="trait-group"><span class="trait-title" data-i18n="tr_dv">Vulnerabilità ai danni</span><div id="chips-dv"></div></div>
+        <div class="trait-group"><span class="trait-title" data-i18n="tr_ci">Immunità alle condizioni</span><div id="chips-ci"></div></div>
+        <div class="trait-group"><span class="trait-title" data-i18n="tr_langs">Lingue</span><div id="chips-languages"></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="act_legend">Azioni, attacchi e tratti</legend>
+        <div id="items-list"><!-- card generate da items-editor.js --></div>
+        <button type="button" id="btn-add-item" class="secondary" data-i18n="act_add">➕ Aggiungi azione / tratto</button>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="leg_legend">Leggendario</legend>
+        <div class="grid-3">
+          <label><span data-i18n="f_legact">Azioni leggendarie</span> <input type="number" id="legact" min="0" /></label>
+          <label><span data-i18n="f_legres">Resistenze leggendarie</span> <input type="number" id="legres" min="0" /></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span data-i18n="img_legend">Immagini</span> <span class="hint" data-i18n="img_legend_hint">(percorso Foundry o URL web)</span></legend>
+        <div class="grid-2">
+          <label><span data-i18n="f_avatar">Avatar scheda</span> <input type="text" id="img" data-i18n-ph="ph_avatar" placeholder="https://... oppure worlds/avernus/img/mostro.webp" /></label>
+          <label><span data-i18n="f_token">Immagine token</span> <input type="text" id="tokenImg" data-i18n-ph="ph_token" placeholder="vuoto = usa l'avatar" /></label>
+        </div>
+        <p class="hint" data-i18n="img_warn">⚠ Il percorso deve finire con .webp/.png/.jpg (le ?query vengono rimosse in automatico). Gli URL esterni si vedono in scheda ma spesso NON in mappa (CORS): meglio caricare l'immagine dentro il server (worlds/...).</p>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="bio_legend">Descrizione / Biografia</legend>
+        <textarea id="bio" rows="5" data-i18n-ph="ph_bio" placeholder="Supporta HTML: &lt;p&gt;, &lt;b&gt;, tabelle..."></textarea>
+      </fieldset>
+
+    </form>
+
+    <!-- ===== Colonna destra: comandi sempre in vista + anteprima scorrevole ===== -->
+    <aside>
+      <div class="aside-fixed">
+        <!-- Collezione batch: crea più mostri in una volta con la macro -->
+        <div class="panel-box">
+          <div class="panel-title"><span data-i18n="batch_title">📦 Collezione batch</span> (<span id="batch-count">0</span>)</div>
+          <div class="btn-row">
+            <button type="button" id="btn-batch-add" class="secondary small" data-i18n="batch_add">➕ Aggiungi</button>
+            <button type="button" id="btn-batch-export" class="secondary small" data-i18n="batch_export">Esporta collezione</button>
+            <button type="button" id="btn-batch-clear" class="secondary small" data-i18n="batch_clear">🗑️ Svuota</button>
+          </div>
+          <span id="batch-msg" class="hint"></span>
+        </div>
+
+        <!-- Azioni principali -->
+        <div class="btn-row main-actions">
+          <button type="button" id="btn-export" data-i18n="main_export">⬇️ Esporta JSON</button>
+          <button type="button" id="btn-save-draft" class="secondary small" data-i18n="main_savedraft">💾 Salva bozza</button>
+          <button type="button" id="btn-load-draft" class="secondary small" data-i18n="main_loaddraft">📂 Carica bozza</button>
+          <button type="button" id="btn-new" class="secondary small" data-i18n="main_new">🗑️ Nuova scheda</button>
+          <button type="button" id="btn-copy-macro" class="secondary small" data-i18n="main_copymacro" data-i18n-title="title_copymacro" title="Copia la macro da incollare una volta sola in Foundry">🎲 Copia macro importer</button>
+          <input type="file" id="draft-file" accept=".json" hidden />
+        </div>
+        <span id="warnings"></span>
+
+        <div class="preview-head">
+          <h2 data-i18n="preview_title">Anteprima JSON</h2>
+          <button type="button" id="btn-copy-preview" class="secondary small" data-i18n="btn_copy" data-i18n-title="title_copypreview" title="Copia tutto il JSON negli appunti">📋 Copia</button>
+        </div>
+        <div id="validation"></div>
+      </div>
+      <pre id="preview"></pre>
+    </aside>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

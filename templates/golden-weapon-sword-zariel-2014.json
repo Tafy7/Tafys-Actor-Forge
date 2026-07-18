@@ -1,0 +1,620 @@
+{
+  "name": "Sword of Zariel",
+  "type": "weapon",
+  "effects": [
+    {
+      "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-bgdia-sword-of-zariel.webp",
+      "name": "Status: Blinded",
+      "statuses": [
+        "blinded"
+      ],
+      "changes": [],
+      "duration": {
+        "seconds": 6,
+        "startTime": null,
+        "rounds": 1,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "tint": "#ffffff",
+      "transfer": false,
+      "disabled": false,
+      "flags": {
+        "dae": {
+          "transfer": false,
+          "stackable": "noneNameOnly",
+          "specialDuration": [
+            "turnEnd"
+          ]
+        },
+        "ddbimporter": {
+          "disabled": false
+        },
+        "midi-qol": {
+          "forceCEOff": true
+        },
+        "core": {}
+      },
+      "description": "Apply status blinded",
+      "_id": "eqehZJdbRerowNsH",
+      "type": "base",
+      "system": {},
+      "origin": null,
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    },
+    {
+      "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-bgdia-sword-of-zariel.webp",
+      "name": "Sword of Zariel",
+      "statuses": [],
+      "changes": [
+        {
+          "key": "system.traits.languages.value",
+          "value": "celestial",
+          "mode": 2,
+          "priority": 0
+        },
+        {
+          "key": "system.traits.dr.value",
+          "value": "radiant",
+          "mode": 2,
+          "priority": 1
+        },
+        {
+          "key": "system.traits.dr.value",
+          "value": "necrotic",
+          "mode": 2,
+          "priority": 1
+        },
+        {
+          "key": "system.abilities.cha.value",
+          "value": "20",
+          "mode": 4,
+          "priority": 3
+        },
+        {
+          "key": "system.attributes.senses.truesight",
+          "value": "60",
+          "mode": 2,
+          "priority": 20
+        },
+        {
+          "key": "system.attributes.movement.fly",
+          "value": "90",
+          "mode": 4,
+          "priority": 5
+        },
+        {
+          "key": "system.skills.ins.roll.mode",
+          "value": "1",
+          "mode": 2,
+          "priority": 10
+        }
+      ],
+      "duration": {
+        "seconds": null,
+        "startTime": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "tint": "#ffffff",
+      "transfer": true,
+      "disabled": false,
+      "flags": {
+        "dae": {
+          "transfer": true,
+          "stackable": "noneNameOnly"
+        },
+        "ddbimporter": {
+          "disabled": false,
+          "passive": true,
+          "itemId": 0,
+          "itemEntityTypeId": 0
+        },
+        "midi-qol": {
+          "forceCEOff": true
+        },
+        "core": {}
+      },
+      "description": "<div class=\"item-attunement\"><i>(Requires attunement by a creature the sword deems worthy)</i></div><p>This longsword belonged to the angel Zariel before her fall from grace. Fashioned from celestial steel, it gives off a faint glow and hum. The weapon chooses who can attune to it and who can’t. It desires a wielder who embodies bravery and heroism.</p>\n<p><em><strong>Attunement.</strong></em> The sword allows you to attune to it immediately, without having to take a short rest. The first time you attune to the sword, you are transformed into a heavenly, idealized version of yourself, blessed with otherworldly beauty and a touch of heaven in your heart. Neither magic nor divine intervention can reverse this transformation. Your alignment becomes lawful good, and you gain the following traits:</p>\n<p><strong>Angelic Language.</strong> You can speak, read, and write Celestial.</p>\n<p><strong>Celestial Resistance.</strong> You have resistance to necrotic and radiant damage.</p>\n<p><strong>Divine Presence.</strong> Your Charisma score becomes 20, unless it is already 20 or higher.</p>\n<p><strong>Feathered Wings.</strong> You sprout a beautiful pair of feathered wings that grant you a flying speed of 90 feet and the ability to hover. If you already have a different kind of wings, these new wings replace the old ones, which fall off.</p>\n<p><strong>&amp;Reference[truesight]{Truesight}.</strong> Your eyes become luminous pools of silver. You can see in normal and magical darkness, see invisible creatures and objects, automatically detect visual illusions and succeed on saving throws against them, perceive the original form of a shapechanger or a creature that is transformed by magic, and see into the Ethereal Plane, all within a range of 60 feet.</p>\n<p><strong>New Personality.</strong> You gain new personality traits, determined by rolling once on each of the following tables. These traits override any conflicting personality trait, ideal, bond, or flaw.</p>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"4bfc6278-f373-4095-ae63-0a422fd75674\"><strong>Personality Traits</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"39d30ea7-c302-40fa-8e98-3f2b7ec9d780\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"99ec4e1d-3206-4c22-ad86-a3443336e1ff\">\n<thead>\n<tr>\n<th>D8</th>\n<th>PERSONALITY TRAIT</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>I treat all beings, even enemies, with respect.</td>\n</tr>\n<tr>\n<td>2</td>\n<td>I won’t tell a lie.</td>\n</tr>\n<tr>\n<td>3</td>\n<td>I enjoy sharing my philosophical worldview and experiences with others.</td>\n</tr>\n<tr>\n<td>4</td>\n<td>I cut right to the chase in every conversation.</td>\n</tr>\n<tr>\n<td>5</td>\n<td>I often quote (or misquote) religious texts.</td>\n</tr>\n<tr>\n<td>6</td>\n<td>I anger quickly when I witness cruelty or injustice.</td>\n</tr>\n<tr>\n<td>7</td>\n<td>My praise and trust are earned and never given freely.</td>\n</tr>\n<tr>\n<td>8</td>\n<td>I like everything clean and organized.</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.t1VA6e4J9qcDyQ0d]{Open RollTable Sword of Zariel: Personality Traits}</div>\n</div>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"38e16546-67dc-434b-b27a-05d2ea05e968\"><strong>Ideals</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"2af187cd-d049-4cf9-99d2-d977b47de729\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"3c67b372-90a5-4f52-b66f-b904b93e6c8b\">\n<thead>\n<tr>\n<th>D6</th>\n<th>IDEAL</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Charity.</span> I always help those in need. (Good)</td>\n</tr>\n<tr>\n<td>2</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Faith.</span> I choose to follow the tenets of a particular lawful good deity to the letter. (Lawful)</td>\n</tr>\n<tr>\n<td>3</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Responsibility.</span> It is the duty of the strong to protect the weak. (Lawful)</td>\n</tr>\n<tr>\n<td>4</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Respect.</span> All people deserve to be treated with dignity. (Good)</td>\n</tr>\n<tr>\n<td>5</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Honor.</span> The way I conduct myself determines my reward in the afterlife. (Lawful)</td>\n</tr>\n<tr>\n<td>6</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Redemption.</span> All creatures are capable of change for the better. (Good)</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.harP7jOtgE6LPH1l]{Open RollTable Sword of Zariel: Ideals}</div>\n</div>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"29f7f0b1-d76e-488f-ae7a-29fba3d3d31c\"><strong>Bonds</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"05b0b200-15bc-48d3-b690-48789ac70b1e\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"b02fa3f5-d5e3-414b-8a42-046af05bf498\">\n<thead>\n<tr>\n<th>D6</th>\n<th>BOND</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>I have a favorite religious hymn that I constantly hum.</td>\n</tr>\n<tr>\n<td>2</td>\n<td>I must keep a written record of my beliefs and the sins that I witness. When finished, this book will be my gift to the multiverse.</td>\n</tr>\n<tr>\n<td>3</td>\n<td>I have cherished memories of Idyllglen, though I’ve only seen this bucolic town in dreams.</td>\n</tr>\n<tr>\n<td>4</td>\n<td>I would die for those who fight beside me, regardless of their faults.</td>\n</tr>\n<tr>\n<td>5</td>\n<td>I seek to honor the angel Zariel by destroying fiends and other evildoers wherever I find them.</td>\n</tr>\n<tr>\n<td>6</td>\n<td>The <span class=\"Sans-Serif-Character-Styles_Italic-Sans-Serif\">Sword of Zariel</span> has chosen me. I shall not fail to wield it justly.</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.aLhFIOZnG6Q4GtW0]{Open RollTable Sword of Zariel: Bonds}</div>\n</div>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"1aaaba57-d077-43a1-8b82-b224fa327535\"><strong>Flaws</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"a34730a9-12da-476b-94a4-951ef8ac16be\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"1465a606-9cfb-43c4-98ef-c7f70803a944\">\n<thead>\n<tr>\n<th>D6</th>\n<th>FLAW</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>I am too quick to judge others.</td>\n</tr>\n<tr>\n<td>2</td>\n<td>I offer forgiveness too readily.</td>\n</tr>\n<tr>\n<td>3</td>\n<td>I will sacrifice innocent lives for the greater good.</td>\n</tr>\n<tr>\n<td>4</td>\n<td>Flaw? What flaw? I am flawless. Utter perfection!</td>\n</tr>\n<tr>\n<td>5</td>\n<td>I allow nothing to stand in the way of my crusade to eradicate evil from the multiverse.</td>\n</tr>\n<tr>\n<td>6</td>\n<td>I ignore those who do not support my plans, for my calling is higher than all others.</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.7XUCMEbN0jKvLzh5]{Open RollTable Sword of Zariel: Flaws}</div>\n</div>\n<p><em><strong>Holy Light.</strong></em> The sword sheds bright light in a 5-foot radius and dim light for an additional 5 feet. Fiends find the sword’s light disconcerting and painful, even if they can’t see it, and have disadvantage on attack rolls made within the weapon’s radius of bright light.</p>\n<p>As a bonus action, you can intensify the sword’s light, causing it to shed bright light in a 15-foot radius and dim light for an additional 15 feet, or reduce its glow to its normal intensity.</p>\n<p><em><strong>Random Properties.</strong></em> The sword has 2 minor beneficial properties, each determined by rolling on the <a href=\"https://www.dndbeyond.com/sources/dmg/sentient-magic-items-artifacts#MinorBeneficialProperties\">Minor Beneficial Properties</a> table in chapter 7 of the <em><a href=\"https://www.dndbeyond.com/sources/dmg\">Dungeon Master’s Guide</a></em>.</p>\n<p><em><strong>Searing Radiance.</strong></em> The sword deals an extra  [[/damage 2d8 type=radiant average=true]] damage to any creature it hits, or  [[/damage 3d10 type=radiant average=true]] damage if you’re wielding the weapon with two hands. An evil creature that takes this radiant damage must succeed on a [[/save con 17 format=long]] or be blinded until the end of its next turn.</p>\n<p><em><strong>Sentience.</strong></em> The <em>Sword of Zariel</em> is a sentient, lawful good item with an Intelligence of 10, a Wisdom of 20, and a Charisma of 18. It has hearing and normal vision out to a range of 30 feet.</p>\n<p>The sword communicates by transmitting emotion to the creature carrying or wielding it.</p>\n<p><em><strong>Truth Seer.</strong></em> While holding the sword, you gain advantage on all Wisdom (&amp;Reference[ins]{Insight}) checks.</p>\n<p><em><strong>Destroying the Sword.</strong></em> Zariel can destroy the sword simply by grasping it. She couldn’t bring herself to do so when she was an angel, but as an archdevil she has no compunction about ridding the multiverse of the weapon. The sword is also destroyed if it’s used to shatter the Companion (see “<a href=\"https://www.dndbeyond.com/sources/bgdia/escape-from-avernus#ShatteringtheCompanion\">Shattering the Companion</a>”), unless the blade is wielded by an angel of challenge rating 15 or higher, or a good-aligned cleric or paladin of at least 10th level.</p>\n<p>If Zariel is killed for good (that is, if she dies in the Nine Hells), the sword becomes no harder to destroy than a normal longsword.</p>",
+      "_id": "8f2mGU1YWUyRz6fz",
+      "type": "base",
+      "system": {},
+      "origin": null,
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "system": {
+    "activities": {
+      "attackSworOfZarI": {
+        "type": "attack",
+        "_id": "attackSworOfZarI",
+        "sort": 0,
+        "activation": {
+          "type": "action",
+          "value": 1,
+          "condition": "",
+          "override": true
+        },
+        "consumption": {
+          "targets": [],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {},
+        "duration": {
+          "value": "",
+          "units": "turn",
+          "special": "",
+          "override": true,
+          "concentration": false
+        },
+        "effects": [
+          {
+            "_id": "eqehZJdbRerowNsH",
+            "level": {}
+          }
+        ],
+        "range": {
+          "units": "self",
+          "override": false
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": null,
+          "recovery": []
+        },
+        "attack": {
+          "ability": "",
+          "bonus": "",
+          "critical": {},
+          "flat": false,
+          "type": {
+            "value": "melee",
+            "classification": "weapon"
+          }
+        },
+        "damage": {
+          "critical": {},
+          "includeBase": true,
+          "parts": []
+        },
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "confirmTargets": "default",
+          "automationOnly": false,
+          "identifier": "",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "attackMode": "oneHanded",
+        "ammunition": "",
+        "otherActivityUuid": "",
+        "attackRollPerTarget": "default",
+        "fumbleThreshold": 1,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      },
+      "attackRestricted": {
+        "name": "Restricted Attack: 3d10 radiant if you’re wielding the weapon with two hands",
+        "type": "attack",
+        "_id": "attackRestricted",
+        "sort": 0,
+        "activation": {
+          "type": "action",
+          "value": 1,
+          "condition": "",
+          "override": true
+        },
+        "consumption": {
+          "targets": [],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {
+          "chatFlavor": "3d10 radiant if you’re wielding the weapon with two hands"
+        },
+        "duration": {
+          "value": "",
+          "units": "turn",
+          "special": "",
+          "override": true,
+          "concentration": false
+        },
+        "effects": [
+          {
+            "_id": "eqehZJdbRerowNsH",
+            "level": {}
+          }
+        ],
+        "range": {
+          "units": "self",
+          "override": false
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": null,
+          "recovery": []
+        },
+        "attack": {
+          "ability": "",
+          "bonus": "",
+          "critical": {},
+          "flat": false,
+          "type": {
+            "value": "melee",
+            "classification": "weapon"
+          }
+        },
+        "damage": {
+          "parts": [
+            {
+              "number": 2,
+              "denomination": 8,
+              "bonus": "",
+              "types": [
+                "radiant"
+              ],
+              "custom": {
+                "enabled": false,
+                "formula": ""
+              },
+              "scaling": {
+                "mode": "",
+                "number": null,
+                "formula": ""
+              }
+            }
+          ],
+          "includeBase": false,
+          "critical": {
+            "bonus": ""
+          }
+        },
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "confirmTargets": "default",
+          "automationOnly": false,
+          "identifier": "",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "attackMode": "oneHanded",
+        "ammunition": "",
+        "otherActivityUuid": "",
+        "attackRollPerTarget": "default",
+        "fumbleThreshold": 1,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      }
+    },
+    "uses": {
+      "spent": null,
+      "recovery": []
+    },
+    "description": {
+      "value": "<div class=\"ddb\">\n<div class=\"item-attunement\"><i>(Requires attunement by a creature the sword deems worthy)</i></div><p>This longsword belonged to the angel Zariel before her fall from grace. Fashioned from celestial steel, it gives off a faint glow and hum. The weapon chooses who can attune to it and who can’t. It desires a wielder who embodies bravery and heroism.</p>\n<p><em><strong>Attunement.</strong></em> The sword allows you to attune to it immediately, without having to take a short rest. The first time you attune to the sword, you are transformed into a heavenly, idealized version of yourself, blessed with otherworldly beauty and a touch of heaven in your heart. Neither magic nor divine intervention can reverse this transformation. Your alignment becomes lawful good, and you gain the following traits:</p>\n<p><strong>Angelic Language.</strong> You can speak, read, and write Celestial.</p>\n<p><strong>Celestial Resistance.</strong> You have resistance to necrotic and radiant damage.</p>\n<p><strong>Divine Presence.</strong> Your Charisma score becomes 20, unless it is already 20 or higher.</p>\n<p><strong>Feathered Wings.</strong> You sprout a beautiful pair of feathered wings that grant you a flying speed of 90 feet and the ability to hover. If you already have a different kind of wings, these new wings replace the old ones, which fall off.</p>\n<p><strong>&amp;Reference[truesight]{Truesight}.</strong> Your eyes become luminous pools of silver. You can see in normal and magical darkness, see invisible creatures and objects, automatically detect visual illusions and succeed on saving throws against them, perceive the original form of a shapechanger or a creature that is transformed by magic, and see into the Ethereal Plane, all within a range of 60 feet.</p>\n<p><strong>New Personality.</strong> You gain new personality traits, determined by rolling once on each of the following tables. These traits override any conflicting personality trait, ideal, bond, or flaw.</p>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"4bfc6278-f373-4095-ae63-0a422fd75674\"><strong>Personality Traits</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"39d30ea7-c302-40fa-8e98-3f2b7ec9d780\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"99ec4e1d-3206-4c22-ad86-a3443336e1ff\">\n<thead>\n<tr>\n<th>D8</th>\n<th>PERSONALITY TRAIT</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>I treat all beings, even enemies, with respect.</td>\n</tr>\n<tr>\n<td>2</td>\n<td>I won’t tell a lie.</td>\n</tr>\n<tr>\n<td>3</td>\n<td>I enjoy sharing my philosophical worldview and experiences with others.</td>\n</tr>\n<tr>\n<td>4</td>\n<td>I cut right to the chase in every conversation.</td>\n</tr>\n<tr>\n<td>5</td>\n<td>I often quote (or misquote) religious texts.</td>\n</tr>\n<tr>\n<td>6</td>\n<td>I anger quickly when I witness cruelty or injustice.</td>\n</tr>\n<tr>\n<td>7</td>\n<td>My praise and trust are earned and never given freely.</td>\n</tr>\n<tr>\n<td>8</td>\n<td>I like everything clean and organized.</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.t1VA6e4J9qcDyQ0d]{Open RollTable Sword of Zariel: Personality Traits}</div>\n</div>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"38e16546-67dc-434b-b27a-05d2ea05e968\"><strong>Ideals</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"2af187cd-d049-4cf9-99d2-d977b47de729\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"3c67b372-90a5-4f52-b66f-b904b93e6c8b\">\n<thead>\n<tr>\n<th>D6</th>\n<th>IDEAL</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Charity.</span> I always help those in need. (Good)</td>\n</tr>\n<tr>\n<td>2</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Faith.</span> I choose to follow the tenets of a particular lawful good deity to the letter. (Lawful)</td>\n</tr>\n<tr>\n<td>3</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Responsibility.</span> It is the duty of the strong to protect the weak. (Lawful)</td>\n</tr>\n<tr>\n<td>4</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Respect.</span> All people deserve to be treated with dignity. (Good)</td>\n</tr>\n<tr>\n<td>5</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Honor.</span> The way I conduct myself determines my reward in the afterlife. (Lawful)</td>\n</tr>\n<tr>\n<td>6</td>\n<td><span class=\"Sans-Serif-Character-Styles_Bold-Sans-Serif\">Redemption.</span> All creatures are capable of change for the better. (Good)</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.harP7jOtgE6LPH1l]{Open RollTable Sword of Zariel: Ideals}</div>\n</div>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"29f7f0b1-d76e-488f-ae7a-29fba3d3d31c\"><strong>Bonds</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"05b0b200-15bc-48d3-b690-48789ac70b1e\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"b02fa3f5-d5e3-414b-8a42-046af05bf498\">\n<thead>\n<tr>\n<th>D6</th>\n<th>BOND</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>I have a favorite religious hymn that I constantly hum.</td>\n</tr>\n<tr>\n<td>2</td>\n<td>I must keep a written record of my beliefs and the sins that I witness. When finished, this book will be my gift to the multiverse.</td>\n</tr>\n<tr>\n<td>3</td>\n<td>I have cherished memories of Idyllglen, though I’ve only seen this bucolic town in dreams.</td>\n</tr>\n<tr>\n<td>4</td>\n<td>I would die for those who fight beside me, regardless of their faults.</td>\n</tr>\n<tr>\n<td>5</td>\n<td>I seek to honor the angel Zariel by destroying fiends and other evildoers wherever I find them.</td>\n</tr>\n<tr>\n<td>6</td>\n<td>The <span class=\"Sans-Serif-Character-Styles_Italic-Sans-Serif\">Sword of Zariel</span> has chosen me. I shall not fail to wield it justly.</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.aLhFIOZnG6Q4GtW0]{Open RollTable Sword of Zariel: Bonds}</div>\n</div>\n<p class=\"Table-Styles_Table-Title\" data-content-chunk-id=\"1aaaba57-d077-43a1-8b82-b224fa327535\"><strong>Flaws</strong></p>\n<div class=\"table-overflow-wrapper\" data-content-chunk-id=\"a34730a9-12da-476b-94a4-951ef8ac16be\">\n<table class=\"compendium-left-aligned-table\" data-content-chunk-id=\"1465a606-9cfb-43c4-98ef-c7f70803a944\">\n<thead>\n<tr>\n<th>D6</th>\n<th>FLAW</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>I am too quick to judge others.</td>\n</tr>\n<tr>\n<td>2</td>\n<td>I offer forgiveness too readily.</td>\n</tr>\n<tr>\n<td>3</td>\n<td>I will sacrifice innocent lives for the greater good.</td>\n</tr>\n<tr>\n<td>4</td>\n<td>Flaw? What flaw? I am flawless. Utter perfection!</td>\n</tr>\n<tr>\n<td>5</td>\n<td>I allow nothing to stand in the way of my crusade to eradicate evil from the multiverse.</td>\n</tr>\n<tr>\n<td>6</td>\n<td>I ignore those who do not support my plans, for my calling is higher than all others.</td>\n</tr>\n</tbody>\n</table><div id=\"table-link\">@UUID[Compendium.world.ddb-journey-to-ragnarock-ddb-tables.RollTable.7XUCMEbN0jKvLzh5]{Open RollTable Sword of Zariel: Flaws}</div>\n</div>\n<p><em><strong>Holy Light.</strong></em> The sword sheds bright light in a 5-foot radius and dim light for an additional 5 feet. Fiends find the sword’s light disconcerting and painful, even if they can’t see it, and have disadvantage on attack rolls made within the weapon’s radius of bright light.</p>\n<p>As a bonus action, you can intensify the sword’s light, causing it to shed bright light in a 15-foot radius and dim light for an additional 15 feet, or reduce its glow to its normal intensity.</p>\n<p><em><strong>Random Properties.</strong></em> The sword has 2 minor beneficial properties, each determined by rolling on the <a href=\"https://www.dndbeyond.com/sources/dmg/sentient-magic-items-artifacts#MinorBeneficialProperties\">Minor Beneficial Properties</a> table in chapter 7 of the <em><a href=\"https://www.dndbeyond.com/sources/dmg\">Dungeon Master’s Guide</a></em>.</p>\n<p><em><strong>Searing Radiance.</strong></em> The sword deals an extra  [[/damage 2d8 type=radiant average=true]] damage to any creature it hits, or  [[/damage 3d10 type=radiant average=true]] damage if you’re wielding the weapon with two hands. An evil creature that takes this radiant damage must succeed on a [[/save con 17 format=long]] or be blinded until the end of its next turn.</p>\n<p><em><strong>Sentience.</strong></em> The <em>Sword of Zariel</em> is a sentient, lawful good item with an Intelligence of 10, a Wisdom of 20, and a Charisma of 18. It has hearing and normal vision out to a range of 30 feet.</p>\n<p>The sword communicates by transmitting emotion to the creature carrying or wielding it.</p>\n<p><em><strong>Truth Seer.</strong></em> While holding the sword, you gain advantage on all Wisdom (&amp;Reference[ins]{Insight}) checks.</p>\n<p><em><strong>Destroying the Sword.</strong></em> Zariel can destroy the sword simply by grasping it. She couldn’t bring herself to do so when she was an angel, but as an archdevil she has no compunction about ridding the multiverse of the weapon. The sword is also destroyed if it’s used to shatter the Companion (see “<a href=\"https://www.dndbeyond.com/sources/bgdia/escape-from-avernus#ShatteringtheCompanion\">Shattering the Companion</a>”), unless the blade is wielded by an angel of challenge rating 15 or higher, or a good-aligned cleric or paladin of at least 10th level.</p>\n<p>If Zariel is killed for good (that is, if she dies in the Nine Hells), the sword becomes no harder to destroy than a normal longsword.</p>\n</div>",
+      "chat": ""
+    },
+    "identifier": "sword-of-zariel",
+    "source": {
+      "book": "BGDiA",
+      "page": "",
+      "license": "",
+      "custom": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "identified": true,
+    "unidentified": {
+      "description": ""
+    },
+    "container": null,
+    "quantity": 1,
+    "weight": {
+      "value": 3,
+      "units": "lb"
+    },
+    "price": {
+      "value": 0,
+      "denomination": "gp"
+    },
+    "rarity": "artifact",
+    "attunement": "required",
+    "attuned": false,
+    "equipped": false,
+    "ammunition": {},
+    "armor": {},
+    "damage": {
+      "base": {
+        "number": 1,
+        "denomination": 8,
+        "bonus": "",
+        "types": [
+          "slashing"
+        ],
+        "custom": {
+          "enabled": false,
+          "formula": ""
+        },
+        "scaling": {
+          "mode": "",
+          "number": null,
+          "formula": ""
+        }
+      },
+      "versatile": {
+        "types": [],
+        "custom": {
+          "enabled": false
+        },
+        "scaling": {
+          "number": 1
+        }
+      }
+    },
+    "mastery": "sap",
+    "properties": [
+      "ver",
+      "mgc"
+    ],
+    "proficient": null,
+    "range": {
+      "value": 5,
+      "long": null,
+      "units": "ft",
+      "reach": null
+    },
+    "type": {
+      "value": "martialM",
+      "baseItem": "longsword"
+    },
+    "crew": {
+      "value": []
+    }
+  },
+  "flags": {
+    "ddbimporter": {
+      "originalName": "Sword of Zariel",
+      "version": "6.5.7",
+      "dndbeyond": {
+        "type": "Longsword",
+        "avatarUrl": "https://www.dndbeyond.com/avatars/6757/71/637006868715445155.jpeg",
+        "largeAvatarUrl": "https://www.dndbeyond.com/avatars/6757/72/637006868716587825.jpeg",
+        "filterType": "Weapon",
+        "isConsumable": false,
+        "isContainer": false,
+        "isCustomItem": false,
+        "homebrew": false,
+        "isMonkWeapon": false,
+        "isPack": false,
+        "levelInfusionGranted": null,
+        "tags": [],
+        "sources": [
+          {
+            "sourceId": 48,
+            "pageNumber": null,
+            "sourceType": 1
+          }
+        ],
+        "damage": {
+          "parts": []
+        },
+        "classFeatures": [],
+        "ability": "str",
+        "pictureUrl": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-bgdia-sword-of-zariel-large.webp"
+      },
+      "is2014": true,
+      "is2024": false,
+      "legacy": false,
+      "id": 0,
+      "entityTypeId": 0,
+      "definitionEntityTypeId": 112130694,
+      "definitionId": 842321,
+      "defaultAdditionalActivities": {
+        "enabled": true,
+        "data": {}
+      },
+      "effectsApplied": true,
+      "keepIcon": true
+    },
+    "infusions": {
+      "maps": [],
+      "applied": [],
+      "infused": false
+    },
+    "dae": {
+      "alwaysActive": false,
+      "activeEquipped": true
+    },
+    "midi-qol": {
+      "removeAttackDamageButtons": "default",
+      "forceCEOff": true
+    },
+    "midiProperties": {
+      "confirmTargets": "default"
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": [],
+        "effect": []
+      }
+    }
+  },
+  "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-bgdia-sword-of-zariel.webp",
+  "folder": "uv3eR17lHfPyLSGf",
+  "_stats": {
+    "compendiumSource": "Compendium.u-tian-de-tuttu-emil-definitive-edition.object-2014-2024.Item.eeNpEr86EYfcRs5E",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.3QlQ8rmYiifKwvUb",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784117714447,
+    "modifiedTime": 1784117714447,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

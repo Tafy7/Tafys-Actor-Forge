@@ -1,0 +1,310 @@
+/* Tafy's Actor Forge — tema scuro con accenti infernali (siamo pur sempre ad Avernus) */
+:root {
+  --bg: #17151c;
+  --panel: #201d27;
+  --panel-2: #2a2633;
+  --border: #3b3547;
+  --text: #e8e4f0;
+  --muted: #9b93ab;
+  --accent: #e0552e;
+  --accent-2: #f0a45c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, 'Segoe UI', sans-serif;
+  line-height: 1.4;
+}
+
+header {
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid var(--accent);
+  background: var(--panel);
+}
+.header-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.lang-btn {
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  color: var(--accent-2);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.lang-btn:hover { background: var(--accent); color: #fff; }
+header h1 { margin: 0; font-size: 1.4rem; }
+.subtitle { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.85rem; }
+
+main {
+  display: grid;
+  grid-template-columns: minmax(420px, 1.2fr) 1fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  align-items: start;
+}
+@media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  margin: 0 0 0.8rem;
+  padding: 0.7rem 0.9rem;
+}
+legend {
+  padding: 0 0.4rem;
+  color: var(--accent-2);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.hint { color: var(--muted); font-weight: 400; font-size: 0.78rem; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 0.8rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem 0.8rem; }
+.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem 0.8rem; }
+@media (max-width: 700px) {
+  .grid-3, .grid-6 { grid-template-columns: repeat(2, 1fr); }
+}
+
+label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.82rem; color: var(--muted); }
+.row { display: flex; gap: 0.4rem; }
+.check { flex-direction: row; align-items: center; gap: 0.4rem; }
+.check.small { font-size: 0.72rem; }
+
+input, select, textarea {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+input[type='checkbox'] { width: auto; accent-color: var(--accent); }
+textarea { resize: vertical; font-family: inherit; }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+}
+button {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.15); }
+button.secondary {
+  background: var(--panel-2);
+  border: 1px dashed var(--border);
+  color: var(--accent-2);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+#warnings { color: #ff9a8a; font-size: 0.85rem; }
+
+/* Card delle azioni/tratti */
+.item-card {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: var(--panel-2);
+  padding: 0.6rem 0.7rem;
+  margin-bottom: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.item-card input, .item-card select, .item-card textarea { background: var(--bg); }
+.item-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--accent-2);
+}
+.item-card .remove {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 0.1rem 0.3rem;
+}
+.item-card .remove:hover { color: #ff9a8a; }
+
+/* Import da statblock (Fase 4) */
+#statblock-details summary { cursor: pointer; margin-bottom: 0.4rem; }
+#statblock-details summary:hover { color: var(--accent-2); }
+#statblock-input { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; }
+#parse-report {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--muted);
+  max-height: 260px;
+  overflow: auto;
+}
+
+/* Sezione effetti DAE dentro le card azione */
+.effects-block {
+  border-top: 1px dashed var(--border);
+  padding-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.effects-head { color: var(--accent-2); font-size: 0.85rem; }
+.effects-head .hint { margin-left: 0.4rem; }
+.effect-card {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-2);
+  border-radius: 6px;
+  background: var(--panel);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.changes { display: flex; flex-direction: column; gap: 0.3rem; }
+.change-row {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 0.5fr auto;
+  gap: 0.3rem;
+  align-items: center;
+}
+.change-row input, .change-row select { font-size: 0.8rem; padding: 0.25rem 0.4rem; }
+button.small { font-size: 0.75rem; padding: 0.25rem 0.6rem; align-self: flex-start; }
+/* Pulsante "armato": conferma non bloccante in attesa del secondo click */
+button.armed { background: var(--accent); color: #fff; border-style: solid; animation: armpulse 0.9s ease-in-out infinite; }
+@keyframes armpulse { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+.effects-block select[data-eff-add-preset] {
+  width: auto;
+  font-size: 0.8rem;
+  color: var(--accent-2);
+  background: var(--panel-2);
+  border-style: dashed;
+}
+
+/* Chip group dei tratti */
+.trait-group { margin-bottom: 0.6rem; }
+.trait-title {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+.chip {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+  padding: 0.15rem 0.6rem;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--accent-2); color: var(--text); filter: none; }
+.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.chips-custom {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  max-width: 320px;
+}
+
+aside {
+  position: sticky;
+  top: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  max-height: calc(100vh - 2rem);
+  /* Comandi fissi in alto, solo l'anteprima scorre → flex column. */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.aside-fixed { flex: 0 0 auto; }
+aside h2 { margin: 0; font-size: 1rem; color: var(--accent-2); }
+
+/* Blocco collezione batch nella colonna destra */
+.panel-box {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--panel-2);
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.panel-title { color: var(--accent-2); font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.main-actions { margin-bottom: 0.4rem; }
+#batch-msg { display: block; margin-top: 0.35rem; }
+#warnings { display: block; }
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+/* Pannello di validazione strutturale */
+.val {
+  font-size: 0.76rem;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.val.ok { color: #8fdf9f; border-color: rgba(95, 191, 127, 0.4); }
+.val.has-error { border-color: rgba(224, 85, 46, 0.6); }
+.val.has-warn { border-color: rgba(240, 164, 92, 0.5); }
+.val:empty { display: none; }
+.val-head { font-weight: 600; margin-bottom: 0.3rem; color: var(--accent-2); }
+.val ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.val li { line-height: 1.35; }
+.val li.error { color: #ff9a8a; }
+.val li.warn { color: var(--muted); }
+
+#preview {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #c9f0c9;
+  /* Solo l'anteprima scorre: i comandi sopra restano sempre visibili. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}

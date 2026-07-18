@@ -1,0 +1,216 @@
+{
+  "name": "Bracciali della Difesa",
+  "type": "equipment",
+  "effects": [
+    {
+      "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/equipment/2024-dmg2024-bracers-of-defense.webp",
+      "name": "Bracers of Defense",
+      "statuses": [],
+      "changes": [
+        {
+          "key": "system.attributes.ac.bonus",
+          "value": "2",
+          "mode": 2,
+          "priority": 18
+        }
+      ],
+      "duration": {
+        "seconds": null,
+        "startTime": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "tint": "#ffffff",
+      "transfer": true,
+      "disabled": false,
+      "flags": {
+        "dae": {
+          "transfer": true,
+          "stackable": "noneNameOnly"
+        },
+        "ddbimporter": {
+          "disabled": false,
+          "passive": true,
+          "itemId": 0,
+          "itemEntityTypeId": 0
+        },
+        "midi-qol": {
+          "forceCEOff": true
+        },
+        "core": {}
+      },
+      "description": "<p>While wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield.</p>",
+      "_id": "x1n9qFGaZELiqsCk",
+      "type": "base",
+      "system": {},
+      "origin": null,
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.350",
+        "systemId": "dnd5e",
+        "systemVersion": "5.1.10",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "system": {
+    "activities": {},
+    "uses": {
+      "spent": null,
+      "recovery": [],
+      "max": ""
+    },
+    "description": {
+      "value": "<div class=\"ddb\"><p>Quindi ti lanci in mischia protetto dai soli peli del petto e senza uno straccio di scudo?<br />Mi piace! ecco a te un bonus di +2 alla CA.<br /><br />Falli secchi tigre!</p></div>",
+      "chat": ""
+    },
+    "identifier": "bracers-of-defense",
+    "source": {
+      "book": "DMG 2024",
+      "page": "",
+      "license": "",
+      "custom": "",
+      "rules": "2024",
+      "revision": 1
+    },
+    "identified": false,
+    "unidentified": {
+      "description": "<p>Dei bracciali piuttosto larghi, però son belli!</p>",
+      "name": "Bracciali Dorati"
+    },
+    "container": null,
+    "quantity": 1,
+    "weight": {
+      "value": 0,
+      "units": "lb"
+    },
+    "price": {
+      "value": 4000,
+      "denomination": "gp"
+    },
+    "rarity": "rare",
+    "attunement": "required",
+    "attuned": false,
+    "equipped": false,
+    "armor": {
+      "value": null,
+      "dex": null
+    },
+    "proficient": null,
+    "properties": [
+      "mgc"
+    ],
+    "strength": 0,
+    "type": {
+      "value": "trinket",
+      "baseItem": ""
+    },
+    "crew": {
+      "value": []
+    }
+  },
+  "flags": {
+    "ddbimporter": {
+      "originalName": "Bracers of Defense",
+      "version": "6.5.7",
+      "dndbeyond": {
+        "type": "Wondrous item",
+        "avatarUrl": "https://www.dndbeyond.com/avatars/18/933/636381775650863473.jpeg",
+        "largeAvatarUrl": "https://www.dndbeyond.com/avatars/7/146/636284716655660478.jpeg",
+        "filterType": "Wondrous item",
+        "isConsumable": false,
+        "isContainer": false,
+        "isCustomItem": false,
+        "homebrew": false,
+        "isMonkWeapon": false,
+        "isPack": false,
+        "levelInfusionGranted": 14,
+        "tags": [
+          "Warding",
+          "Wristwear"
+        ],
+        "sources": [
+          {
+            "sourceId": 146,
+            "pageNumber": 156,
+            "sourceType": 1
+          },
+          {
+            "sourceId": 1,
+            "pageNumber": null,
+            "sourceType": 2
+          },
+          {
+            "sourceId": 148,
+            "pageNumber": null,
+            "sourceType": 2
+          }
+        ],
+        "pictureUrl": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/equipment/2024-dmg2024-bracers-of-defense-large.webp"
+      },
+      "is2014": false,
+      "is2024": true,
+      "legacy": true,
+      "id": 0,
+      "entityTypeId": 0,
+      "definitionEntityTypeId": 112130694,
+      "definitionId": 4594,
+      "defaultAdditionalActivities": {
+        "enabled": true,
+        "data": {}
+      },
+      "effectsApplied": true,
+      "keepIcon": true
+    },
+    "infusions": {
+      "maps": [],
+      "applied": [],
+      "infused": false
+    },
+    "midi-qol": {
+      "removeAttackDamageButtons": "default",
+      "forceCEOff": true
+    },
+    "midiProperties": {
+      "confirmTargets": "default"
+    },
+    "dae": {
+      "alwaysActive": false,
+      "activeEquipped": true
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": [],
+        "effect": []
+      }
+    }
+  },
+  "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/equipment/2024-dmg2024-bracers-of-defense.webp",
+  "folder": null,
+  "_stats": {
+    "compendiumSource": "Compendium.u-tian-de-tuttu-emil-definitive-edition.oggetti.Item.WnS6YqmV2Mx6H0BZ",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.b8avZOfg0PGUD2ct",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.350",
+    "systemId": "dnd5e",
+    "systemVersion": "5.1.10",
+    "createdTime": 1770317615647,
+    "modifiedTime": 1771542610071,
+    "lastModifiedBy": "VvqzXy8cTxfyckGB"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

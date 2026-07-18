@@ -1,0 +1,270 @@
+{
+  "name": "Cloak of Protection",
+  "type": "equipment",
+  "effects": [
+    {
+      "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/equipment/2024-dmg2024-cloak-of-protection.webp",
+      "name": "Cloak of Protection",
+      "statuses": [],
+      "changes": [
+        {
+          "key": "system.bonuses.abilities.save",
+          "value": "1",
+          "mode": 2,
+          "priority": 20
+        }
+      ],
+      "duration": {
+        "seconds": null,
+        "startTime": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "tint": "#ffffff",
+      "transfer": true,
+      "disabled": false,
+      "flags": {
+        "dae": {
+          "transfer": true,
+          "stackable": "noneNameOnly"
+        },
+        "ddbimporter": {
+          "disabled": false,
+          "passive": true,
+          "itemId": 0,
+          "itemEntityTypeId": 0
+        },
+        "midi-qol": {
+          "forceCEOff": true
+        },
+        "core": {}
+      },
+      "description": "<p>You gain a +1 bonus to Armor Class and saving throws while you wear this cloak.</p>",
+      "_id": "IMHDJeyZeJEQT3q4",
+      "type": "base",
+      "system": {},
+      "origin": null,
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    },
+    {
+      "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/equipment/2024-dmg2024-cloak-of-protection.webp",
+      "name": "Cloak of Protection",
+      "statuses": [],
+      "changes": [
+        {
+          "key": "system.attributes.ac.bonus",
+          "value": "1",
+          "mode": 2,
+          "priority": 18
+        }
+      ],
+      "duration": {
+        "seconds": null,
+        "startTime": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "tint": "#ffffff",
+      "transfer": true,
+      "disabled": false,
+      "flags": {
+        "dae": {
+          "transfer": true,
+          "stackable": "noneNameOnly"
+        },
+        "ddbimporter": {
+          "disabled": false,
+          "passive": true,
+          "itemId": 0,
+          "itemEntityTypeId": 0
+        },
+        "midi-qol": {
+          "forceCEOff": true
+        },
+        "core": {}
+      },
+      "description": "<p>You gain a +1 bonus to Armor Class and saving throws while you wear this cloak.</p>",
+      "_id": "Yfxo7ecxMS5vvqAO",
+      "type": "base",
+      "system": {},
+      "origin": null,
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "system": {
+    "activities": {},
+    "uses": {
+      "spent": null,
+      "recovery": []
+    },
+    "description": {
+      "value": "<div class=\"ddb\">\n<p>You gain a +1 bonus to Armor Class and saving throws while you wear this cloak.</p>\n</div>",
+      "chat": ""
+    },
+    "identifier": "cloak-of-protection",
+    "source": {
+      "book": "DMG 2024",
+      "page": "",
+      "license": "",
+      "custom": "",
+      "rules": "2024",
+      "revision": 1
+    },
+    "identified": true,
+    "unidentified": {
+      "description": ""
+    },
+    "container": null,
+    "quantity": 1,
+    "weight": {
+      "value": 0,
+      "units": "lb"
+    },
+    "price": {
+      "value": 400,
+      "denomination": "gp"
+    },
+    "rarity": "uncommon",
+    "attunement": "required",
+    "attuned": false,
+    "equipped": false,
+    "armor": {
+      "value": null,
+      "dex": null
+    },
+    "proficient": null,
+    "properties": [
+      "mgc"
+    ],
+    "strength": 0,
+    "type": {
+      "value": "clothing",
+      "baseItem": ""
+    },
+    "crew": {
+      "value": []
+    }
+  },
+  "flags": {
+    "ddbimporter": {
+      "originalName": "Cloak of Protection",
+      "version": "6.5.7",
+      "dndbeyond": {
+        "type": "Wondrous item",
+        "avatarUrl": "https://www.dndbeyond.com/avatars/19/215/636382363291130832.jpeg",
+        "largeAvatarUrl": "https://www.dndbeyond.com/avatars/7/168/636284723508326581.jpeg",
+        "filterType": "Wondrous item",
+        "isConsumable": false,
+        "isContainer": false,
+        "isCustomItem": false,
+        "homebrew": false,
+        "isMonkWeapon": false,
+        "isPack": false,
+        "levelInfusionGranted": 10,
+        "tags": [
+          "Warding",
+          "Outerwear"
+        ],
+        "sources": [
+          {
+            "sourceId": 146,
+            "pageNumber": 159,
+            "sourceType": 1
+          },
+          {
+            "sourceId": 1,
+            "pageNumber": null,
+            "sourceType": 2
+          },
+          {
+            "sourceId": 148,
+            "pageNumber": null,
+            "sourceType": 2
+          }
+        ],
+        "pictureUrl": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/equipment/2024-dmg2024-cloak-of-protection-large.webp"
+      },
+      "is2014": false,
+      "is2024": true,
+      "legacy": true,
+      "id": 0,
+      "entityTypeId": 0,
+      "definitionEntityTypeId": 112130694,
+      "definitionId": 4607,
+      "defaultAdditionalActivities": {
+        "enabled": true,
+        "data": {}
+      },
+      "effectsApplied": true,
+      "keepIcon": true
+    },
+    "infusions": {
+      "maps": [],
+      "applied": [],
+      "infused": false
+    },
+    "dae": {
+      "alwaysActive": false,
+      "activeEquipped": true
+    },
+    "midi-qol": {
+      "removeAttackDamageButtons": "default",
+      "forceCEOff": true
+    },
+    "midiProperties": {
+      "confirmTargets": "default"
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": [],
+        "effect": []
+      }
+    }
+  },
+  "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/equipment/2024-dmg2024-cloak-of-protection.webp",
+  "folder": "eHaIPKIweu7sUFTE",
+  "_stats": {
+    "compendiumSource": "Compendium.u-tian-de-tuttu-emil-definitive-edition.object-2014-2024.Item.qbylsEpdbeShoSPo",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.nrNWaZ1uDklbbiNd",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784117752186,
+    "modifiedTime": 1784117752186,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

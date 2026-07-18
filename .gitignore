@@ -1,0 +1,10 @@
+# Dipendenze e output di build: rigenerati da npm install / vite build,
+# non vanno versionati (li produce anche la GitHub Action).
+node_modules/
+dist/
+
+# Rumore vario
+*.log
+.DS_Store
+Thumbs.db
+.vite/

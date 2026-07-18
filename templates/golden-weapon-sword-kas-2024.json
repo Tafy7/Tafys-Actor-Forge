@@ -1,0 +1,530 @@
+{
+  "name": "Sword of Kas",
+  "type": "weapon",
+  "effects": [
+    {
+      "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-dmg-sword-of-kas.webp",
+      "name": "Sword of Kas",
+      "statuses": [],
+      "changes": [
+        {
+          "key": "system.traits.dr.value",
+          "value": "necrotic",
+          "mode": 2,
+          "priority": 1
+        },
+        {
+          "key": "system.attributes.init.bonus",
+          "value": "1d10",
+          "mode": 2,
+          "priority": 20
+        }
+      ],
+      "duration": {
+        "seconds": null,
+        "startTime": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "tint": "#ffffff",
+      "transfer": true,
+      "disabled": false,
+      "flags": {
+        "dae": {
+          "transfer": true,
+          "stackable": "noneNameOnly"
+        },
+        "ddbimporter": {
+          "disabled": false,
+          "passive": true,
+          "itemId": 0,
+          "itemEntityTypeId": 0
+        },
+        "midi-qol": {
+          "forceCEOff": true
+        },
+        "core": {}
+      },
+      "description": "<p>Kas was a powerful warrior who served Vecna and whose loyalty was rewarded with this sword. As Kas’s power grew, so did his hubris. The sword urged Kas to destroy Vecna and usurp his throne. Legend says Vecna’s destruction came at Kas’s hand, but Vecna also wrought his rebellious lieutenant’s doom, leaving only Kas’s sword behind.</p>\n<p><em><strong>Bloodthirst.</strong></em> The sword thirsts for blood. If the sword doesn’t taste blood on its blade within 1 minute of being drawn from its scabbard, its wielder makes a [[/save cha 15 format=long]]. On a successful save, the wielder takes  [[/damage 3d6 type=psychic average=true]] damage. On a failed save, the wielder is dominated by the sword, as if by the Dominate Monster spell, and the sword demands blood. The spell effect ends when the sword’s demand is met.</p>\n<p><em><strong>Magic Weapon.</strong></em> You gain a +3 bonus to attack rolls and damage rolls made with the sword, which scores a Critical Hit on a roll of 19 or 20 on the  [[/damage + 20 type=and deals an extra 2d10 slashing average=true]] damage to Undead.</p>\n<p><em><strong>Random Properties.</strong></em> The sword has the following random properties (see <a href=\"https://dndbeyond.com/sources/dmg/treasure/#Artifacts\">“Artifacts”</a>):</p>\n<ul>\n<li>1 minor beneficial property</li>\n<li>1 major beneficial property</li>\n<li>1 minor detrimental property</li>\n<li>1 major detrimental property</li>\n</ul>\n<p><em><strong>Spells.</strong></em> While the sword is on your person, you can cast the following spells (save DC 18) from it:</p>\n<ul>\n<li>Call Lightning</li>\n<li>Divine Word</li>\n<li>Finger of Death</li>\n</ul>\n<p>Once you use the sword to cast a spell, you can’t cast that spell again from it until the next dawn.</p>\n<p><em><strong>Spirit of Kas.</strong></em> While the sword is on your person, you gain the following benefits:</p>\n<p><strong>Battle Hunger.</strong> You add 1d10 to your Initiative rolls.</p>\n<p><strong>Blade of Defense.</strong> When you take an action to attack with the sword, you can transfer some or all of its attack bonus to your Armor Class instead. The adjusted bonuses remain in effect until the start of your next turn.</p>\n<p><strong>Necrotic Resistance.</strong> You have Resistance to Necrotic damage.</p>\n<p><em><strong>Sentience.</strong></em> The <em>Sword of Kas</em> is a sentient Chaotic Evil weapon with an Intelligence of 15, a Wisdom of 13, and a Charisma of 16. It has hearing and &amp;Reference[darkvision]{Darkvision} out to 120 feet.</p>\n<p>The weapon communicates telepathically with its wielder and speaks Common.</p>\n<p><em><strong>Personality.</strong> </em>The sword’s purpose is to bring ruin to Vecna. Killing Vecna’s worshipers, destroying the lich’s works, and foiling his machinations all help to fulfill this goal.</p>\n<p>The <em>Sword of Kas</em> also seeks to destroy anyone corrupted by the <em>Eye</em> and <em>Hand of Vecna</em>.</p>\n<p><em><strong>Destroying the Sword.</strong></em> A creature attuned to both the <em>Eye of Vecna</em> and the <em>Hand of Vecna</em> can use the Wish property of those combined Artifacts to unmake the <em>Sword of Kas</em>, provided the sword is within 30 feet of the spell’s caster. Upon casting Wish, the creature makes a [[/save cha 18 format=long]]. On a failed save, nothing happens, and the Wish spell is wasted. On a successful save, the <em>Sword of Kas</em> is destroyed.</p>",
+      "_id": "nVBLSjNZgBh9ZJKe",
+      "type": "base",
+      "system": {},
+      "origin": null,
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "system": {
+    "activities": {
+      "attackSworOfKasI": {
+        "type": "attack",
+        "_id": "attackSworOfKasI",
+        "sort": 0,
+        "activation": {
+          "type": "action",
+          "value": 1,
+          "condition": "",
+          "override": true
+        },
+        "consumption": {
+          "targets": [],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {},
+        "duration": {
+          "value": "1",
+          "units": "minute",
+          "special": "",
+          "override": true,
+          "concentration": false
+        },
+        "effects": [],
+        "range": {
+          "units": "self",
+          "override": false
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": null,
+          "recovery": []
+        },
+        "attack": {
+          "ability": "",
+          "bonus": "",
+          "critical": {},
+          "flat": false,
+          "type": {
+            "value": "melee",
+            "classification": "weapon"
+          }
+        },
+        "damage": {
+          "critical": {},
+          "includeBase": true,
+          "parts": []
+        },
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "confirmTargets": "default",
+          "automationOnly": false,
+          "identifier": "",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "attackMode": "oneHanded",
+        "ammunition": "",
+        "otherActivityUuid": "",
+        "attackRollPerTarget": "default",
+        "fumbleThreshold": 1,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      },
+      "attackRestAtToUn": {
+        "name": "Restricted Attack: To Undead",
+        "type": "attack",
+        "_id": "attackRestAtToUn",
+        "sort": 0,
+        "activation": {
+          "type": "action",
+          "value": 1,
+          "condition": "",
+          "override": true
+        },
+        "consumption": {
+          "targets": [],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {
+          "chatFlavor": "To Undead"
+        },
+        "duration": {
+          "value": "1",
+          "units": "minute",
+          "special": "",
+          "override": true,
+          "concentration": false
+        },
+        "effects": [],
+        "range": {
+          "units": "self",
+          "override": false
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": null,
+          "recovery": []
+        },
+        "attack": {
+          "ability": "",
+          "bonus": "",
+          "critical": {},
+          "flat": false,
+          "type": {
+            "value": "melee",
+            "classification": "weapon"
+          }
+        },
+        "damage": {
+          "parts": [
+            {
+              "number": 2,
+              "denomination": 10,
+              "bonus": "",
+              "types": [
+                "slashing"
+              ],
+              "custom": {
+                "enabled": false,
+                "formula": ""
+              },
+              "scaling": {
+                "mode": "",
+                "number": null,
+                "formula": ""
+              }
+            }
+          ],
+          "includeBase": false,
+          "critical": {
+            "bonus": ""
+          }
+        },
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "confirmTargets": "default",
+          "automationOnly": false,
+          "identifier": "",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "attackMode": "oneHanded",
+        "ammunition": "",
+        "otherActivityUuid": "",
+        "attackRollPerTarget": "default",
+        "fumbleThreshold": 1,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      }
+    },
+    "uses": {
+      "spent": null,
+      "recovery": []
+    },
+    "description": {
+      "value": "<div class=\"ddb\">\n<p>Kas was a powerful warrior who served Vecna and whose loyalty was rewarded with this sword. As Kas’s power grew, so did his hubris. The sword urged Kas to destroy Vecna and usurp his throne. Legend says Vecna’s destruction came at Kas’s hand, but Vecna also wrought his rebellious lieutenant’s doom, leaving only Kas’s sword behind.</p>\n<p><em><strong>Bloodthirst.</strong></em> The sword thirsts for blood. If the sword doesn’t taste blood on its blade within 1 minute of being drawn from its scabbard, its wielder makes a [[/save cha 15 format=long]]. On a successful save, the wielder takes  [[/damage 3d6 type=psychic average=true]] damage. On a failed save, the wielder is dominated by the sword, as if by the Dominate Monster spell, and the sword demands blood. The spell effect ends when the sword’s demand is met.</p>\n<p><em><strong>Magic Weapon.</strong></em> You gain a +3 bonus to attack rolls and damage rolls made with the sword, which scores a Critical Hit on a roll of 19 or 20 on the  [[/damage + 20 type=and deals an extra 2d10 slashing average=true]] damage to Undead.</p>\n<p><em><strong>Random Properties.</strong></em> The sword has the following random properties (see <a href=\"https://dndbeyond.com/sources/dmg/treasure/#Artifacts\">“Artifacts”</a>):</p>\n<ul>\n<li>1 minor beneficial property</li>\n<li>1 major beneficial property</li>\n<li>1 minor detrimental property</li>\n<li>1 major detrimental property</li>\n</ul>\n<p><em><strong>Spells.</strong></em> While the sword is on your person, you can cast the following spells (save DC 18) from it:</p>\n<ul>\n<li>Call Lightning</li>\n<li>Divine Word</li>\n<li>Finger of Death</li>\n</ul>\n<p>Once you use the sword to cast a spell, you can’t cast that spell again from it until the next dawn.</p>\n<p><em><strong>Spirit of Kas.</strong></em> While the sword is on your person, you gain the following benefits:</p>\n<p><strong>Battle Hunger.</strong> You add 1d10 to your Initiative rolls.</p>\n<p><strong>Blade of Defense.</strong> When you take an action to attack with the sword, you can transfer some or all of its attack bonus to your Armor Class instead. The adjusted bonuses remain in effect until the start of your next turn.</p>\n<p><strong>Necrotic Resistance.</strong> You have Resistance to Necrotic damage.</p>\n<p><em><strong>Sentience.</strong></em> The <em>Sword of Kas</em> is a sentient Chaotic Evil weapon with an Intelligence of 15, a Wisdom of 13, and a Charisma of 16. It has hearing and &amp;Reference[darkvision]{Darkvision} out to 120 feet.</p>\n<p>The weapon communicates telepathically with its wielder and speaks Common.</p>\n<p><em><strong>Personality.</strong> </em>The sword’s purpose is to bring ruin to Vecna. Killing Vecna’s worshipers, destroying the lich’s works, and foiling his machinations all help to fulfill this goal.</p>\n<p>The <em>Sword of Kas</em> also seeks to destroy anyone corrupted by the <em>Eye</em> and <em>Hand of Vecna</em>.</p>\n<p><em><strong>Destroying the Sword.</strong></em> A creature attuned to both the <em>Eye of Vecna</em> and the <em>Hand of Vecna</em> can use the Wish property of those combined Artifacts to unmake the <em>Sword of Kas</em>, provided the sword is within 30 feet of the spell’s caster. Upon casting Wish, the creature makes a [[/save cha 18 format=long]]. On a failed save, nothing happens, and the Wish spell is wasted. On a successful save, the <em>Sword of Kas</em> is destroyed.</p>\n</div>",
+      "chat": ""
+    },
+    "identifier": "sword-of-kas",
+    "source": {
+      "book": "DMG 2024",
+      "page": "",
+      "license": "",
+      "custom": "",
+      "rules": "2024",
+      "revision": 1
+    },
+    "identified": true,
+    "unidentified": {
+      "description": ""
+    },
+    "container": null,
+    "quantity": 1,
+    "weight": {
+      "value": 3,
+      "units": "lb"
+    },
+    "price": {
+      "value": 0,
+      "denomination": "gp"
+    },
+    "rarity": "artifact",
+    "attunement": "required",
+    "attuned": false,
+    "equipped": false,
+    "ammunition": {},
+    "armor": {},
+    "damage": {
+      "base": {
+        "number": 1,
+        "denomination": 8,
+        "bonus": "",
+        "types": [
+          "slashing"
+        ],
+        "custom": {
+          "enabled": false,
+          "formula": ""
+        },
+        "scaling": {
+          "mode": "",
+          "number": null,
+          "formula": ""
+        }
+      },
+      "versatile": {
+        "types": [],
+        "custom": {
+          "enabled": false
+        },
+        "scaling": {
+          "number": 1
+        }
+      }
+    },
+    "magicalBonus": "3",
+    "mastery": "sap",
+    "properties": [
+      "ver",
+      "mgc"
+    ],
+    "proficient": null,
+    "range": {
+      "value": 5,
+      "long": null,
+      "units": "ft",
+      "reach": null
+    },
+    "type": {
+      "value": "martialM",
+      "baseItem": "longsword"
+    },
+    "crew": {
+      "value": []
+    }
+  },
+  "flags": {
+    "ddbimporter": {
+      "originalName": "Sword of Kas",
+      "version": "6.5.7",
+      "dndbeyond": {
+        "type": "Longsword",
+        "avatarUrl": "https://www.dndbeyond.com/avatars/45205/876/638657414148924695.jpeg",
+        "largeAvatarUrl": "https://www.dndbeyond.com/avatars/45205/877/638657414150020935.png",
+        "filterType": "Weapon",
+        "isConsumable": false,
+        "isContainer": false,
+        "isCustomItem": false,
+        "homebrew": false,
+        "isMonkWeapon": false,
+        "isPack": false,
+        "levelInfusionGranted": null,
+        "tags": [],
+        "sources": [
+          {
+            "sourceId": 146,
+            "pageNumber": 313,
+            "sourceType": 1
+          }
+        ],
+        "damage": {
+          "parts": []
+        },
+        "classFeatures": [],
+        "ability": "str",
+        "pictureUrl": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-dmg-sword-of-kas-large.webp"
+      },
+      "is2014": false,
+      "is2024": true,
+      "legacy": false,
+      "id": 0,
+      "entityTypeId": 0,
+      "definitionEntityTypeId": 112130694,
+      "definitionId": 9229112,
+      "defaultAdditionalActivities": {
+        "enabled": true,
+        "data": {}
+      },
+      "effectsApplied": true,
+      "keepIcon": true
+    },
+    "infusions": {
+      "maps": [],
+      "applied": [],
+      "infused": false
+    },
+    "dae": {
+      "alwaysActive": false,
+      "activeEquipped": true
+    },
+    "midi-qol": {
+      "removeAttackDamageButtons": "default",
+      "forceCEOff": true
+    },
+    "midiProperties": {
+      "confirmTargets": "default"
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": [],
+        "effect": []
+      }
+    }
+  },
+  "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-dmg-sword-of-kas.webp",
+  "folder": "uv3eR17lHfPyLSGf",
+  "_stats": {
+    "compendiumSource": "Compendium.u-tian-de-tuttu-emil-definitive-edition.object-2014-2024.Item.TrBrSupF9ELEIcMh",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.rY6UaRwbgHmS6OXQ",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784117674959,
+    "modifiedTime": 1784117674959,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

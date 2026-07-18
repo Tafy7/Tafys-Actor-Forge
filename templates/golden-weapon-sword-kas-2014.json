@@ -1,0 +1,387 @@
+{
+  "name": "Sword of Kas",
+  "type": "weapon",
+  "effects": [
+    {
+      "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-dmg-sword-of-kas.webp",
+      "name": "Sword of Kas",
+      "statuses": [],
+      "changes": [
+        {
+          "key": "system.attributes.init.bonus",
+          "value": "1d10",
+          "mode": 2,
+          "priority": 20
+        }
+      ],
+      "duration": {
+        "seconds": null,
+        "startTime": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "tint": "#ffffff",
+      "transfer": true,
+      "disabled": false,
+      "flags": {
+        "dae": {
+          "transfer": true,
+          "stackable": "noneNameOnly"
+        },
+        "ddbimporter": {
+          "disabled": false,
+          "passive": true,
+          "itemId": 0,
+          "itemEntityTypeId": 0
+        },
+        "midi-qol": {
+          "forceCEOff": true
+        },
+        "core": {}
+      },
+      "description": "<p>When Vecna grew in power, he appointed an evil and ruthless lieutenant, Kas the Bloody Handed, to act as his bodyguard and right hand. This despicable villain served as advisor, warlord, and assassin. His successes earned him Vecna’s admiration and a reward: a sword with as dark a pedigree as the man who would wield it.</p>\n<p>For a long time, Kas faithfully served the lich, but as Kas’s power grew, so did his hubris. His sword urged him to supplant Vecna, so that they could rule the lich’s empire in Vecna’s stead. Legend says Vecna’s destruction came at Kas’s hand, but Vecna also wrought his rebellious lieutenant’s doom, leaving only Kas’s sword behind. The world was made brighter thereby.</p>\n<p>The <em>Sword of Kas</em> is a magic, sentient longsword that grants a +3 bonus to attack and damage rolls made with it. It scores a critical hit on a roll of 19 or 20, and deals an extra  [[/damage 2d10 type=slashing average=true]] damage to undead.</p>\n<p>If the sword isn’t bathed in blood within 1 minute of being drawn from its scabbard, its wielder must make a [[/save cha 15 format=long]]. On a successful save, the wielder take  [[/damage 3d6 type=psychic average=true]] damage. On a failed save, the wielder is dominated by the sword, as if by the dominate monster spell, and the sword demands that it be bathed in blood. The spell effect ends when the sword’s demand is met.</p>\n<p><strong><em>Random Properties.</em></strong> The <em>Sword of Kas</em> has the following random properties:</p>\n<ul>\n<li>1 minor beneficial property</li>\n<li>1 major beneficial property</li>\n<li>1 minor detrimental property</li>\n<li>1 major detrimental property</li>\n</ul>\n<p><strong><em>Spirit of Kas.</em></strong> While the sword is on your person, you add a d10 to your initiative at the start of every combat. In addition, when you use an action to attack with the sword, you can transfer some or all of its attack bonus to your Armor Class instead. The adjusted bonuses remain in effect until the start of your next turn.</p>\n<p><strong><em>Spells.</em></strong> While the sword is on your person, you can use an action to cast one of the following spells (save DC 18) from it: call lightning, divine word, or finger of death. Once you use the sword to cast a spell, you can’t cast that spell again from it until the next dawn.</p>\n<p><strong><em>Sentience.</em></strong> The <em>Sword of Kas</em> is a sentient chaotic evil weapon with an Intelligence of 15, a Wisdom of 13, and a Charisma of 16. It has hearing and &amp;Reference[darkvision]{darkvision} out to a range of 120 feet.</p>\n<p>The weapon communicates telepathically with its wielder and can speak, read, and understand Common.</p>\n<p><strong><em>Personality.</em></strong> The sword’s purpose is to bring ruin to Vecna. Killing Vecna’s worshipers, destroying the lich’s works, and foiling his machinations all help to fulfill this goal.</p>\n<p>The <em>Sword of Kas</em> also seeks to destroy anyone corrupted by the Eye and Hand of Vecna. The sword’s obsession with those artifacts eventually becomes a fixation for its wielder.</p>\n<p><strong><em>Destroying the Sword.</em></strong> A creature attuned to both the Eye of Vecna and the Hand of Vecna can use the wish property of those combined artifacts to unmake the <em>Sword of Kas</em>. The creature must cast the wish spell and make a [[/check cha format=long]] contested by the [[/check cha format=long]] of the sword. The sword must be within 30 feet of the creature, or the spell fails. If the sword wins the contest, nothing happens, and the wish spell is wasted. If the sword loses the contest, it is destroyed.</p>",
+      "_id": "73OiKetzyja9OL42",
+      "type": "base",
+      "system": {},
+      "origin": null,
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "system": {
+    "activities": {
+      "attackSworOfKasI": {
+        "type": "attack",
+        "_id": "attackSworOfKasI",
+        "sort": 0,
+        "activation": {
+          "type": "action",
+          "value": 1,
+          "condition": "",
+          "override": true
+        },
+        "consumption": {
+          "targets": [],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {},
+        "duration": {
+          "value": "1",
+          "units": "minute",
+          "special": "",
+          "override": true,
+          "concentration": false
+        },
+        "effects": [],
+        "range": {
+          "units": "self",
+          "override": false
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": null,
+          "recovery": []
+        },
+        "attack": {
+          "ability": "",
+          "bonus": "",
+          "critical": {},
+          "flat": false,
+          "type": {
+            "value": "melee",
+            "classification": "weapon"
+          }
+        },
+        "damage": {
+          "critical": {},
+          "includeBase": true,
+          "parts": []
+        },
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "confirmTargets": "default",
+          "automationOnly": false,
+          "identifier": "",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "attackMode": "oneHanded",
+        "ammunition": "",
+        "otherActivityUuid": "",
+        "attackRollPerTarget": "default",
+        "fumbleThreshold": 1,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      }
+    },
+    "uses": {
+      "spent": null,
+      "recovery": []
+    },
+    "description": {
+      "value": "<div class=\"ddb\">\n<p>When Vecna grew in power, he appointed an evil and ruthless lieutenant, Kas the Bloody Handed, to act as his bodyguard and right hand. This despicable villain served as advisor, warlord, and assassin. His successes earned him Vecna’s admiration and a reward: a sword with as dark a pedigree as the man who would wield it.</p>\n<p>For a long time, Kas faithfully served the lich, but as Kas’s power grew, so did his hubris. His sword urged him to supplant Vecna, so that they could rule the lich’s empire in Vecna’s stead. Legend says Vecna’s destruction came at Kas’s hand, but Vecna also wrought his rebellious lieutenant’s doom, leaving only Kas’s sword behind. The world was made brighter thereby.</p>\n<p>The <em>Sword of Kas</em> is a magic, sentient longsword that grants a +3 bonus to attack and damage rolls made with it. It scores a critical hit on a roll of 19 or 20, and deals an extra  [[/damage 2d10 type=slashing average=true]] damage to undead.</p>\n<p>If the sword isn’t bathed in blood within 1 minute of being drawn from its scabbard, its wielder must make a [[/save cha 15 format=long]]. On a successful save, the wielder take  [[/damage 3d6 type=psychic average=true]] damage. On a failed save, the wielder is dominated by the sword, as if by the dominate monster spell, and the sword demands that it be bathed in blood. The spell effect ends when the sword’s demand is met.</p>\n<p><strong><em>Random Properties.</em></strong> The <em>Sword of Kas</em> has the following random properties:</p>\n<ul>\n<li>1 minor beneficial property</li>\n<li>1 major beneficial property</li>\n<li>1 minor detrimental property</li>\n<li>1 major detrimental property</li>\n</ul>\n<p><strong><em>Spirit of Kas.</em></strong> While the sword is on your person, you add a d10 to your initiative at the start of every combat. In addition, when you use an action to attack with the sword, you can transfer some or all of its attack bonus to your Armor Class instead. The adjusted bonuses remain in effect until the start of your next turn.</p>\n<p><strong><em>Spells.</em></strong> While the sword is on your person, you can use an action to cast one of the following spells (save DC 18) from it: call lightning, divine word, or finger of death. Once you use the sword to cast a spell, you can’t cast that spell again from it until the next dawn.</p>\n<p><strong><em>Sentience.</em></strong> The <em>Sword of Kas</em> is a sentient chaotic evil weapon with an Intelligence of 15, a Wisdom of 13, and a Charisma of 16. It has hearing and &amp;Reference[darkvision]{darkvision} out to a range of 120 feet.</p>\n<p>The weapon communicates telepathically with its wielder and can speak, read, and understand Common.</p>\n<p><strong><em>Personality.</em></strong> The sword’s purpose is to bring ruin to Vecna. Killing Vecna’s worshipers, destroying the lich’s works, and foiling his machinations all help to fulfill this goal.</p>\n<p>The <em>Sword of Kas</em> also seeks to destroy anyone corrupted by the Eye and Hand of Vecna. The sword’s obsession with those artifacts eventually becomes a fixation for its wielder.</p>\n<p><strong><em>Destroying the Sword.</em></strong> A creature attuned to both the Eye of Vecna and the Hand of Vecna can use the wish property of those combined artifacts to unmake the <em>Sword of Kas</em>. The creature must cast the wish spell and make a [[/check cha format=long]] contested by the [[/check cha format=long]] of the sword. The sword must be within 30 feet of the creature, or the spell fails. If the sword wins the contest, nothing happens, and the wish spell is wasted. If the sword loses the contest, it is destroyed.</p>\n</div>",
+      "chat": ""
+    },
+    "identifier": "sword-of-kas",
+    "source": {
+      "book": "DMG",
+      "page": "",
+      "license": "",
+      "custom": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "identified": true,
+    "unidentified": {
+      "description": ""
+    },
+    "container": null,
+    "quantity": 1,
+    "weight": {
+      "value": 3,
+      "units": "lb"
+    },
+    "price": {
+      "value": 0,
+      "denomination": "gp"
+    },
+    "rarity": "artifact",
+    "attunement": "required",
+    "attuned": false,
+    "equipped": false,
+    "ammunition": {},
+    "armor": {},
+    "damage": {
+      "base": {
+        "number": 1,
+        "denomination": 8,
+        "bonus": "",
+        "types": [
+          "slashing"
+        ],
+        "custom": {
+          "enabled": false,
+          "formula": ""
+        },
+        "scaling": {
+          "mode": "",
+          "number": null,
+          "formula": ""
+        }
+      },
+      "versatile": {
+        "types": [],
+        "custom": {
+          "enabled": false
+        },
+        "scaling": {
+          "number": 1
+        }
+      }
+    },
+    "magicalBonus": "3",
+    "mastery": "sap",
+    "properties": [
+      "ver",
+      "mgc"
+    ],
+    "proficient": null,
+    "range": {
+      "value": 5,
+      "long": null,
+      "units": "ft",
+      "reach": null
+    },
+    "type": {
+      "value": "martialM",
+      "baseItem": "longsword"
+    },
+    "crew": {
+      "value": []
+    }
+  },
+  "flags": {
+    "ddbimporter": {
+      "originalName": "Sword of Kas",
+      "version": "6.5.7",
+      "dndbeyond": {
+        "type": "Longsword",
+        "avatarUrl": "https://www.dndbeyond.com/avatars/26024/694/637890895510624535.jpeg",
+        "largeAvatarUrl": "https://www.dndbeyond.com/avatars/26024/803/637890900193572230.jpeg",
+        "filterType": "Weapon",
+        "isConsumable": false,
+        "isContainer": false,
+        "isCustomItem": false,
+        "homebrew": false,
+        "isMonkWeapon": false,
+        "isPack": false,
+        "levelInfusionGranted": null,
+        "tags": [
+          "Damage",
+          "Buff",
+          "Debuff",
+          "Combat",
+          "Cursed"
+        ],
+        "sources": [
+          {
+            "sourceId": 3,
+            "pageNumber": 226,
+            "sourceType": 1
+          },
+          {
+            "sourceId": 91,
+            "pageNumber": null,
+            "sourceType": 2
+          },
+          {
+            "sourceId": 132,
+            "pageNumber": null,
+            "sourceType": 2
+          }
+        ],
+        "damage": {
+          "parts": []
+        },
+        "classFeatures": [],
+        "ability": "str",
+        "pictureUrl": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-dmg-sword-of-kas-large.webp"
+      },
+      "is2014": true,
+      "is2024": false,
+      "legacy": true,
+      "id": 0,
+      "entityTypeId": 0,
+      "definitionEntityTypeId": 112130694,
+      "definitionId": 5427,
+      "defaultAdditionalActivities": {
+        "enabled": true,
+        "data": {}
+      },
+      "effectsApplied": true,
+      "keepIcon": true
+    },
+    "infusions": {
+      "maps": [],
+      "applied": [],
+      "infused": false
+    },
+    "dae": {
+      "alwaysActive": false,
+      "activeEquipped": true
+    },
+    "midi-qol": {
+      "removeAttackDamageButtons": "default",
+      "forceCEOff": true
+    },
+    "midiProperties": {
+      "confirmTargets": "default"
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": [],
+        "effect": []
+      }
+    }
+  },
+  "img": "https://assets.forge-vtt.com/62a789ff2ad2c8c6527f9481/ddb-images/other/item/weapon/2014-dmg-sword-of-kas.webp",
+  "folder": "uv3eR17lHfPyLSGf",
+  "_stats": {
+    "compendiumSource": "Compendium.u-tian-de-tuttu-emil-definitive-edition.object-2014-2024.Item.jpBVXUOn9d3XbYgr",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.f4pl4nKvo6pk2Pxm",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784117676229,
+    "modifiedTime": 1784117676229,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}
