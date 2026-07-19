@@ -46,6 +46,58 @@ export const BYPASS_LABELS = {
   adamantine: 'solo non adamantio',
 };
 
+// Armi base dnd5e (system.type.baseItem) con la loro categoria
+// (system.type.value: simpleM/simpleR/martialM/martialR/natural).
+// Scegliendo l'arma base, Foundry sa già competenza, mastery ammesse, ecc.
+export const WEAPON_TYPES = [
+  { id: '', cat: 'natural', it: 'Arma naturale / generica', en: 'Natural / generic' },
+  // Simple melee
+  { id: 'club', cat: 'simpleM', it: 'Clava', en: 'Club' },
+  { id: 'dagger', cat: 'simpleM', it: 'Pugnale', en: 'Dagger' },
+  { id: 'greatclub', cat: 'simpleM', it: 'Randello', en: 'Greatclub' },
+  { id: 'handaxe', cat: 'simpleM', it: 'Ascia da lancio', en: 'Handaxe' },
+  { id: 'javelin', cat: 'simpleM', it: 'Giavellotto', en: 'Javelin' },
+  { id: 'lighthammer', cat: 'simpleM', it: 'Martello leggero', en: 'Light hammer' },
+  { id: 'mace', cat: 'simpleM', it: 'Mazza', en: 'Mace' },
+  { id: 'quarterstaff', cat: 'simpleM', it: 'Bastone ferrato', en: 'Quarterstaff' },
+  { id: 'sickle', cat: 'simpleM', it: 'Falcetto', en: 'Sickle' },
+  { id: 'spear', cat: 'simpleM', it: 'Lancia', en: 'Spear' },
+  // Simple ranged
+  { id: 'dart', cat: 'simpleR', it: 'Dardo', en: 'Dart' },
+  { id: 'lightcrossbow', cat: 'simpleR', it: 'Balestra leggera', en: 'Light crossbow' },
+  { id: 'shortbow', cat: 'simpleR', it: 'Arco corto', en: 'Shortbow' },
+  { id: 'sling', cat: 'simpleR', it: 'Fionda', en: 'Sling' },
+  // Martial melee
+  { id: 'battleaxe', cat: 'martialM', it: 'Ascia da battaglia', en: 'Battleaxe' },
+  { id: 'flail', cat: 'martialM', it: 'Mazzafrusto', en: 'Flail' },
+  { id: 'glaive', cat: 'martialM', it: 'Glaive', en: 'Glaive' },
+  { id: 'greataxe', cat: 'martialM', it: 'Ascia bipenne', en: 'Greataxe' },
+  { id: 'greatsword', cat: 'martialM', it: 'Spadone', en: 'Greatsword' },
+  { id: 'halberd', cat: 'martialM', it: 'Alabarda', en: 'Halberd' },
+  { id: 'lance', cat: 'martialM', it: 'Lancia da cavaliere', en: 'Lance' },
+  { id: 'longsword', cat: 'martialM', it: 'Spada lunga', en: 'Longsword' },
+  { id: 'maul', cat: 'martialM', it: 'Maglio', en: 'Maul' },
+  { id: 'morningstar', cat: 'martialM', it: 'Mazza chiodata', en: 'Morningstar' },
+  { id: 'pike', cat: 'martialM', it: 'Picca', en: 'Pike' },
+  { id: 'rapier', cat: 'martialM', it: 'Stocco', en: 'Rapier' },
+  { id: 'scimitar', cat: 'martialM', it: 'Scimitarra', en: 'Scimitar' },
+  { id: 'shortsword', cat: 'martialM', it: 'Spada corta', en: 'Shortsword' },
+  { id: 'trident', cat: 'martialM', it: 'Tridente', en: 'Trident' },
+  { id: 'warpick', cat: 'martialM', it: 'Piccone da guerra', en: 'War pick' },
+  { id: 'warhammer', cat: 'martialM', it: 'Martello da guerra', en: 'Warhammer' },
+  { id: 'whip', cat: 'martialM', it: 'Frusta', en: 'Whip' },
+  // Martial ranged
+  { id: 'blowgun', cat: 'martialR', it: 'Cerbottana', en: 'Blowgun' },
+  { id: 'handcrossbow', cat: 'martialR', it: 'Balestra a mano', en: 'Hand crossbow' },
+  { id: 'heavycrossbow', cat: 'martialR', it: 'Balestra pesante', en: 'Heavy crossbow' },
+  { id: 'longbow', cat: 'martialR', it: 'Arco lungo', en: 'Longbow' },
+  { id: 'net', cat: 'martialR', it: 'Rete', en: 'Net' },
+];
+
+// Maestrie d'arma (Weapon Mastery) — regole 2024. Il sistema le ignora in
+// automatico con le regole 2014, quindi le mostriamo sempre con una nota.
+export const WEAPON_MASTERIES = ['', 'cleave', 'graze', 'nick', 'push', 'sap', 'slow', 'topple', 'vex'];
+
 export const CONDITIONS = [
   'blinded', 'charmed', 'deafened', 'exhaustion', 'frightened', 'grappled',
   'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone',

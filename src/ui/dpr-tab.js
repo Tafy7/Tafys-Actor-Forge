@@ -53,11 +53,15 @@ function recompute() {
 
 /** Grafico DPR-vs-CA in SVG puro (niente librerie): curva + marker sulla CA scelta. */
 function drawChart(curve, currentAc) {
-  const W = 380, H = 210, padL = 34, padB = 24, padT = 10, padR = 10;
-  const maxDpr = Math.max(1, ...curve.map(p => p.dpr));
+  // padT ampio e "headroom" del 18% sopra il massimo: così una curva PIATTA
+  // (tipico delle azioni a solo TS, che non dipendono dalla CA) non finisce
+  // schiacciata sul bordo superiore con l'etichetta tagliata fuori.
+  const W = 380, H = 220, padL = 36, padB = 40, padT = 20, padR = 12;
+  const dataMax = Math.max(1, ...curve.map(p => p.dpr)); // per le etichette dell'asse
+  const top = dataMax * 1.18;                            // per la scala verticale
   const a0 = curve[0].ac, a1 = curve[curve.length - 1].ac;
   const X = (ac) => padL + (ac - a0) / (a1 - a0) * (W - padL - padR);
-  const Y = (dpr) => H - padB - dpr / maxDpr * (H - padB - padT);
+  const Y = (dpr) => H - padB - dpr / top * (H - padB - padT);
   const pts = curve.map(p => `${X(p.ac).toFixed(1)},${Y(p.dpr).toFixed(1)}`).join(' ');
   const cur = curve.find(p => p.ac === currentAc);
   const marker = cur ? `
@@ -65,11 +69,11 @@ function drawChart(curve, currentAc) {
     <circle cx="${X(cur.ac)}" cy="${Y(cur.dpr)}" r="4" class="dpr-dot" />
     <text x="${X(cur.ac)}" y="${Y(cur.dpr) - 8}" class="dpr-lbl" text-anchor="middle">${cur.dpr.toFixed(1)}</text>` : '';
   const yTicks = [0, 0.5, 1].map(f => {
-    const v = maxDpr * f;
-    return `<text x="${padL - 5}" y="${Y(v) + 3}" class="dpr-axis" text-anchor="end">${v.toFixed(0)}</text>`;
+    const v = dataMax * f;
+    return `<text x="${padL - 6}" y="${Y(v) + 3}" class="dpr-axis" text-anchor="end">${v.toFixed(0)}</text>`;
   }).join('');
   const xTicks = [a0, Math.round((a0 + a1) / 2), a1].map(ac =>
-    `<text x="${X(ac)}" y="${H - padB + 14}" class="dpr-axis" text-anchor="middle">${ac}</text>`).join('');
+    `<text x="${X(ac)}" y="${H - padB + 15}" class="dpr-axis" text-anchor="middle">${ac}</text>`).join('');
   document.getElementById('dpr-chart').innerHTML = `
     <svg viewBox="0 0 ${W} ${H}" class="dpr-svg">
       <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" class="dpr-axisline" />
@@ -77,7 +81,7 @@ function drawChart(curve, currentAc) {
       ${yTicks}${xTicks}
       <polyline points="${pts}" class="dpr-curve" />
       ${marker}
-      <text x="${(W) / 2}" y="${H - 2}" class="dpr-axis" text-anchor="middle">${t('dpr_x')}</text>
+      <text x="${(padL + W - padR) / 2}" y="${H - 6}" class="dpr-axis dpr-axis-title" text-anchor="middle">${t('dpr_x')}</text>
     </svg>`;
 }
 

@@ -581,3 +581,174 @@ export const EFFECT_BASE = {
   "tint": "#ffffff",
   "sort": 0
 };
+
+
+// GENERATE dai golden equipment (Bracers of Defense) e consumable (Potion),
+// svuotate. Basi per gli Item STANDALONE della Tab Item (Fase 6). Non modificare a mano.
+export const EQUIPMENT_BASE = {
+  "name": "",
+  "type": "equipment",
+  "effects": [],
+  "system": {
+    "activities": {},
+    "uses": {
+      "spent": null,
+      "recovery": [],
+      "max": ""
+    },
+    "description": {
+      "value": "",
+      "chat": ""
+    },
+    "identifier": "",
+    "source": {
+      "custom": "",
+      "book": "",
+      "page": "",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "identified": false,
+    "unidentified": {
+      "description": ""
+    },
+    "container": null,
+    "quantity": 1,
+    "weight": {
+      "value": 0,
+      "units": "lb"
+    },
+    "price": {
+      "value": 0,
+      "denomination": "gp"
+    },
+    "rarity": "",
+    "attunement": "",
+    "attuned": false,
+    "equipped": false,
+    "armor": {
+      "value": null,
+      "dex": null
+    },
+    "proficient": null,
+    "properties": [],
+    "strength": 0,
+    "type": {
+      "value": "trinket",
+      "baseItem": ""
+    },
+    "crew": {
+      "value": []
+    }
+  },
+  "flags": {},
+  "img": "icons/svg/item-bag.svg",
+  "folder": null,
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null,
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "lastModifiedBy": null,
+    "createdTime": null,
+    "modifiedTime": null
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_id": ""
+};
+
+export const CONSUMABLE_BASE = {
+  "name": "",
+  "type": "consumable",
+  "effects": [],
+  "system": {
+    "activities": {},
+    "uses": {
+      "spent": 0,
+      "max": "",
+      "recovery": [],
+      "autoDestroy": true
+    },
+    "description": {
+      "value": "",
+      "chat": ""
+    },
+    "identifier": "",
+    "source": {
+      "custom": "",
+      "book": "",
+      "page": "",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "identified": true,
+    "unidentified": {
+      "description": ""
+    },
+    "container": null,
+    "quantity": 1,
+    "weight": {
+      "value": 0,
+      "units": "lb"
+    },
+    "price": {
+      "value": 0,
+      "denomination": "gp"
+    },
+    "rarity": "",
+    "attunement": "",
+    "attuned": false,
+    "equipped": false,
+    "damage": {
+      "base": {
+        "types": [],
+        "custom": {
+          "enabled": false
+        },
+        "scaling": {
+          "number": 1
+        }
+      },
+      "versatile": {
+        "types": [],
+        "custom": {
+          "enabled": false
+        },
+        "scaling": {
+          "number": 1
+        }
+      }
+    },
+    "properties": [],
+    "type": {
+      "value": "potion",
+      "subtype": ""
+    }
+  },
+  "flags": {},
+  "img": "icons/consumables/potions/potion-tube-corked-orange.webp",
+  "folder": null,
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null,
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "lastModifiedBy": null,
+    "createdTime": null,
+    "modifiedTime": null
+  },
+  "ownership": {
+    "default": 0
+  },
+  "sort": 0,
+  "_id": ""
+};

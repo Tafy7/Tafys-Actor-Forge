@@ -75,10 +75,18 @@ function buildConditionEffect(condition, rounds, itemName) {
   eff.name = `${itemName}: ${condition}`;
   eff.img = conditionIcon(condition);
   eff.statuses = [condition];
-  // forceCEOff: dice a Midi-QOL di NON applicare anche la versione
-  // "Convenient Effects" della condizione, altrimenti il bersaglio la
-  // riceve DUE volte (la nostra + quella di CE). Tutti i golden template
-  // (Bracers, Cloak, Sword of Zariel "Status: Blinded") ce l'hanno.
+  eff.transfer = false;
+  // ⚠ Anti-doppione: replichiamo ESATTAMENTE il golden "Status: Blinded"
+  // della Spada di Zariel (unico golden reale che applica una condizione a
+  // un bersaglio da un attacco). Due meccanismi vanno impostati insieme,
+  // altrimenti il bersaglio riceve la condizione DUE volte:
+  //   1) flags['midi-qol'].forceCEOff = true → Midi NON aggiunge anche la
+  //      versione "Convenient Effects"/DFreds omonima della condizione;
+  //   2) flags.dae.stackable = 'noneNameOnly' → DAE non impila due effetti
+  //      con lo stesso nome (blocca il secondo se per qualsiasi motivo
+  //      l'effetto viene riapplicato), e transfer:false esplicito perché
+  //      NON è un buff permanente ma va sul bersaglio via activity.
+  eff.flags.dae = { transfer: false, stackable: 'noneNameOnly', specialDuration: [] };
   eff.flags['midi-qol'] = { forceCEOff: true };
   const n = Number(rounds) || 0;
   if (n > 0) eff.duration = { rounds: n, startTime: null, combat: null };

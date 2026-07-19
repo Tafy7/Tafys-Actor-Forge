@@ -11,7 +11,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.17</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.19</p>
       </div>
       <button type="button" id="btn-lang" class="lang-btn" data-i18n-title="langLabel" title="Lingua">EN</button>
     </div>
@@ -19,6 +19,7 @@
 
   <nav class="tabs" id="tabs">
     <button type="button" class="tab active" data-tab="npc" data-i18n="tab_npc">🐲 Mostro / NPC</button>
+    <button type="button" class="tab" data-tab="item" data-i18n="tab_item">🎒 Oggetto</button>
     <button type="button" class="tab" data-tab="dpr" data-i18n="tab_dpr">📊 Calcolatore DPR</button>
   </nav>
 
@@ -192,6 +193,30 @@
       </div>
       <pre id="preview"></pre>
     </aside>
+    </section>
+
+    <!-- ===== Tab: oggetto standalone (arma/equip/consumabile/feature) ===== -->
+    <section class="tab-panel npc-grid" id="tab-item" hidden>
+      <form id="item-form" autocomplete="off">
+        <fieldset>
+          <legend><span data-i18n="tab_item">🎒 Oggetto</span></legend>
+          <div id="item-form-body"><!-- generato da item-tab.js --></div>
+        </fieldset>
+      </form>
+      <aside>
+        <div class="aside-fixed">
+          <div class="btn-row main-actions">
+            <button type="button" id="item-export" data-i18n="it_export">⬇️ Esporta oggetto</button>
+            <button type="button" id="item-batch" class="secondary small" data-i18n="it_batch">➕ Aggiungi alla collezione</button>
+          </div>
+          <span id="item-warn"></span>
+          <div class="preview-head">
+            <h2 data-i18n="it_preview_title">Anteprima JSON oggetto</h2>
+            <button type="button" id="item-copy" class="secondary small" data-i18n="btn_copy" data-i18n-title="title_copypreview" title="Copia tutto il JSON negli appunti">📋 Copia</button>
+          </div>
+        </div>
+        <pre id="item-preview"></pre>
+      </aside>
     </section>
 
     <!-- ===== Tab: calcolatore DPR ===== -->

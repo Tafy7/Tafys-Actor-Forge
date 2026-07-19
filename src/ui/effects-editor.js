@@ -13,7 +13,7 @@
 //   data-eff-add / data-eff-remove / data-chg-add / data-chg-remove → bottoni
 //   data-eff-add-preset → select "effetto pronto da un click"
 // ============================================================
-import { CHANGE_KEYS, CHANGE_MODES, EFFECT_PRESETS } from '../data/effect-keys.js';
+import { CHANGE_KEYS, CHANGE_MODES, EFFECT_PRESETS, presetById, keyDefaults } from '../data/effect-keys.js';
 import { t } from '../i18n.js';
 
 /** Descrittore di un nuovo effetto vuoto (parte con una riga di modifica). */
@@ -109,6 +109,53 @@ function effectCardHtml(e, j, forcePassive) {
       <button type="button" class="secondary small" data-chg-add>${t('ef_change_add')}</button>
     </div>
   </div>`;
+}
+
+/**
+ * Gestore CONDIVISO degli eventi della sezione effetti su UN item.
+ * Lo usa la Tab Item (e in futuro chiunque riusi effectsSectionHtml) senza
+ * duplicare la logica. NON tocca items-editor.js (che ha la sua copia
+ * storica, per non rischiare la scheda NPC già in produzione).
+ * `item` deve avere un array `item.effects`. Ritorna:
+ *   { handled, structural } — structural:true = serve ridisegnare.
+ */
+export function applyEffectsEvent(item, ev) {
+  const ds = ev.target.dataset;
+  const effEl = ev.target.closest('[data-eidx]');
+  const eff = effEl ? item.effects[Number(effEl.dataset.eidx)] : null;
+
+  if ('effAddPreset' in ds) {
+    const p = presetById(ev.target.value);
+    if (p) item.effects.push({ ...newEffect(), name: p.name, application: p.application, changes: JSON.parse(JSON.stringify(p.changes)) });
+    return { handled: true, structural: true };
+  }
+  if ('effAdd' in ds) { item.effects.push(newEffect()); return { handled: true, structural: true }; }
+  if ('effRemove' in ds) { item.effects.splice(Number(ds.effRemove), 1); return { handled: true, structural: true }; }
+  if ('chgAdd' in ds && eff) { eff.changes.push(newChange()); return { handled: true, structural: true }; }
+  if ('chgRemove' in ds && eff) { eff.changes.splice(Number(ds.chgRemove), 1); return { handled: true, structural: true }; }
+
+  if (ds.cf && eff) {
+    const row = ev.target.closest('[data-cidx]');
+    const c = eff.changes[Number(row.dataset.cidx)];
+    c[ds.cf] = ev.target.value;
+    // Scelta chiave nota: imposta mode/priorità di default aggiornando i
+    // campi vicini SENZA ridisegnare (così non si perde il focus).
+    if (ds.cf === 'key') {
+      const def = keyDefaults(ev.target.value);
+      if (def) {
+        c.mode = def.mode;
+        if (!String(c.priority).trim()) c.priority = def.priority;
+        row.querySelector('[data-cf="mode"]').value = String(def.mode);
+        row.querySelector('[data-cf="priority"]').value = String(c.priority);
+      }
+    }
+    return { handled: true, structural: false };
+  }
+  if (ds.ef && eff) {
+    eff[ds.ef] = ev.target.value;
+    return { handled: true, structural: ds.ef === 'application' };
+  }
+  return { handled: false, structural: false };
 }
 
 /**

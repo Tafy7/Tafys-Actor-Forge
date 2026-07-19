@@ -4,6 +4,7 @@ import { buildNpc, parseCR, validateNpc } from '../src/builders/npc.js';
 import { parseDamageParts } from '../src/builders/item.js';
 import { validateActor, looksLikeValidFormula } from '../src/builders/validate.js';
 import { parseDamageExpr, hitChance, totalDPR, attacksFromMonster } from '../src/tools/dpr.js';
+import { buildStandaloneItem, validateStandaloneItem } from '../src/builders/standalone-item.js';
 import { readFileSync } from 'node:fs';
 
 const sample = {
@@ -269,6 +270,107 @@ check('attacksFromMonster: Coda atkBonus = mod4 + prof3 = 7, @mod risolto',
   dprMon[0].atkBonus === 7 && dprMon[0].dice.includes('2d8 + 4'));
 check('attacksFromMonster: Soffio riconosciuto come save (CD 15, metà)',
   dprMon[1].type === 'save' && dprMon[1].atkBonus === 15 && dprMon[1].half === true);
+
+// --- Fase 6: Item standalone (builders/standalone-item.js) ---
+console.log('\n— Item standalone —');
+
+// Golden rule: la base di ogni tipo deve avere le stesse chiavi di system
+// del rispettivo golden template — nessuna chiave inventata, nessuna persa.
+// Confrontiamo le chiavi di primo livello di system tra la base e l'output.
+function topKeys(o) { return Object.keys(o).sort().join(','); }
+
+// A) Arma magica con attacco: rarità/sintonia/proprietà mgc + attività.
+const wpn = buildStandaloneItem({
+  itemType: 'weapon', name: 'Spada Fiammeggiante', img: 'icons/weapons/swords/sword-flame.webp',
+  description: 'Una lama avvolta dalle fiamme.', rarity: 'rare', attunement: 'required', magical: true,
+  kind: 'attack', activation: 'action', attackType: 'melee', ability: 'str', reach: '5',
+  damage: '1d8 + @mod slashing, 2d6 fire', usesMode: 'none', effects: [],
+});
+check('item arma: type weapon', wpn.type === 'weapon');
+check('item arma: rarità raro + sintonia richiesta', wpn.system.rarity === 'rare' && wpn.system.attunement === 'required');
+check('item arma: proprietà magica (mgc)', wpn.system.properties.includes('mgc'));
+check('item arma: ha 1 attività (attack)', Object.keys(wpn.system.activities).length === 1);
+check('item arma: _id assegnato', typeof wpn._id === 'string' && wpn._id.length > 0);
+check('item arma: identifier slug dal nome', wpn.system.identifier === 'spada-fiammeggiante');
+check('item arma: immagine mantenuta', wpn.img === 'icons/weapons/swords/sword-flame.webp');
+
+// B) Equipaggiamento passivo con effetto DAE transfer + valore armatura.
+const eqp = buildStandaloneItem({
+  itemType: 'equipment', name: 'Bracciali della Difesa', magical: true, rarity: 'rare', attunement: 'required',
+  armorValue: '2', kind: 'passive',
+  effects: [{ name: '+2 CA', application: 'passive', rounds: '', img: '', changes: [{ key: 'system.attributes.ac.bonus', mode: 2, value: '2', priority: '' }] }],
+});
+check('item equip: type equipment', eqp.type === 'equipment');
+check('item equip: valore armatura impostato', eqp.system.armor && eqp.system.armor.value === 2);
+check('item equip: effetto passivo transfer:true', eqp.effects.length === 1 && eqp.effects[0].transfer === true);
+check('item equip: nessuna attività (tratto passivo)', Object.keys(eqp.system.activities).length === 0);
+
+// C) Consumabile con usi limitati e attività a TS.
+const pot = buildStandaloneItem({
+  itemType: 'consumable', name: 'Pozione del Fuoco', magical: true, rarity: 'uncommon',
+  kind: 'save', activation: 'action', saveAbility: 'dex', dc: '13', onSave: 'half',
+  damage: '3d6 fire', usesMode: 'day', usesValue: '1', effects: [],
+});
+check('item consumabile: type consumable', pot.type === 'consumable');
+check('item consumabile: 1 uso al giorno (uses.max)', String(pot.system.uses.max) === '1');
+check('item consumabile: ha attività a TS', Object.keys(pot.system.activities).length === 1);
+
+// D) Validazione: nome obbligatorio, estensione immagine.
+check('validateStandaloneItem: nome mancante bloccato', validateStandaloneItem({ name: '' }).length > 0);
+check('validateStandaloneItem: nome valido passa', validateStandaloneItem({ name: 'X', img: 'icons/a.webp' }).length === 0);
+check('validateStandaloneItem: immagine senza estensione segnalata',
+  validateStandaloneItem({ name: 'X', img: 'https://sito.it/pagina' }).length > 0);
+
+// E) magical=false rimuove mgc dalle proprietà.
+const nonMagic = buildStandaloneItem({ itemType: 'weapon', name: 'Spada', magical: false, kind: 'attack', ability: 'str', damage: '1d8 slashing', effects: [] });
+check('item non magico: nessuna proprietà mgc', !nonMagic.system.properties.includes('mgc'));
+
+// --- Fase 6 v0.19: arma magica completa (golden Battleaxe come riferimento) ---
+console.log('\n— Arma magica: bonus/tipo/mastery/danno base —');
+const axe = buildStandaloneItem({
+  itemType: 'weapon', name: 'Ascia +2', magical: true, rarity: 'rare',
+  weaponBase: 'battleaxe', magicalBonus: '2', mastery: 'topple',
+  silvered: false, adamantine: false, unidentified: 'Un\'ascia dall\'aria antica.',
+  kind: 'attack', activation: 'action', attackType: 'melee', ability: 'str', reach: '5',
+  damage: '1d8 slashing', usesMode: 'none', effects: [],
+});
+check('arma: categoria martialM da battleaxe', axe.system.type.value === 'martialM' && axe.system.type.baseItem === 'battleaxe');
+check('arma: magicalBonus = "2"', axe.system.magicalBonus === '2');
+check('arma: mastery = topple', axe.system.mastery === 'topple');
+check('arma: danno base 1d8 slashing in system.damage.base', axe.system.damage.base.number === 1 && axe.system.damage.base.denomination === 8 && axe.system.damage.base.types.includes('slashing'));
+const axeAtk = Object.values(axe.system.activities).find(a => a.type === 'attack');
+check('arma: parti extra vuote, includeBase attivo', axeAtk.damage.parts.length === 0 && axeAtk.damage.includeBase === true);
+check('arma: descrizione non identificato salvata', /aria antica/.test(axe.system.unidentified.description));
+
+// Danno con parte extra (lama fiammeggiante): base + 1 parte extra.
+const flame = buildStandaloneItem({
+  itemType: 'weapon', name: 'Lama Fiammeggiante', magical: true, weaponBase: 'longsword',
+  kind: 'attack', activation: 'action', attackType: 'melee', ability: 'str', damage: '1d8 slashing, 2d6 fire', effects: [],
+});
+const flameAtk = Object.values(flame.system.activities).find(a => a.type === 'attack');
+check('lama: base 1d8 slashing, extra 2d6 fire in parts',
+  flame.system.damage.base.denomination === 8 && flameAtk.damage.parts.length === 1 && flameAtk.damage.parts[0].types.includes('fire'));
+
+// Materiali: argentata + adamantina → sil/ada nelle proprietà.
+const silAda = buildStandaloneItem({ itemType: 'weapon', name: 'X', magical: false, silvered: true, adamantine: true, kind: 'attack', ability: 'str', damage: '1d6 slashing', effects: [] });
+check('materiali: sil e ada presenti', silAda.system.properties.includes('sil') && silAda.system.properties.includes('ada'));
+
+// On-hit su arma: condizione con TS → seconda activity rider collegata.
+const onHitWpn = buildStandaloneItem({
+  itemType: 'weapon', name: 'Mazza Stordente', magical: true, weaponBase: 'mace',
+  kind: 'attack', activation: 'action', attackType: 'melee', ability: 'str', damage: '1d6 bludgeoning',
+  onHit: 'save', condition: 'stunned', condRounds: '1', riderSaveAbility: 'con', riderDc: '15', effects: [],
+});
+const acts = Object.values(onHitWpn.system.activities);
+check('on-hit arma: 2 activity (attacco + rider TS)', acts.length === 2);
+check('on-hit arma: effetto condizione stunned presente', onHitWpn.effects.some(e => e.statuses?.includes('stunned')));
+
+// --- Effetto condizione: forma allineata al golden "Status: Blinded" ---
+console.log('\n— Effetto condizione anti-doppione —');
+const condEff = onHitWpn.effects.find(e => e.statuses?.includes('stunned'));
+check('condizione: forceCEOff = true', condEff.flags['midi-qol']?.forceCEOff === true);
+check('condizione: dae.stackable = noneNameOnly', condEff.flags.dae?.stackable === 'noneNameOnly');
+check('condizione: dae.transfer = false, transfer top = false', condEff.flags.dae?.transfer === false && condEff.transfer === false);
 
 if (failures) {
   console.error(`\n${failures} test falliti.`);

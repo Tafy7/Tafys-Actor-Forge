@@ -1,13 +1,18 @@
 /*
  * ============================================================
- * Tafy's Actor Forge — Importer di Actor (macro Foundry VTT 13)
+ * Tafy's Actor Forge — Importer (macro Foundry VTT 13)
  * ============================================================
  * COME SI USA
  *  1. In Foundry: barra macro → nuova macro → Tipo: "Script".
  *  2. Incolla TUTTO questo codice, salva, trascina la macro sulla hotbar.
  *  3. Da ora, ogni volta che la lanci: si apre una finestra, incolli il
- *     JSON generato dal Forge (un mostro o un array di più mostri) e
- *     l'Actor viene creato subito, con dentro già attacchi ed effetti.
+ *     JSON generato dal Forge (un mostro, un oggetto, o un array misto) e
+ *     l'Actor / l'Item viene creato subito, con dentro già attacchi ed effetti.
+ *
+ * SMISTAMENTO Actor vs Item
+ *  Lo stesso file può contenere Actor (npc/character…) e Item standalone
+ *  (weapon/equipment/consumable/feat…). La macro li divide per `type` e crea
+ *  ciascun gruppo con la sua factory (Actor.createDocuments / Item.createDocuments).
  *
  * PERCHÉ UNA MACRO E NON L'"IMPORT DATA" NATIVO?
  *  - Import Data SOVRASCRIVE un documento già esistente: sei costretto a
@@ -23,14 +28,18 @@
   // deprecata). Vive sotto foundry.applications.api.
   const { DialogV2 } = foundry.applications.api;
 
+  // Tipi che sono Actor in dnd5e: tutto il resto (weapon, equipment,
+  // consumable, feat, spell, tool…) viene trattato come Item standalone.
+  const ACTOR_TYPES = new Set(["npc", "character", "vehicle", "group"]);
+
   // 1) Finestra con la casella dove incollare il JSON + cartella opzionale.
   const content = `
     <p>Incolla il JSON generato da <strong>Tafy's Actor Forge</strong>:
-    un singolo mostro, oppure un array <code>[ {…}, {…} ]</code> di più mostri.</p>
+    un mostro, un oggetto, oppure un array <code>[ {…}, {…} ]</code> misto.</p>
     <textarea name="payload" rows="12"
       style="width:100%; font-family:monospace; white-space:pre; overflow:auto;"></textarea>
     <label style="display:block; margin-top:.5rem;">
-      Cartella di destinazione (opzionale)
+      Cartella di destinazione (opzionale, solo per gli Actor)
       <input type="text" name="folder" placeholder="es. Avernus - Mostri" style="width:100%;" />
     </label>`;
 
@@ -39,7 +48,7 @@
   let choice;
   try {
     choice = await DialogV2.prompt({
-      window: { title: "Actor Forge — Importa Actor" },
+      window: { title: "Actor Forge — Importa" },
       position: { width: 560 },
       content,
       ok: {
@@ -74,42 +83,58 @@
       "Nel Forge usa il pulsante «Esporta JSON per Foundry»."
     );
   }
-  //    b) Sono davvero Actor (hanno name, type e system).
+  //    b) Sono documenti validi (hanno name, type e system).
   const invalid = list.filter((a) => !a || !a.name || !a.type || !a.system);
   if (invalid.length) {
     return ui.notifications.error(
-      `Actor Forge: ${invalid.length} elemento/i non sembrano Actor validi (manca name/type/system).`
+      `Actor Forge: ${invalid.length} elemento/i non validi (manca name/type/system).`
     );
   }
 
-  // 4) Cartella opzionale: la troviamo per nome o la creiamo.
+  // 4) Smistamento: Actor da una parte, Item standalone dall'altra.
+  const actors = list.filter((a) => ACTOR_TYPES.has(a.type));
+  const items = list.filter((a) => !ACTOR_TYPES.has(a.type));
+
+  // 5) Cartella opzionale (solo per gli Actor): la troviamo per nome o la creiamo.
   let folderId = null;
-  if (choice.folder) {
+  if (choice.folder && actors.length) {
     let folder = game.folders.find((f) => f.type === "Actor" && f.name === choice.folder);
     if (!folder) folder = await Folder.create({ name: choice.folder, type: "Actor" });
     folderId = folder.id;
   }
 
-  // 5) Prepariamo i dati per la creazione:
-  //    - togliamo l'_id dell'Actor → Foundry ne assegna uno nuovo ad ogni
-  //      import, così re-importare lo stesso file NON dà "id duplicato".
+  // 6) Prepariamo i dati per la creazione:
+  //    - togliamo l'_id del documento di primo livello → Foundry ne assegna
+  //      uno nuovo ad ogni import, così re-importare NON dà "id duplicato".
   //    - MANTENIAMO gli _id degli elementi interni (keepId sotto): attività
   //      ed effetti si riferiscono l'uno all'altro tramite _id (es. il rider
   //      del "morso di lupo" punta all'effetto col suo _id). Rigenerarli
   //      spezzerebbe quei collegamenti e l'automazione non partirebbe.
-  const toCreate = list.map((a) => {
+  const prep = (a, withFolder) => {
     const clone = foundry.utils.deepClone(a);
     delete clone._id;
-    if (folderId) clone.folder = folderId;
+    if (withFolder && folderId) clone.folder = folderId;
     return clone;
-  });
+  };
 
-  // 6) Creazione in blocco: createDocuments accetta un array e crea in un
-  //    colpo solo l'actor, gli item embedded e i loro effetti.
+  // 7) Creazione in blocco, un gruppo per classe di documento.
+  const created = [];
   try {
-    const created = await Actor.createDocuments(toCreate, { keepId: true });
+    if (actors.length) {
+      const madeA = await Actor.createDocuments(actors.map((a) => prep(a, true)), { keepId: true });
+      created.push(...madeA);
+    }
+    if (items.length) {
+      // Item standalone → finiscono negli "Items" del mondo, con dentro
+      // già attività ed effetti DAE (transfer per i tratti passivi).
+      const madeI = await Item.createDocuments(items.map((a) => prep(a, false)), { keepId: true });
+      created.push(...madeI);
+    }
     ui.notifications.info(
-      `Actor Forge: creati ${created.length} attori — ${created.map((a) => a.name).join(", ")}`
+      `Actor Forge: creati ${created.length} documenti` +
+      (actors.length ? ` · ${actors.length} attori` : "") +
+      (items.length ? ` · ${items.length} oggetti` : "") +
+      ` — ${created.map((d) => d.name).join(", ")}`
     );
     // Comodità: se ne hai importato uno solo, apriamo la sua scheda.
     if (created.length === 1) created[0].sheet.render(true);

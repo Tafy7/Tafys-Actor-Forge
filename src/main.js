@@ -6,6 +6,7 @@ import { buildNpc, validateNpc } from './builders/npc.js';
 import { validateActor } from './builders/validate.js';
 import { parseStatblock, emptyTemplate } from './parsers/statblock.js';
 import { initDprTab } from './ui/dpr-tab.js';
+import { initItemTab } from './ui/item-tab.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
 // La macro vive come vero file .js (lintabile), qui la copiamo solo negli appunti.
 import importerMacro from './foundry/import-actor.macro.js?raw';
@@ -414,6 +415,18 @@ function batchMsg(text) {
   if (text) setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 3000);
 }
 
+/**
+ * Aggiunge un documento GIÀ COSTRUITO e VALIDO alla collezione batch.
+ * La collezione è mista: può contenere sia Actor (dalla tab NPC) sia Item
+ * (dalla tab Oggetto). La macro importer smista per `type` in fase d'import.
+ */
+function pushDocToBatch(doc) {
+  batch.push(doc);
+  saveBatch();
+  updateBatchUI();
+  batchMsg(t('batch_added', { name: doc.name, n: batch.length }));
+}
+
 /** Aggiunge il mostro corrente alla collezione, ma solo se è valido. */
 function addToBatch() {
   const data = readForm();
@@ -433,10 +446,7 @@ function addToBatch() {
     batchMsg(t('batch_correct'));
     return;
   }
-  batch.push(actor);
-  saveBatch();
-  updateBatchUI();
-  batchMsg(t('batch_added', { name: actor.name, n: batch.length }));
+  pushDocToBatch(actor);
 }
 
 /** Scarica tutta la collezione come un array JSON, pronto per la macro. */
@@ -573,5 +583,9 @@ document.getElementById('tabs').addEventListener('click', (ev) => {
 });
 // Il calcolatore DPR legge il mostro corrente tramite readForm().
 initDprTab({ getData: readForm });
+
+// Tab Oggetto: crea Item standalone. Condivide la collezione batch con la
+// tab NPC (la macro importer smista Actor vs Item in fase d'import).
+initItemTab({ onAddToBatch: pushDocToBatch });
 
 renderPreview(); // prima anteprima
