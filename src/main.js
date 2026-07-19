@@ -5,6 +5,7 @@
 import { buildNpc, validateNpc } from './builders/npc.js';
 import { validateActor } from './builders/validate.js';
 import { parseStatblock, emptyTemplate } from './parsers/statblock.js';
+import { initDprTab } from './ui/dpr-tab.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
 // La macro vive come vero file .js (lintabile), qui la copiamo solo negli appunti.
 import importerMacro from './foundry/import-actor.macro.js?raw';
@@ -561,5 +562,16 @@ try {
   const saved = localStorage.getItem(DRAFT_KEY);
   if (saved) restoreForm(JSON.parse(saved));
 } catch { /* bozza corrotta: si riparte puliti */ }
+
+// Tab: mostra il pannello scelto, nasconde gli altri.
+document.getElementById('tabs').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('.tab');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('#tabs .tab').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.id !== `tab-${tab}`; });
+});
+// Il calcolatore DPR legge il mostro corrente tramite readForm().
+initDprTab({ getData: readForm });
 
 renderPreview(); // prima anteprima

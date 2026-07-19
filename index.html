@@ -11,13 +11,20 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.16.1</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.17</p>
       </div>
       <button type="button" id="btn-lang" class="lang-btn" data-i18n-title="langLabel" title="Lingua">EN</button>
     </div>
   </header>
 
+  <nav class="tabs" id="tabs">
+    <button type="button" class="tab active" data-tab="npc" data-i18n="tab_npc">🐲 Mostro / NPC</button>
+    <button type="button" class="tab" data-tab="dpr" data-i18n="tab_dpr">📊 Calcolatore DPR</button>
+  </nav>
+
   <main>
+    <!-- ===== Tab: generatore NPC (form + anteprima) ===== -->
+    <section class="tab-panel npc-grid" id="tab-npc">
     <!-- ===== Colonna sinistra: il form ===== -->
     <form id="npc-form" autocomplete="off">
 
@@ -185,6 +192,33 @@
       </div>
       <pre id="preview"></pre>
     </aside>
+    </section>
+
+    <!-- ===== Tab: calcolatore DPR ===== -->
+    <section class="tab-panel" id="tab-dpr" hidden>
+      <div class="dpr-wrap">
+        <div class="dpr-controls">
+          <h2 data-i18n="dpr_title">Calcolatore DPR</h2>
+          <p class="hint" data-i18n="dpr_intro">Danno medio per round: media dei dadi × probabilità di colpire (critici inclusi), sommato su tutti gli attacchi.</p>
+          <div class="btn-row" style="margin:0.4rem 0">
+            <button type="button" id="dpr-add" class="secondary small" data-i18n="dpr_add">➕ Attacco</button>
+            <button type="button" id="dpr-load" class="secondary small" data-i18n="dpr_load" data-i18n-title="dpr_load_title" title="Legge gli attacchi dal mostro nella scheda NPC">📥 Carica dal mostro</button>
+            <span id="dpr-msg" class="hint"></span>
+          </div>
+          <div id="dpr-rows"></div>
+          <div class="dpr-targets">
+            <label><span data-i18n="dpr_ac">CA bersaglio</span> <input type="number" id="dpr-ac" value="15" /></label>
+            <label><span data-i18n="dpr_ts">TS bersaglio</span> <input type="number" id="dpr-save" value="3" title="Bonus al tiro salvezza del bersaglio (per le azioni a TS)" /></label>
+          </div>
+          <div class="dpr-result"><span data-i18n="dpr_total">DPR totale</span>: <strong id="dpr-out">—</strong></div>
+        </div>
+        <div class="dpr-chart-box">
+          <h3 data-i18n="dpr_chart_title">DPR vs CA</h3>
+          <div id="dpr-chart"></div>
+          <p class="hint" data-i18n="dpr_chart_hint">La curva mostra come cambia il DPR al variare della CA del bersaglio; il punto rosso è la CA scelta.</p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script type="module" src="./src/main.js"></script>

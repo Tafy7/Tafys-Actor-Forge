@@ -3,6 +3,7 @@
 import { buildNpc, parseCR, validateNpc } from '../src/builders/npc.js';
 import { parseDamageParts } from '../src/builders/item.js';
 import { validateActor, looksLikeValidFormula } from '../src/builders/validate.js';
+import { parseDamageExpr, hitChance, totalDPR, attacksFromMonster } from '../src/tools/dpr.js';
 import { readFileSync } from 'node:fs';
 
 const sample = {
@@ -233,6 +234,41 @@ check('formula: vuota lecita (opzionale)', looksLikeValidFormula(''));
 const sabE = structuredClone(actor); sabE.system.attributes.hp.formula = '16d10 + aa64a';
 check('validateActor: avviso su formula HP sbagliata',
   validateActor(sabE).some(i => i.level === 'warn' && /Formula HP/.test(i.msg)));
+
+// --- Fase 6: calcolatore DPR (tools/dpr.js) ---
+console.log('\n— Calcolatore DPR —');
+const de = parseDamageExpr('2d8 + 4 piercing, 8d8 fire');
+check('parseDamageExpr: dadi sommati (2d8+8d8=45), flat 4', de.diceAvg === 45 && de.flat === 4);
+check('parseDamageExpr ignora i tipi di danno', parseDamageExpr('1d10 + 4 slashing').diceAvg === 5.5);
+check('hitChance CA16 +7 = 0.6', hitChance(16, 7) === 0.6);
+check('hitChance cap: max 0.95 (nat1 manca sempre), min 0.05 (nat20 colpisce)',
+  hitChance(5, 20) === 0.95 && hitChance(30, 0) === 0.05);
+
+// Esempio della guida utente (Morso 1d10+4 +7, Artigli 2d6+3 +5, CA 16):
+// senza crit = 10.70; coi crit (nostra aggiunta) ~11.33.
+const dprRows = [
+  { name: 'Morso', type: 'attack', dice: '1d10 + 4', atkBonus: 7, count: 1, critChance: 0 },
+  { name: 'Artigli', type: 'attack', dice: '2d6 + 3', atkBonus: 5, count: 1, critChance: 0 },
+];
+check('totalDPR senza crit = 10.70 (come il calcolatore di riferimento)',
+  Math.abs(totalDPR(dprRows, 16) - 10.7) < 0.001);
+const dprCrit = dprRows.map(r => ({ ...r, critChance: 0.05 }));
+check('totalDPR coi crit ≈ 11.33 (> versione senza crit)',
+  totalDPR(dprCrit, 16) > 11.3 && totalDPR(dprCrit, 16) < 11.35);
+check('DPR scala con la CA (CA20 < CA10)', totalDPR(dprRows, 20) < totalDPR(dprRows, 10));
+
+// Lettura dal mostro: risolve @mod (str 18 → +4) e prof da CR (5 → +3).
+const dprMon = attacksFromMonster({
+  cr: '5', str: '18', con: '16',
+  items: [
+    { kind: 'attack', name: 'Coda', ability: 'str', damage: '2d8 + @mod piercing' },
+    { kind: 'save', name: 'Soffio', saveAbility: 'con', dc: '15', onSave: 'half', damage: '8d6 fire' },
+  ],
+});
+check('attacksFromMonster: Coda atkBonus = mod4 + prof3 = 7, @mod risolto',
+  dprMon[0].atkBonus === 7 && dprMon[0].dice.includes('2d8 + 4'));
+check('attacksFromMonster: Soffio riconosciuto come save (CD 15, metà)',
+  dprMon[1].type === 'save' && dprMon[1].atkBonus === 15 && dprMon[1].half === true);
 
 if (failures) {
   console.error(`\n${failures} test falliti.`);
