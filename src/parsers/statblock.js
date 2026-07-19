@@ -133,7 +133,10 @@ const DIST = "(\\d+(?:[.,]\\d+)?)\\s*(ft|m)\\b";
 function normalizeText(raw) {
   return String(raw || '')
     .replace(/\r/g, '')
-    .replace(/[–—]/g, '-')      // en/em dash → trattino
+    // en-dash (–), em-dash (—) E il SEGNO MENO Unicode (−, U+2212) → trattino ASCII.
+    // Il 2024 usa il vero segno meno per i modificatori negativi (DEX 8 −1): senza
+    // questa conversione la regex [+-] non lo riconosce e le caratteristiche falliscono.
+    .replace(/[–—−]/g, '-')
     .replace(/[‘’]/g, "'")      // apostrofi curvi
     .replace(/[“”]/g, '"')
     .replace(/ﬁ/g, 'fi').replace(/ﬂ/g, 'fl') // legature ﬁ ﬂ
@@ -146,7 +149,10 @@ function normalizeText(raw) {
 // ATTENZIONE: niente \b dopo le parole accentate! Il \b di JavaScript è
 // ASCII-only: dopo la "à" di "Velocità" non c'è boundary e il match
 // fallirebbe in silenzio. Usiamo un lookahead su spazio/fine riga.
-const LABEL_RE = /^(Armor Class|Hit Points|Speed|Saving Throws|Skills|Damage Resistances|Damage Immunities|Damage Vulnerabilities|Condition Immunities|Senses|Languages|Challenge|Proficiency Bonus|Classe Armatura|Punti Ferita|Velocità|Tiri Salvezza|Competenze|Abilità|Resistenze ai Danni|Immunità ai Danni|Vulnerabilità ai Danni|Immunità alle Condizioni|Sensi|Lingue|Linguaggi|Sfida|Bonus di Competenza)(?=\s|$)/i;
+// Include sia il formato 2014 (Armor Class, Hit Points, Challenge...) sia il
+// 2024 (sigle corte: AC, HP, CR, Initiative, e "Immunities" che unisce danni
+// e condizioni). L'ordine non conta perché ogni voce è ancorata con (?=\s|$).
+const LABEL_RE = /^(Armor Class|Hit Points|Speed|Saving Throws|Skills|Damage Resistances|Damage Immunities|Damage Vulnerabilities|Condition Immunities|Senses|Languages|Challenge|Proficiency Bonus|AC|HP|Initiative|CR|Immunities|Resistances|Vulnerabilities|Gear|Classe Armatura|Punti Ferita|Velocità|Tiri Salvezza|Competenze|Abilità|Resistenze ai Danni|Immunità ai Danni|Vulnerabilità ai Danni|Immunità alle Condizioni|Sensi|Lingue|Linguaggi|Sfida|Bonus di Competenza|Iniziativa)(?=\s|$)/i;
 
 /**
  * Una riga è un'etichetta solo se INIZIA con la maiuscola: le righe
@@ -157,7 +163,8 @@ const LABEL_RE = /^(Armor Class|Hit Points|Speed|Saving Throws|Skills|Damage Res
 function isLabelLine(line) {
   return LABEL_RE.test(line) && /^[A-ZÀ-ÖØ-Þ]/.test(line);
 }
-const SECTION_RE = /^(Actions|Legendary Actions|Reactions|Bonus Actions|Lair Actions|Azioni|Azioni Leggendarie|Reazioni|Azioni Bonus|Azioni di Tana)\.?$/i;
+// Titoli di sezione, singolare/plurale (il 2024 usa "Bonus Action", "Trait").
+const SECTION_RE = /^(Actions?|Legendary Actions?|Reactions?|Bonus Actions?|Lair Actions?|Traits?|Azioni|Azioni Leggendarie|Reazioni|Azioni Bonus|Azioni di Tana|Tratti)\.?$/i;
 
 // Inizio di un tratto/azione: nome in Title Case (accenti inclusi, max 8
 // parole con particelle minuscole ammesse), usi tra parentesi, poi punto.
@@ -267,6 +274,22 @@ function parseAbilities(text, state, report) {
       return;
     }
   }
+  // Tentativo 3 (formato 2024): "STR 18 +4 +6" = sigla, punteggio, MOD, TS
+  // (senza parentesi, con colonna Mod e colonna Save). Se il TS è diverso dal
+  // mod, quella caratteristica è competente nel tiro salvezza.
+  const found3 = {};
+  const saves3 = [];
+  for (const m of text.matchAll(/\b(STR|DEX|CON|INT|WIS|CHA|FOR|DES|COS|SAG|CAR)\s+(\d+)\s+([+-]\d+)\s+([+-]\d+)/g)) {
+    const id = ABILITY_MAP[m[1].toLowerCase()];
+    found3[id] = m[2];
+    if (Number(m[3]) !== Number(m[4]) && !saves3.includes(id)) saves3.push(id);
+  }
+  if (Object.keys(found3).length === 6) {
+    Object.assign(state, found3);
+    if (saves3.length) state.saves = saves3;
+    report.ok.push('Caratteristiche + TS (formato 2024)');
+    return;
+  }
   report.warn.push('Caratteristiche non trovate: compilale a mano.');
 }
 
@@ -322,14 +345,18 @@ function cleanTraitList(value, itMap) {
 function parseLabelLine(line, state, report) {
   let m;
 
-  if ((m = line.match(/^(?:Armor Class|Classe Armatura)\s+(\d+)\s*(?:\(([^)]+)\))?/i))) {
-    // "natural armor"/"armatura naturale" → CA naturale; il resto → fissa.
+  // CA — 2014 "Armor Class 15 (natural armor)" e 2024 "AC 15" (a volte sulla
+  // stessa riga di "Initiative", che ignoriamo: prendiamo solo il primo numero).
+  if ((m = line.match(/^(?:Armor Class|Classe Armatura|AC)\s+(\d+)\s*(?:\(([^)]+)\))?/i))) {
     state.acFlat = m[1];
     state.acCalc = m[2] && /natural/i.test(m[2]) ? 'natural' : 'flat';
     report.ok.push(`CA ${m[1]}${m[2] ? ` (${m[2]})` : ''}`);
     return true;
   }
-  if ((m = line.match(/^(?:Hit Points|Punti Ferita)\s+(\d+)\s*(?:\(([^)]+)\))?/i))) {
+  // Iniziativa (2024): non serve, la calcola Foundry. La riconosciamo solo
+  // per non farla finire tra le righe ignorate.
+  if (/^(?:Initiative|Iniziativa)\b/i.test(line)) return true;
+  if ((m = line.match(/^(?:Hit Points|Punti Ferita|HP)\s+(\d+)\s*(?:\(([^)]+)\))?/i))) {
     state.hpMax = m[1];
     if (m[2]) state.hpFormula = m[2].trim();
     report.ok.push(`HP ${m[1]}`);
@@ -367,6 +394,33 @@ function parseLabelLine(line, state, report) {
   if ((m = line.match(/^(?:Damage Immunities|Immunità ai Danni)\s+(.+)$/i))) { state.di = parseDamageList(m[1]); report.ok.push('Immunità ai danni'); return true; }
   if ((m = line.match(/^(?:Damage Vulnerabilities|Vulnerabilità ai Danni)\s+(.+)$/i))) { state.dv = parseDamageList(m[1]); report.ok.push('Vulnerabilità ai danni'); return true; }
   if ((m = line.match(/^(?:Condition Immunities|Immunità alle Condizioni)\s+(.+)$/i))) { state.ci = cleanTraitList(m[1], CONDITION_IT); report.ok.push('Immunità alle condizioni'); return true; }
+  // 2024: "Resistances" / "Vulnerabilities" (solo danni, forma corta).
+  if ((m = line.match(/^Resistances\s+(.+)$/i))) { state.dr = parseDamageList(m[1]); report.ok.push('Resistenze ai danni'); return true; }
+  if ((m = line.match(/^Vulnerabilities\s+(.+)$/i))) { state.dv = parseDamageList(m[1]); report.ok.push('Vulnerabilità ai danni'); return true; }
+  // 2024: "Immunities" UNICA riga che fonde danni e condizioni
+  // (es. "Poison; Exhaustion, Poisoned"). Smistiamo ogni voce: se è un tipo
+  // di danno → immunità danni; se è una condizione → immunità condizioni.
+  if ((m = line.match(/^Immunities\s+(.+)$/i))) {
+    const di = [], ci = [];
+    for (const raw of m[1].split(/[,;]/)) {
+      const tok = raw.trim();
+      if (!tok) continue;
+      const low = tok.toLowerCase();
+      // Danno: id inglese (DAMAGE_TYPE_LABELS) o italiano/aggettivo (DAMAGE_LIST_IT).
+      // Condizione: id inglese (CONDITION_LABELS) o italiano (CONDITION_IT).
+      // "poison" è danno, "poisoned" è condizione: parole distinte, nessun conflitto.
+      if (DAMAGE_TYPE_LABELS[low]) di.push(low);
+      else if (DAMAGE_LIST_IT[low]) di.push(DAMAGE_LIST_IT[low]);
+      else if (CONDITION_LABELS[low]) ci.push(low);
+      else if (CONDITION_IT[low]) ci.push(CONDITION_IT[low]);
+      else di.push(tok); // sconosciuto: lo lasciamo nei danni come custom
+    }
+    if (di.length) state.di = di.join(', ');
+    if (ci.length) state.ci = ci.join(', ');
+    report.ok.push('Immunità (danni + condizioni, formato 2024)');
+    return true;
+  }
+  if (/^Gear\b/i.test(line)) return true; // equipaggiamento: non serve nel form
   if ((m = line.match(/^(?:Senses|Sensi)\s+(.+)$/i))) {
     for (const [key, words] of [
       ['darkvision', 'darkvision|scurovisione'], ['blindsight', 'blindsight|vista cieca'],
@@ -386,7 +440,7 @@ function parseLabelLine(line, state, report) {
     report.ok.push('Lingue');
     return true;
   }
-  if ((m = line.match(/^(?:Challenge|Sfida)\s+([\d/]+)/i))) {
+  if ((m = line.match(/^(?:Challenge|Sfida|CR)\s+([\d/]+)/i))) {
     state.cr = m[1];
     report.ok.push(`CR ${m[1]}`);
     return true;
@@ -476,7 +530,11 @@ function extractDamage(body, report, label) {
 
 /** Trova il TS: "DC 13 Dexterity saving throw" / "tiro salvezza su Costituzione DC 12". */
 function findSave(body) {
-  let m = body.match(new RegExp(`DC\\s+(\\d+)\\s+(${ABILITY_WORDS})\\s+saving throw`, 'i'));
+  // 2024 EN: "Dexterity Saving Throw: DC 14" (caratteristica PRIMA del DC).
+  let m = body.match(new RegExp(`(${ABILITY_WORDS})\\s+Saving Throw:\\s*DC\\s*(\\d+)`, 'i'));
+  if (m) return { dc: m[2], ability: ABILITY_MAP[m[1].toLowerCase()] };
+  // 2014 EN: "DC 13 Dexterity saving throw".
+  m = body.match(new RegExp(`DC\\s+(\\d+)\\s+(${ABILITY_WORDS})\\s+saving throw`, 'i'));
   if (m) return { dc: m[1], ability: ABILITY_MAP[m[2].toLowerCase()] };
   m = body.match(new RegExp(`tiro salvezza (?:su|di)\\s+(${ABILITY_WORDS})\\s+(?:DC|CD)\\s*(\\d+)`, 'i'));
   if (m) return { dc: m[2], ability: ABILITY_MAP[m[1].toLowerCase()] };
@@ -523,6 +581,17 @@ function findAttack(body) {
       isMelee: kind !== 'a distanza',
       isSpell: /incantesim/i.test(m[1]),
       toHit: Number(m[3]),
+    };
+  }
+  // Formato 2024: "Melee Attack Roll: +6" / "Ranged Attack Roll: +6"
+  // (niente più "Weapon/Spell ... to hit"). IT 2024: "Tiro per Colpire...".
+  m = body.match(/(Melee or Ranged|Melee|Ranged)\s+Attack Roll:\s*([+-]\d+)/i);
+  if (m) {
+    return {
+      both: /^Melee or Ranged$/i.test(m[1]),
+      isMelee: !/^Ranged$/i.test(m[1]),
+      isSpell: /Spell/i.test(body.slice(0, 60)),
+      toHit: Number(m[2]),
     };
   }
   return null;
@@ -619,7 +688,7 @@ function entryToItem(parsed, activation, state, report) {
     base.dc = save.dc;
     base.saveAbility = save.ability;
     base.damage = extractDamage(body, report, name);
-    base.onSave = /half as much|la metà|metà danni/i.test(body) ? 'half' : 'none';
+    base.onSave = /half as much|half damage|la metà|metà danni/i.test(body) ? 'half' : 'none';
     const condition = extractCondition(body);
     if (condition) {
       base.condition = condition;
@@ -647,11 +716,13 @@ function entryToItem(parsed, activation, state, report) {
 // ---------- Parser principale ----------
 
 const REGION_BY_SECTION = {
-  'actions': 'action', 'azioni': 'action',
-  'legendary actions': 'legendary', 'azioni leggendarie': 'legendary',
-  'reactions': 'reaction', 'reazioni': 'reaction',
-  'bonus actions': 'bonus', 'azioni bonus': 'bonus',
-  'lair actions': 'lair', 'azioni di tana': 'lair',
+  'actions': 'action', 'action': 'action', 'azioni': 'action',
+  'legendary actions': 'legendary', 'legendary action': 'legendary', 'azioni leggendarie': 'legendary',
+  'reactions': 'reaction', 'reaction': 'reaction', 'reazioni': 'reaction',
+  'bonus actions': 'bonus', 'bonus action': 'bonus', 'azioni bonus': 'bonus',
+  'lair actions': 'lair', 'lair action': 'lair', 'azioni di tana': 'lair',
+  // 2024: intestazione "Traits" esplicita (nel 2014 i tratti non hanno titolo).
+  'traits': 'traits', 'trait': 'traits', 'tratti': 'traits',
 };
 
 export function parseStatblock(raw) {
@@ -680,7 +751,7 @@ export function parseStatblock(raw) {
     // Righe statistiche etichettate.
     if (isLabelLine(entry)) {
       if (!parseLabelLine(entry, state, report)) report.skipped.push(entry);
-      if (/^(?:Challenge|Sfida)/i.test(entry)) region = 'traits';
+      if (/^(?:Challenge|Sfida|CR)\b/i.test(entry)) region = 'traits';
       continue;
     }
 

@@ -425,6 +425,83 @@ check('Gumiho: sottotipo "mutaforma" → Shapechanger', s7.subtype === 'Shapecha
 check('Gumiho: allineamento "caotico neutrale" → Chaotic Neutral', s7.alignment === 'Chaotic Neutral');
 check('Gumiho: riga tipo NON più ignorata', r7.skipped.length === 0);
 
+// ------------------------------------------------------------
+// Fixture 8 — Dolgrim (SRD 2014 EN): conferma che "Melee or Ranged", i
+// multi-attacco e i tratti con "advantage on saves" restano gestiti.
+// ------------------------------------------------------------
+const dolgrim = `
+Dolgrim
+Small aberration, chaotic evil
+Armor Class 15 (natural armor, shield)
+Hit Points 13 (3d6 + 3)
+Speed 30 ft.
+STR 15 (+2) DEX 14 (+2) CON 12 (+1) INT 8 (-1) WIS 10 (+0) CHA 8 (-1)
+Senses darkvision 60 ft., passive Perception 10
+Languages Deep Speech, Goblin
+Challenge 1/2 (100 XP)
+Actions
+Multiattack. The dolgrim makes three attacks.
+Morningstar. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 6 (1d8 + 2) piercing damage.
+Spear. Melee or Ranged Weapon Attack: +4 to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 (1d6 + 2) piercing damage.
+Hand Crossbow. Ranged Weapon Attack: +4 to hit, range 30/120 ft., one target. Hit: 5 (1d6 + 2) piercing damage.
+`;
+const { state: s8 } = parseStatblock(dolgrim);
+const it8 = s8.items || [];
+console.log('\n— Fixture EN 2014: Dolgrim —');
+check('Dolgrim: aberration/sm, CA 15 naturale', s8.creatureType === 'aberration' && s8.size === 'sm' && s8.acFlat === '15');
+check('Dolgrim: Morningstar attacco 1d8+2 piercing', it8.find(i => i.name === 'Morningstar')?.damage === '1d8 + 2 piercing');
+check('Dolgrim: Hand Crossbow attacco a distanza DEX', it8.find(i => i.name === 'Hand Crossbow')?.attackType === 'ranged');
+
+// ------------------------------------------------------------
+// Fixture 9 — Death's Head Tree (Ravenloft, formato 2024 EN): AC/HP/CR
+// corti, tabella caratteristiche Mod/Save, "Immunities" combinata,
+// "Melee Attack Roll", "Dexterity Saving Throw: DC", Bonus Action.
+// ------------------------------------------------------------
+const dht = `
+Death's Head Tree
+Huge Plant, Chaotic Evil
+AC 15 Initiative -1 (9)
+HP 95 (10d12 + 30)
+Speed 20 ft.
+STR 18 +4 +6
+DEX 8 −1 −1
+CON 16 +3 +3
+INT 5 −3 −3
+WIS 10 +0 +0
+CHA 13 +1 +1
+Immunities Poison; Exhaustion, Poisoned
+Senses Blindsight 120 ft.; Passive Perception 10
+Languages None
+CR 4 (XP 1,100; PB +2)
+Traits
+Overhanging Branches. The tree's allies can willingly end their moves in the tree's space.
+Actions
+Multiattack. The tree makes two Slam attacks.
+Slam. Melee Attack Roll: +6, reach 10 ft. Hit: 15 (2d10 + 4) Bludgeoning damage.
+Exploding Head. Dexterity Saving Throw: DC 14, each creature in a 10-foot-radius Sphere. Failure: 10 (3d6) Necrotic damage, and the creature has the Poisoned condition until the start of the tree's next turn. Success: Half damage only.
+Bonus Action
+Head Fruits. Each Undead ally in the tree's space can take a Reaction to gain 5 Temporary Hit Points.
+`;
+const { state: s9, report: r9 } = parseStatblock(dht);
+const it9 = s9.items || [];
+console.log('\n— Fixture EN 2024: Death\'s Head Tree —');
+check('2024: identità Huge Plant → plant/huge, Chaotic Evil', s9.creatureType === 'plant' && s9.size === 'huge' && s9.alignment === 'Chaotic Evil');
+check('2024: AC 15 (sigla corta), HP 95 (10d12 + 30)', s9.acFlat === '15' && s9.hpMax === '95' && s9.hpFormula === '10d12 + 30');
+check('2024: caratteristiche da tabella Mod/Save (con segno meno Unicode −)',
+  s9.str === '18' && s9.dex === '8' && s9.con === '16' && s9.int === '5' && s9.cha === '13');
+check('2024: TS competente dedotto (save≠mod → STR)', JSON.stringify(s9.saves) === JSON.stringify(['str']));
+check('2024: "Immunities" combinata → danni (poison) e condizioni (exhaustion, poisoned)',
+  s9.di === 'poison' && s9.ci === 'exhaustion, poisoned');
+check('2024: CR 4 (sigla corta)', s9.cr === '4');
+const slam = it9.find(i => i.name === 'Slam');
+check('2024: "Melee Attack Roll: +6" → attacco, 2d10+4 bludgeoning', slam?.kind === 'attack' && slam.damage === '2d10 + 4 bludgeoning');
+const eh = it9.find(i => i.name === 'Exploding Head');
+check('2024: "Dexterity Saving Throw: DC 14" → save DEX 14, 3d6 necrotic, metà, poisoned',
+  eh?.kind === 'save' && eh.saveAbility === 'dex' && eh.dc === '14' && eh.damage === '3d6 necrotic' && eh.onSave === 'half' && eh.condition === 'poisoned');
+check('2024: Bonus Action riconosciuta (Head Fruits)', it9.find(i => i.name === 'Head Fruits')?.activation === 'bonus');
+check('2024: tratto Overhanging Branches passivo', it9.find(i => i.name === 'Overhanging Branches')?.kind === 'passive');
+check('2024: nessuna riga ignorata', r9.skipped.length === 0);
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);
