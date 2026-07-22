@@ -224,6 +224,21 @@ fieldset.inner legend { font-size: 0.85rem; }
   overflow: auto;
 }
 
+/* Tab Incantesimo: riga componenti V/S/M compatta */
+.sp-comps { margin: 0.4rem 0; }
+.sp-comps .check { font-weight: 600; color: var(--accent-2); }
+#spell-warn { display: block; color: #ff9a8a; font-size: 0.85rem; margin: 0.3rem 0; }
+#spell-preview {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #c9f0c9;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
 /* Import da statblock (Fase 4) */
 #statblock-details summary { cursor: pointer; margin-bottom: 0.4rem; }
 #statblock-details summary:hover { color: var(--accent-2); }

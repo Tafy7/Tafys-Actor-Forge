@@ -7,6 +7,7 @@ import { validateActor } from './builders/validate.js';
 import { parseStatblock, emptyTemplate } from './parsers/statblock.js';
 import { initDprTab } from './ui/dpr-tab.js';
 import { initItemTab } from './ui/item-tab.js';
+import { initSpellTab } from './ui/spell-tab.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
 // La macro vive come vero file .js (lintabile), qui la copiamo solo negli appunti.
 import importerMacro from './foundry/import-actor.macro.js?raw';
@@ -587,5 +588,9 @@ initDprTab({ getData: readForm });
 // Tab Oggetto: crea Item standalone. Condivide la collezione batch con la
 // tab NPC (la macro importer smista Actor vs Item in fase d'import).
 initItemTab({ onAddToBatch: pushDocToBatch });
+
+// Tab Incantesimo: le spell sono Item di tipo 'spell' → la macro le
+// smista già su Item.createDocuments, nessuna modifica alla macro.
+initSpellTab({ onAddToBatch: pushDocToBatch });
 
 renderPreview(); // prima anteprima

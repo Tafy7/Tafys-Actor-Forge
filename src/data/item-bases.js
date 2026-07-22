@@ -752,3 +752,94 @@ export const CONSUMABLE_BASE = {
   "sort": 0,
   "_id": ""
 };
+
+
+// GENERATA dal golden Fireball (Zariel 2014, export reale 13.351/dnd5e 5.3.3),
+// svuotata. Base per gli incantesimi STANDALONE della Tab Spell (Fase 6).
+// Non modificare a mano.
+export const SPELL_BASE = {
+  "_id": "",
+  "name": "",
+  "type": "spell",
+  "system": {
+    "source": {
+      "custom": "",
+      "book": "",
+      "page": "",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "description": {
+      "value": "",
+      "chat": ""
+    },
+    "level": 1,
+    "school": "evo",
+    "properties": [],
+    "ability": "",
+    "materials": {
+      "value": "",
+      "consumed": false,
+      "cost": 0,
+      "supply": 0
+    },
+    "target": {
+      "template": {
+        "count": "",
+        "contiguous": false,
+        "type": "",
+        "size": "",
+        "units": "ft",
+        "stationary": false
+      },
+      "affects": {
+        "count": "",
+        "type": "",
+        "choice": false
+      }
+    },
+    "range": {
+      "value": "",
+      "units": "ft",
+      "special": ""
+    },
+    "activation": {
+      "type": "action",
+      "value": 1,
+      "condition": ""
+    },
+    "duration": {
+      "value": "",
+      "units": "inst"
+    },
+    "uses": {
+      "max": "",
+      "recovery": [],
+      "spent": 0
+    },
+    "method": "innate",
+    "prepared": 1,
+    "activities": {},
+    "identifier": ""
+  },
+  "img": "icons/svg/book.svg",
+  "flags": {},
+  "effects": [],
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null,
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "lastModifiedBy": null,
+    "createdTime": null,
+    "modifiedTime": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  }
+};

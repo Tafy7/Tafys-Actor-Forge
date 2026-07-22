@@ -365,6 +365,69 @@ const acts = Object.values(onHitWpn.system.activities);
 check('on-hit arma: 2 activity (attacco + rider TS)', acts.length === 2);
 check('on-hit arma: effetto condizione stunned presente', onHitWpn.effects.some(e => e.statuses?.includes('stunned')));
 
+// --- Fase 6 v0.20: incantesimi standalone (builders/spell.js) ---
+console.log('\n— Incantesimi standalone —');
+const { buildSpell, validateSpell } = await import('../src/builders/spell.js');
+
+// A) Fireball-like: save AoE, CD spellcasting, upcast, componenti VSM.
+const fireball = buildSpell({
+  name: 'Palla di Fuoco', rules: '2014', level: '3', school: 'evo',
+  vocal: true, somatic: true, material: true, materialText: 'guano e zolfo',
+  method: 'spell', activation: 'action', rangeMode: 'ft', rangeValue: '150',
+  targetMode: 'template', templateType: 'sphere', templateSize: '20',
+  durationUnits: 'inst', kind: 'save', saveAbility: 'dex', dcMode: 'spellcasting',
+  onSave: 'half', damage: '8d6 fire', upcastFormula: '1d6', usesMode: 'none', effects: [],
+});
+const fbAct = Object.values(fireball.system.activities)[0];
+check('spell: type spell, livello 3, scuola evo', fireball.type === 'spell' && fireball.system.level === 3 && fireball.system.school === 'evo');
+check('spell: componenti V,S,M', ['vocal', 'somatic', 'material'].every(p => fireball.system.properties.includes(p)));
+check('spell: materiale salvato', fireball.system.materials.value === 'guano e zolfo');
+check('spell: gittata 150 ft', fireball.system.range.value === '150' && fireball.system.range.units === 'ft');
+check('spell: sagoma sfera 20 ft', fireball.system.target.template.type === 'sphere' && fireball.system.target.template.size === '20');
+check('spell: CD automatica spellcasting', fbAct.save.dc.calculation === 'spellcasting' && fbAct.save.dc.formula === '');
+check('spell: metà danno al TS superato', fbAct.damage.onSave === 'half');
+check('spell: upcast 1d6 (scaling whole)', fbAct.damage.parts[0].scaling.mode === 'whole' && fbAct.damage.parts[0].scaling.formula === '1d6');
+
+// Zero drift: le chiavi di system identiche al golden Fireball di Zariel.
+const goldenZariel = JSON.parse(readFileSync(new URL('../templates/golden-actor-zariel-2014.json', import.meta.url)));
+const goldenFireball = goldenZariel.items.find(i => i.type === 'spell' && i.name === 'Fireball');
+check('spell: chiavi system IDENTICHE al golden Fireball',
+  Object.keys(fireball.system).sort().join(',') === Object.keys(goldenFireball.system).sort().join(','));
+
+// B) Attacco con incantesimo (Ray of Sickness): classification spell, ability ''.
+const raySpell = buildSpell({
+  name: 'Raggio di Infermità', rules: '2024', level: '1', school: 'nec', vocal: true, somatic: true,
+  method: 'innate', activation: 'action', rangeMode: 'ft', rangeValue: '60',
+  targetMode: 'creature', targetCount: '1', durationUnits: 'inst',
+  kind: 'attack', attackType: 'ranged', damage: '2d8 poison', usesMode: 'day', usesValue: '3', effects: [],
+});
+const rayAct = Object.values(raySpell.system.activities)[0];
+check('spell attack: classification spell, ability vuota (= da incantatore)',
+  rayAct.attack.type.classification === 'spell' && rayAct.attack.ability === '');
+check('spell attack: 3/giorno (metodo innato)', String(raySpell.system.uses.max) === '3' && raySpell.system.method === 'innate');
+check('spell attack: bersaglio 1 creatura', raySpell.system.target.affects.type === 'creature' && raySpell.system.target.affects.count === '1');
+
+// C) Buff con effetto DAE sul bersaglio + concentrazione (Invisibility-like).
+const buff = buildSpell({
+  name: 'Velo', rules: '2014', level: '2', school: 'ill', vocal: true, somatic: true,
+  concentration: true, method: 'spell', activation: 'action', rangeMode: 'touch',
+  targetMode: 'creature', targetCount: '1', durationValue: '1', durationUnits: 'hour',
+  kind: 'utility', usesMode: 'none',
+  effects: [{ name: 'Invisibile', application: 'target', rounds: '', img: '', changes: [{ key: 'system.attributes.ac.bonus', mode: 2, value: '2', priority: '' }] }],
+});
+check('spell buff: concentrazione nelle properties', buff.system.properties.includes('concentration'));
+check('spell buff: gittata contatto', buff.system.range.units === 'touch');
+check('spell buff: durata 1 ora', buff.system.duration.value === '1' && buff.system.duration.units === 'hour');
+check('spell buff: effetto DAE presente e referenziato dall\'activity',
+  buff.effects.length === 1 && Object.values(buff.system.activities)[0].effects.length === 1);
+
+// D) Trucchetto + validazione.
+const cantrip = buildSpell({ name: 'Fiotto', level: '0', school: 'evo', vocal: true, kind: 'save', saveAbility: 'dex', dcMode: 'spellcasting', damage: '1d8 fire', durationUnits: 'inst', rangeMode: 'ft', rangeValue: '60', targetMode: 'creature', targetCount: '1', usesMode: 'none', effects: [] });
+check('spell: trucchetto = livello 0', cantrip.system.level === 0);
+check('validateSpell: nome mancante bloccato', validateSpell({ name: '' }).length > 0);
+check('validateSpell: upcast malformato segnalato', validateSpell({ name: 'X', upcastFormula: 'abc' }).length > 0);
+check('validateSpell: upcast NdX valido passa', validateSpell({ name: 'X', upcastFormula: '2d8' }).length === 0);
+
 // --- Effetto condizione: forma allineata al golden "Status: Blinded" ---
 console.log('\n— Effetto condizione anti-doppione —');
 const condEff = onHitWpn.effects.find(e => e.statuses?.includes('stunned'));

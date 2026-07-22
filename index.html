@@ -11,7 +11,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.19</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.20</p>
       </div>
       <button type="button" id="btn-lang" class="lang-btn" data-i18n-title="langLabel" title="Lingua">EN</button>
     </div>
@@ -20,6 +20,7 @@
   <nav class="tabs" id="tabs">
     <button type="button" class="tab active" data-tab="npc" data-i18n="tab_npc">🐲 Mostro / NPC</button>
     <button type="button" class="tab" data-tab="item" data-i18n="tab_item">🎒 Oggetto</button>
+    <button type="button" class="tab" data-tab="spell" data-i18n="tab_spell">✨ Incantesimo</button>
     <button type="button" class="tab" data-tab="dpr" data-i18n="tab_dpr">📊 Calcolatore DPR</button>
   </nav>
 
@@ -216,6 +217,30 @@
           </div>
         </div>
         <pre id="item-preview"></pre>
+      </aside>
+    </section>
+
+    <!-- ===== Tab: incantesimo standalone ===== -->
+    <section class="tab-panel npc-grid" id="tab-spell" hidden>
+      <form id="spell-form" autocomplete="off">
+        <fieldset>
+          <legend><span data-i18n="tab_spell">✨ Incantesimo</span></legend>
+          <div id="spell-form-body"><!-- generato da spell-tab.js --></div>
+        </fieldset>
+      </form>
+      <aside>
+        <div class="aside-fixed">
+          <div class="btn-row main-actions">
+            <button type="button" id="spell-export" data-i18n="sp_export">⬇️ Esporta incantesimo</button>
+            <button type="button" id="spell-batch" class="secondary small" data-i18n="sp_batch">➕ Aggiungi alla collezione</button>
+          </div>
+          <span id="spell-warn"></span>
+          <div class="preview-head">
+            <h2 data-i18n="sp_preview_title">Anteprima JSON incantesimo</h2>
+            <button type="button" id="spell-copy" class="secondary small" data-i18n="btn_copy" data-i18n-title="title_copypreview" title="Copia tutto il JSON negli appunti">📋 Copia</button>
+          </div>
+        </div>
+        <pre id="spell-preview"></pre>
       </aside>
     </section>
 
