@@ -45,7 +45,21 @@ export function parseDamageParts(input) {
     // 2) Il resto è "NdX" seguito da zero o più addendi (+ numero o + @formula).
     const m = formula.trim().match(/^(\d+)\s*d\s*(\d+)((?:\s*\+\s*(?:@[\w.]+|\d+))*)$/);
     if (!m) {
-      errors.push(`Formula dadi non riconosciuta: "${formula}" (esempio: 1d4 + 2 + @mod)`);
+      // 2b) Formula COMPOSTA con più dadi ("10d8 + 1d6 + 1d4"): una singola
+      // parte dnd5e non può tenere due tagli di dado diversi, ma può usare
+      // una formula custom — pattern osservato nel golden Green-Flame Blade:
+      // custom { enabled: true, formula: "@attributes.spell.mod" }.
+      const composite = /^(\d+\s*d\s*\d+|@[\w.]+|\d+)(\s*[+-]\s*(\d+\s*d\s*\d+|@[\w.]+|\d+))+$/i;
+      if (composite.test(formula.trim())) {
+        const part = structuredClone(DAMAGE_PART_BASE);
+        part.number = null;
+        part.denomination = 0;
+        part.custom = { enabled: true, formula: formula.trim().replace(/\s+/g, ' ') };
+        part.types = [type];
+        parts.push(part);
+        continue;
+      }
+      errors.push(`Formula dadi non riconosciuta: "${formula}" (esempio: 1d4 + 2 + @mod, oppure 2d8 + 1d6)`);
       continue;
     }
     const [, number, denomination, bonusRaw] = m;
@@ -138,19 +152,31 @@ function buildDaeEffect(e, itemName, forcePassive) {
   return eff;
 }
 
-/** Imposta gli usi limitati sull'item: nessuno, Recharge X-6, oppure N/giorno. */
+/**
+ * Imposta gli usi limitati sull'item: nessuno, Recharge X-6, oppure N per
+ * periodo (giorno / riposo breve / riposo lungo / turno — periodi osservati
+ * nei golden: Horrid Touch 'day', Wild Shape 'sr', Bladesong 'lr',
+ * Sneak Attack 'turn'). Il max può essere una FORMULA, come il golden
+ * Bladesong: uses.max = "max(1, @abilities.int.mod)".
+ */
+const USE_PERIODS = { day: 'day', sr: 'sr', lr: 'lr', turn: 'turn' };
+
 function applyUses(item, activity, usesMode, usesValue) {
-  const n = Number(usesValue) || 0;
-  if (usesMode === 'none' || n <= 0) return;
+  const raw = String(usesValue ?? '').trim();
+  if (usesMode === 'none' || !raw) return;
 
   if (usesMode === 'recharge') {
     // "Recharge 5–6" → max 1 uso, recovery di tipo 'recharge' con formula "5"
     // (= si ricarica con 5 o più sul d6, come nel golden template di Horrid Touch).
+    const n = Number(raw) || 0;
+    if (n <= 0) return;
     item.system.uses.max = '1';
     item.system.uses.recovery = [{ formula: String(n), period: 'recharge', type: 'recoverAll' }];
-  } else if (usesMode === 'day') {
-    item.system.uses.max = String(n);
-    item.system.uses.recovery = [{ period: 'day', type: 'recoverAll' }];
+  } else if (USE_PERIODS[usesMode]) {
+    item.system.uses.max = raw; // numero O formula (@abilities.x.mod...)
+    item.system.uses.recovery = [{ period: USE_PERIODS[usesMode], type: 'recoverAll' }];
+  } else {
+    return;
   }
   // L'activity deve CONSUMARE quegli usi, altrimenti il contatore non scala
   // (pattern preso pari pari da Horrid Touch).

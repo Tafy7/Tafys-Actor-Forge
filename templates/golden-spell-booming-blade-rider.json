@@ -1,0 +1,434 @@
+{
+  "name": "Booming Blade",
+  "type": "spell",
+  "system": {
+    "source": {
+      "custom": "",
+      "book": "TCoE",
+      "page": "106",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "description": {
+      "value": "<div class=\"rd__b  rd__b--3\"><p>You brandish the weapon used in the spell's casting and make a melee attack with it against one creature within 5 feet of you. On a hit, the target suffers the weapon attack's normal effects and then becomes sheathed in booming energy until the start of your next turn. If the target willingly moves 5 feet or more before then, the target takes [[/damage 1d8 type=thunder]] damage, and the spell ends.</p><p>This spell's damage increases when you reach certain levels. At 5th level, the melee attack deals an extra [[/damage 1d8 type=thunder]] damage to the target on a hit, and the damage the target takes for moving increases to [[/damage 2d8]]. Both damage rolls increase by 1d8 at 11th level ([[/damage 2d8]] and [[/damage 3d8]]) and again at 17th level ([[/damage 3d8]] and [[/damage 4d8]]).</p></div>",
+      "chat": ""
+    },
+    "level": 0,
+    "school": "evo",
+    "properties": [
+      "somatic",
+      "material"
+    ],
+    "materials": {
+      "value": "a melee weapon worth at least 1 sp",
+      "consumed": false,
+      "cost": 0,
+      "supply": 0
+    },
+    "target": {
+      "affects": {
+        "type": "creature",
+        "count": "1",
+        "choice": false,
+        "special": ""
+      },
+      "template": {
+        "units": "ft",
+        "contiguous": false,
+        "type": "",
+        "stationary": false
+      }
+    },
+    "range": {
+      "units": "self",
+      "special": ""
+    },
+    "activation": {
+      "type": "action",
+      "condition": "",
+      "value": 1
+    },
+    "duration": {
+      "value": "1",
+      "units": "round"
+    },
+    "uses": {
+      "max": "",
+      "spent": 0,
+      "recovery": []
+    },
+    "method": "spell",
+    "prepared": 1,
+    "activities": {
+      "dnd5eactivity000": {
+        "_id": "dnd5eactivity000",
+        "type": "utility",
+        "activation": {
+          "type": "action",
+          "value": null,
+          "override": false
+        },
+        "consumption": {
+          "targets": [],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {
+          "chatFlavor": "[1d8 - thunder] Moving Target"
+        },
+        "duration": {
+          "units": "inst",
+          "concentration": false,
+          "override": false
+        },
+        "effects": [],
+        "range": {
+          "override": false,
+          "units": "self"
+        },
+        "target": {
+          "prompt": true,
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false
+        },
+        "uses": {
+          "spent": 0,
+          "max": "",
+          "recovery": []
+        },
+        "roll": {
+          "formula": "",
+          "name": "",
+          "prompt": false,
+          "visible": false
+        },
+        "sort": 0,
+        "useConditionText": "",
+        "effectConditionText": "",
+        "useConditionReason": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "forceDamageDialog": "false",
+          "confirmTargets": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "automationOnly": false,
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "identifier": "",
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      },
+      "3Qk6T9Nk9U62oqdw": {
+        "type": "damage",
+        "_id": "3Qk6T9Nk9U62oqdw",
+        "sort": 0,
+        "activation": {
+          "type": "special",
+          "value": null,
+          "override": true,
+          "condition": ""
+        },
+        "consumption": {
+          "scaling": {
+            "allowed": false
+          },
+          "spellSlot": true,
+          "targets": []
+        },
+        "description": {
+          "chatFlavor": ""
+        },
+        "duration": {
+          "units": "inst",
+          "concentration": false,
+          "override": true
+        },
+        "effects": [],
+        "range": {
+          "override": true,
+          "units": "any",
+          "special": ""
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": 0,
+          "recovery": [],
+          "max": ""
+        },
+        "damage": {
+          "critical": {
+            "allow": false
+          },
+          "parts": [
+            {
+              "custom": {
+                "enabled": false,
+                "formula": ""
+              },
+              "number": 1,
+              "denomination": 8,
+              "bonus": "",
+              "types": [
+                "thunder"
+              ],
+              "scaling": {
+                "mode": "whole",
+                "number": 1,
+                "formula": ""
+              }
+            }
+          ]
+        },
+        "useConditionText": "",
+        "effectConditionText": "",
+        "name": "Booming Blade: Moved",
+        "useConditionReason": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "forceDamageDialog": "false",
+          "confirmTargets": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "automationOnly": false,
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "identifier": "",
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      }
+    },
+    "identifier": "booming-blade",
+    "ability": ""
+  },
+  "img": "icons/skills/melee/strike-sword-slashing-red.webp",
+  "flags": {
+    "plutonium": {
+      "page": "spells.html",
+      "source": "TCE",
+      "hash": "booming%20blade_tce",
+      "propDroppable": "spell",
+      "spellClassNames": [
+        "Artificer",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ]
+    },
+    "midi-qol": {
+      "forceCEOff": true,
+      "effectActivation": false,
+      "rollAttackPerTarget": "default",
+      "itemCondition": "",
+      "effectCondition": "",
+      "AoETargetType": "any",
+      "AoETargetTypeIncludeSelf": true,
+      "autoTarget": "default",
+      "removeAttackDamageButtons": "default",
+      "reactionCondition": "",
+      "otherCondition": ""
+    },
+    "midiProperties": {
+      "nodam": false,
+      "fulldam": false,
+      "halfdam": false,
+      "autoFailFriendly": false,
+      "autoSaveFriendly": false,
+      "rollOther": false,
+      "critOther": false,
+      "offHandWeapon": false,
+      "magicdam": true,
+      "magiceffect": true,
+      "concentration": false,
+      "toggleEffect": false,
+      "ignoreTotalCover": false,
+      "confirmTargets": "default",
+      "noConcentrationCheck": false,
+      "idr": false,
+      "idi": false,
+      "idv": false,
+      "ida": false
+    },
+    "core": {},
+    "dnd5e": {
+      "last": {
+        "3Qk6T9Nk9U62oqdw": {
+          "damageType": {
+            "0": "thunder"
+          }
+        }
+      },
+      "riders": {
+        "activity": [
+          "3Qk6T9Nk9U62oqdw"
+        ]
+      }
+    },
+    "chris-premades": {
+      "info": {
+        "name": "Booming Blade",
+        "version": "1.2.28",
+        "settings": [
+          "Booming Blade"
+        ],
+        "hasAnimation": true,
+        "identifier": "boomingBlade",
+        "source": "chris-premades",
+        "rules": "legacy"
+      },
+      "macros": {
+        "midi": {
+          "item": [
+            "boomingBlade"
+          ]
+        }
+      },
+      "activityIdentifiers": {
+        "boomingBlade": "dnd5eactivity000",
+        "boomingBladeMoved": "3Qk6T9Nk9U62oqdw"
+      },
+      "hiddenActivities": [
+        "boomingBladeMoved"
+      ],
+      "spellActivities": [
+        "boomingBladeMoved"
+      ]
+    }
+  },
+  "effects": [],
+  "folder": "dc6TWWX3n94hTwgz",
+  "_stats": {
+    "compendiumSource": "Compendium.shared-compendiums-u-tian-de-tuttu-demil.item-1-spell-2014.Item.k2liYXq7G1rDvoJ1",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.9cpNVOjHkPtsTP9S",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784684081430,
+    "modifiedTime": 1784684081476,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

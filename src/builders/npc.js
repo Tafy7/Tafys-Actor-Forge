@@ -88,6 +88,9 @@ export function buildNpc(data) {
   sys.details.cr = parseCR(data.cr);
   sys.details.biography.value = data.bio;
   sys.source.rules = data.rules; // '2014' oppure '2024'
+  // Source personalizzata (es. "DMG p.94"), come per Item e Spell.
+  sys.source.book = String(data.sourceBook || '').trim();
+  sys.source.page = String(data.sourcePage || '').trim();
   sys.traits.size = data.size;
 
   // --- Caratteristiche ---

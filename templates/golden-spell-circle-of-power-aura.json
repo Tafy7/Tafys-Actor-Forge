@@ -1,0 +1,791 @@
+{
+  "name": "Circle of Power",
+  "type": "spell",
+  "system": {
+    "source": {
+      "custom": "",
+      "book": "PHB'14",
+      "page": "221",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "description": {
+      "value": "<div class=\"rd__b  rd__b--3\"><p>Divine energy radiates from you, distorting and diffusing magical energy within 30 feet of you. Until the spell ends, the sphere moves with you, centered on you. For the duration, each friendly creature in the area (including you) has advantage on saving throws against spells and other magical effects. Additionally, when an affected creature succeeds on a saving throw made against a spell or magical effect that allows it to make a saving throw to take only half damage, it instead takes no damage if it succeeds on the saving throw.</p></div>",
+      "chat": ""
+    },
+    "level": 5,
+    "school": "abj",
+    "properties": [
+      "vocal",
+      "concentration"
+    ],
+    "materials": {
+      "value": "",
+      "consumed": false,
+      "cost": 0,
+      "supply": 0
+    },
+    "target": {
+      "affects": {
+        "type": "self",
+        "count": "30",
+        "choice": false,
+        "special": ""
+      },
+      "template": {
+        "units": "m",
+        "contiguous": false,
+        "type": "",
+        "stationary": false
+      }
+    },
+    "range": {
+      "units": "self",
+      "special": ""
+    },
+    "activation": {
+      "type": "action",
+      "condition": "",
+      "value": 1
+    },
+    "duration": {
+      "value": "10",
+      "units": "minute"
+    },
+    "uses": {
+      "max": "",
+      "recovery": [],
+      "spent": null
+    },
+    "method": "spell",
+    "prepared": 0,
+    "activities": {
+      "dnd5eactivity000": {
+        "_id": "dnd5eactivity000",
+        "type": "utility",
+        "activation": {
+          "type": "action",
+          "value": null,
+          "override": false
+        },
+        "consumption": {
+          "targets": [],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {
+          "chatFlavor": ""
+        },
+        "duration": {
+          "units": "inst",
+          "concentration": false,
+          "override": false
+        },
+        "effects": [
+          {
+            "_id": "e8PUC4mtW1UlZngp",
+            "level": {}
+          }
+        ],
+        "range": {
+          "override": false,
+          "units": "self"
+        },
+        "target": {
+          "prompt": true,
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false
+        },
+        "uses": {
+          "spent": null,
+          "max": "",
+          "recovery": []
+        },
+        "roll": {
+          "formula": "",
+          "name": "",
+          "prompt": false,
+          "visible": false
+        },
+        "sort": 0,
+        "name": "",
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "confirmTargets": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "automationOnly": false,
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "identifier": "",
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        },
+        "img": null
+      }
+    },
+    "identifier": "circle-of-power",
+    "ability": ""
+  },
+  "img": "icons/magic/light/orb-shadow-blue.webp",
+  "flags": {
+    "ddbimporter": {
+      "id": 136206,
+      "definitionId": 2353,
+      "entityTypeId": 435869154,
+      "dndbeyond": {
+        "lookup": "generic",
+        "lookupName": "generic",
+        "level": null,
+        "castAtLevel": null
+      },
+      "originalName": "Circle of Power",
+      "sources": [
+        {
+          "sourceId": 2,
+          "pageNumber": 221,
+          "sourceType": 1
+        }
+      ],
+      "tags": [
+        "Buff",
+        "Warding"
+      ],
+      "version": "3.5.7",
+      "effectsApplied": true
+    },
+    "midiProperties": {
+      "magicdam": true,
+      "magiceffect": true,
+      "confirmTargets": "default",
+      "autoFailFriendly": false,
+      "autoSaveFriendly": false,
+      "critOther": false,
+      "offHandWeapon": false,
+      "concentration": false,
+      "noConcentrationCheck": false,
+      "toggleEffect": false,
+      "ignoreTotalCover": false,
+      "rollOther": false,
+      "idr": false,
+      "idi": false,
+      "idv": false,
+      "ida": false
+    },
+    "scene-packer": {
+      "sourceId": "Actor.4rgwJtcvBFEmAQ4A.Item.x09oyjOQPzBDQc1A",
+      "hash": "8fbe7c04510da81e4d339bd6114da586427c3122"
+    },
+    "core": {},
+    "midi-qol": {
+      "AoETargetType": "any",
+      "AoETargetTypeIncludeSelf": true,
+      "autoTarget": "default",
+      "effectActivation": false,
+      "itemCondition": "",
+      "reactionCondition": "",
+      "otherCondition": "",
+      "effectCondition": "",
+      "rollAttackPerTarget": "default",
+      "removeAttackDamageButtons": "default"
+    },
+    "autoanimations": {
+      "id": "052cd948-8620-41a8-9bf5-326d11bfb76e",
+      "label": "Circle of Power",
+      "macro": {
+        "enable": false,
+        "playWhen": "0"
+      },
+      "menu": "ontoken",
+      "primary": {
+        "video": {
+          "dbSection": "static",
+          "menuType": "shieldspell",
+          "animation": "loop",
+          "variant": "01",
+          "color": "blue",
+          "enableCustom": false,
+          "customPath": ""
+        },
+        "sound": {
+          "enable": false,
+          "delay": 0,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "startTime": 0,
+          "volume": 0.75
+        },
+        "options": {
+          "addTokenWidth": false,
+          "anchor": "0.5",
+          "contrast": 0,
+          "delay": 0,
+          "elevation": 1000,
+          "fadeIn": 250,
+          "fadeOut": 500,
+          "isMasked": false,
+          "isRadius": true,
+          "isWait": false,
+          "opacity": 0.81,
+          "persistent": true,
+          "playbackRate": 1,
+          "playOn": "source",
+          "repeat": 1,
+          "repeatDelay": 250,
+          "saturate": 0,
+          "size": 10,
+          "tint": false,
+          "tintColor": "#FFFFFF",
+          "unbindAlpha": false,
+          "unbindVisibility": false,
+          "zIndex": 1
+        }
+      },
+      "secondary": {
+        "enable": false,
+        "video": {
+          "dbSection": "static",
+          "menuType": "spell",
+          "animation": "curewounds",
+          "variant": "01",
+          "color": "blue",
+          "enableCustom": false,
+          "customPath": ""
+        },
+        "sound": {
+          "enable": false,
+          "delay": 0,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "startTime": 0,
+          "volume": 0.75
+        },
+        "options": {
+          "addTokenWidth": false,
+          "anchor": "0.5",
+          "contrast": 0,
+          "delay": 0,
+          "elevation": 1000,
+          "fadeIn": 250,
+          "fadeOut": 500,
+          "isMasked": false,
+          "isRadius": true,
+          "isWait": false,
+          "opacity": 1,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "saturate": 0,
+          "size": 1.5,
+          "tint": false,
+          "tintColor": "#FFFFFF",
+          "zIndex": 1
+        }
+      },
+      "soundOnly": {
+        "sound": {
+          "enable": false,
+          "delay": 0,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "startTime": 0,
+          "volume": 0.75
+        }
+      },
+      "source": {
+        "enable": false,
+        "video": {
+          "dbSection": "static",
+          "menuType": "spell",
+          "animation": "curewounds",
+          "variant": "01",
+          "color": "blue",
+          "enableCustom": false,
+          "customPath": ""
+        },
+        "sound": {
+          "enable": false,
+          "delay": 0,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "startTime": 0,
+          "volume": 0.75
+        },
+        "options": {
+          "addTokenWidth": false,
+          "anchor": "0.5",
+          "contrast": 0,
+          "delay": 0,
+          "elevation": 1000,
+          "fadeIn": 250,
+          "fadeOut": 500,
+          "isMasked": false,
+          "isRadius": false,
+          "isWait": true,
+          "opacity": 1,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "saturate": 0,
+          "size": 1,
+          "tint": false,
+          "tintColor": "#FFFFFF",
+          "zIndex": 1
+        }
+      },
+      "target": {
+        "enable": false,
+        "video": {
+          "dbSection": "static",
+          "menuType": "spell",
+          "animation": "curewounds",
+          "variant": "01",
+          "color": "blue",
+          "enableCustom": false,
+          "customPath": ""
+        },
+        "sound": {
+          "enable": false,
+          "delay": 0,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "startTime": 0,
+          "volume": 0.75
+        },
+        "options": {
+          "addTokenWidth": false,
+          "anchor": "0.5",
+          "contrast": 0,
+          "delay": 0,
+          "elevation": 1000,
+          "fadeIn": 250,
+          "fadeOut": 500,
+          "isMasked": false,
+          "isRadius": false,
+          "opacity": 1,
+          "persistent": false,
+          "repeat": 1,
+          "repeatDelay": 250,
+          "saturate": 0,
+          "size": 1,
+          "tint": false,
+          "tintColor": "#FFFFFF",
+          "unbindAlpha": false,
+          "unbindVisibility": false,
+          "zIndex": 1
+        }
+      },
+      "isEnabled": true,
+      "isCustomized": true,
+      "fromAmmo": false,
+      "version": 5,
+      "levels3d": {
+        "type": "explosion",
+        "data": {
+          "color01": "#FFFFFF",
+          "color02": "#FFFFFF",
+          "spritePath": "modules/levels-3d-preview/assets/particles/dust.png"
+        },
+        "sound": {
+          "enable": false
+        },
+        "secondary": {
+          "enable": false,
+          "data": {
+            "color01": "#FFFFFF",
+            "color02": "#FFFFFF",
+            "spritePath": "modules/levels-3d-preview/assets/particles/dust.png"
+          }
+        }
+      }
+    },
+    "dae": {
+      "macro": {
+        "name": "Circle of Power",
+        "img": "icons/magic/light/explosion-star-glow-blue-purple.webp",
+        "type": "script",
+        "scope": "global",
+        "command": "",
+        "author": "roRDywD19pu2VxlC",
+        "ownership": {
+          "default": 3
+        },
+        "_id": null,
+        "folder": null,
+        "sort": 0,
+        "flags": {},
+        "_stats": {
+          "systemId": null,
+          "systemVersion": null,
+          "coreVersion": null,
+          "createdTime": null,
+          "modifiedTime": null,
+          "lastModifiedBy": null
+        }
+      }
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": []
+      }
+    },
+    "rest-recovery": {
+      "data": {
+        "recovery": {
+          "enabled": false
+        }
+      }
+    },
+    "tidy5e-sheet": {
+      "section": "",
+      "actionSection": ""
+    },
+    "boss-loot-assets-premium": {
+      "dnd5eactivity000": {
+        "autoRec": {
+          "enabled": false
+        },
+        "activityName": "Use",
+        "activityType": "utility"
+      }
+    },
+    "chris-premades": {
+      "info": {
+        "source": "gambits-premades",
+        "version": "2.1.38",
+        "rules": "legacy"
+      }
+    }
+  },
+  "effects": [
+    {
+      "origin": "Compendium.world.gps-spells.Item.bM5mY6X8ziNqBrfU",
+      "duration": {
+        "rounds": null,
+        "startTime": null,
+        "seconds": 3600,
+        "combat": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "disabled": false,
+      "name": "Circle of Power",
+      "_id": "e8PUC4mtW1UlZngp",
+      "changes": [
+        {
+          "key": "flags.midi-qol.superSaver.all",
+          "mode": 0,
+          "value": "item?.type === \"spell\" || item?.flags?.midiProperties?.magiceffect",
+          "priority": 20
+        },
+        {
+          "key": "flags.midi-qol.advantage.save.all",
+          "mode": 0,
+          "value": "item?.type === \"spell\" || item?.flags?.midiProperties?.magiceffect",
+          "priority": 20
+        }
+      ],
+      "description": "",
+      "transfer": false,
+      "statuses": [],
+      "flags": {
+        "dae": {
+          "disableIncapacitated": false,
+          "selfTarget": false,
+          "selfTargetAlways": true,
+          "dontApply": false,
+          "stackable": "noneName",
+          "showIcon": false,
+          "durationExpression": "",
+          "macroRepeat": "none",
+          "specialDuration": [],
+          "enableCondition": "",
+          "disableCondition": ""
+        },
+        "ActiveAuras": {
+          "isAura": false,
+          "aura": "Allies",
+          "nameOverride": "",
+          "radius": "30",
+          "alignment": "",
+          "type": "",
+          "customCheck": "",
+          "ignoreSelf": false,
+          "height": false,
+          "hidden": false,
+          "displayTemp": true,
+          "hostile": false,
+          "onlyOnce": false,
+          "wallsBlock": "system",
+          "statuses": []
+        },
+        "autoanimations": {
+          "id": "f9feca38-6223-47c1-8049-08057627dabf",
+          "label": "Circle of Power",
+          "activeEffectType": "ontoken",
+          "menu": "aefx",
+          "macro": {
+            "enable": false
+          },
+          "primary": {
+            "video": {
+              "dbSection": "static",
+              "menuType": "spell",
+              "animation": "curewounds",
+              "variant": "01",
+              "color": "blue",
+              "enableCustom": false,
+              "customPath": ""
+            },
+            "options": {
+              "addTokenWidth": false,
+              "anchor": "0.5",
+              "delay": 0,
+              "elevation": 1000,
+              "fadeIn": 250,
+              "fadeOut": 500,
+              "isMasked": false,
+              "isRadius": false,
+              "isWait": false,
+              "opacity": 1,
+              "persistent": false,
+              "playbackRate": 1,
+              "playOn": "source",
+              "repeat": 1,
+              "repeatDelay": 250,
+              "size": 1,
+              "unbindAlpha": false,
+              "unbindVisibility": false,
+              "zIndex": 1
+            },
+            "sound": {
+              "enable": false,
+              "delay": 0,
+              "repeat": 1,
+              "repeatDelay": 250,
+              "startTime": 0,
+              "volume": 0.75
+            }
+          },
+          "secondary": {
+            "enable": false,
+            "video": {
+              "dbSection": "static",
+              "menuType": "spell",
+              "animation": "curewounds",
+              "variant": "01",
+              "color": "blue",
+              "enableCustom": false,
+              "customPath": ""
+            },
+            "sound": {
+              "enable": false,
+              "delay": 0,
+              "repeat": 1,
+              "repeatDelay": 250,
+              "startTime": 0,
+              "volume": 0.75
+            },
+            "options": {
+              "addTokenWidth": false,
+              "anchor": "0.5",
+              "contrast": 0,
+              "delay": 0,
+              "elevation": 1000,
+              "fadeIn": 250,
+              "fadeOut": 500,
+              "isMasked": false,
+              "isRadius": true,
+              "isWait": false,
+              "opacity": 1,
+              "repeat": 1,
+              "repeatDelay": 250,
+              "saturate": 0,
+              "size": 1.5,
+              "tint": false,
+              "tintColor": "#FFFFFF",
+              "zIndex": 1
+            }
+          },
+          "soundOnly": {
+            "sound": {
+              "enable": false,
+              "delay": 0,
+              "repeat": 1,
+              "repeatDelay": 250,
+              "startTime": 0,
+              "volume": 0.75
+            }
+          },
+          "source": {
+            "enable": false,
+            "video": {
+              "dbSection": "static",
+              "menuType": "spell",
+              "animation": "curewounds",
+              "variant": "01",
+              "color": "blue",
+              "enableCustom": false,
+              "customPath": ""
+            },
+            "sound": {
+              "enable": false,
+              "delay": 0,
+              "repeat": 1,
+              "repeatDelay": 250,
+              "startTime": 0,
+              "volume": 0.75
+            },
+            "options": {
+              "addTokenWidth": false,
+              "anchor": "0.5",
+              "contrast": 0,
+              "delay": 0,
+              "elevation": 1000,
+              "fadeIn": 250,
+              "fadeOut": 500,
+              "isMasked": false,
+              "isRadius": false,
+              "isWait": true,
+              "opacity": 1,
+              "repeat": 1,
+              "repeatDelay": 250,
+              "saturate": 0,
+              "size": 1,
+              "tint": false,
+              "tintColor": "#FFFFFF",
+              "zIndex": 1
+            }
+          },
+          "isEnabled": false,
+          "isCustomized": false,
+          "version": 5
+        },
+        "dnd5e": {
+          "riders": {
+            "statuses": []
+          }
+        },
+        "core": {
+          "overlay": false
+        },
+        "auraeffects": {
+          "originalType": "base"
+        }
+      },
+      "tint": "#ffffff",
+      "img": "icons/magic/light/orb-shadow-blue.webp",
+      "type": "auraeffects.aura",
+      "system": {
+        "showRadius": false,
+        "applyToSelf": true,
+        "bestFormula": "",
+        "canStack": false,
+        "collisionTypes": [
+          "move"
+        ],
+        "color": null,
+        "combatOnly": true,
+        "disableOnHidden": false,
+        "distanceFormula": "30",
+        "disposition": 1,
+        "evaluatePreApply": false,
+        "opacity": 0.25,
+        "overrideName": "",
+        "script": "",
+        "stashedChanges": [],
+        "stashedStatuses": []
+      },
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "folder": "dc6TWWX3n94hTwgz",
+  "_stats": {
+    "compendiumSource": "Compendium.shared-compendiums-u-tian-de-tuttu-demil.item-1-spell-2014.Item.CVXIBJ0mlcvS5dYs",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.041Qv2WImFNvRP7g",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784684105940,
+    "modifiedTime": 1784684712645,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

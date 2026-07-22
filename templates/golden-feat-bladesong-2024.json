@@ -1,0 +1,400 @@
+{
+  "type": "feat",
+  "folder": "dc6TWWX3n94hTwgz",
+  "name": "Bladesong",
+  "system": {
+    "description": {
+      "value": "<p>As a Bonus Action, you invoke an elven magic called the Bladesong, provided you aren’t wearing armor or using a Shield.</p><p>The Bladesong lasts for 1 minute and ends early if you have the Incapacitated condition, if you don armor or a Shield, or if you use two hands to make an attack with a weapon. You can dismiss the Bladesong at any time (no action required).</p><p>While the Bladesong is active, you gain the following benefits. You can invoke the Bladesong a number of times equal to your Intelligence modifier ([[lookup @abilities.int.mod]]{0}, minimum of once), and you regain all expended uses when you finish a Long Rest. You regain one expended use when you use Arcane Recovery.</p><p><em><strong>Agility.</strong></em> You gain a bonus to your AC equal to your Intelligence modifier (minimum of +1), and your Speed increases by 10 feet. In addition, you have Advantage on Dexterity (Acrobatics) checks.</p><p><em><strong>Bladework.</strong></em> Whenever you attack with a weapon with which you have proficiency, you can use your Intelligence modifier for the attack and damage rolls instead of using Strength or Dexterity.</p><p><em><strong>Focus.</strong></em> When you make a Constitution saving throw to maintain Concentration, you can add your Intelligence modifier to the total.</p><section id=\"secret-PYLkGuyEr8KoysnM\" class=\"secret\"><p><strong>Foundry Note</strong></p><p>The included Active Effect does not modify the ability used for attack and damage rolls. This change should be made in the <strong>Attack</strong> activity of the weapon in use.</p></section>",
+      "chat": ""
+    },
+    "prerequisites": {
+      "level": 3,
+      "items": [],
+      "repeatable": false
+    },
+    "activities": {
+      "ZRx69wF5iJCuT7TG": {
+        "type": "utility",
+        "name": "Invoke Bladesong",
+        "_id": "ZRx69wF5iJCuT7TG",
+        "sort": 0,
+        "activation": {
+          "type": "bonus",
+          "override": false,
+          "condition": ""
+        },
+        "consumption": {
+          "scaling": {
+            "allowed": false
+          },
+          "spellSlot": true,
+          "targets": [
+            {
+              "type": "itemUses",
+              "value": "1",
+              "target": "",
+              "scaling": {}
+            }
+          ]
+        },
+        "description": {
+          "chatFlavor": ""
+        },
+        "duration": {
+          "units": "minute",
+          "concentration": false,
+          "override": false,
+          "value": "1"
+        },
+        "effects": [
+          {
+            "_id": "gN3MtriIRf3KApfA",
+            "level": {}
+          }
+        ],
+        "range": {
+          "units": "self",
+          "override": false,
+          "special": ""
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "type": "",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false,
+            "type": "self"
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": 0,
+          "recovery": [],
+          "max": ""
+        },
+        "roll": {
+          "prompt": false,
+          "visible": false,
+          "name": "",
+          "formula": ""
+        },
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "confirmTargets": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "automationOnly": false,
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "identifier": "",
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      },
+      "M3iAi2e51EzpO1ci": {
+        "type": "utility",
+        "name": "Regain Use (Arcane Recovery)",
+        "_id": "M3iAi2e51EzpO1ci",
+        "sort": 0,
+        "activation": {
+          "type": "special",
+          "override": false,
+          "condition": "when you use Arcane Recovery"
+        },
+        "consumption": {
+          "scaling": {
+            "allowed": false
+          },
+          "spellSlot": true,
+          "targets": [
+            {
+              "type": "itemUses",
+              "value": "-1",
+              "target": "",
+              "scaling": {}
+            }
+          ]
+        },
+        "description": {
+          "chatFlavor": ""
+        },
+        "duration": {
+          "units": "inst",
+          "concentration": false,
+          "override": false
+        },
+        "effects": [],
+        "range": {
+          "units": "self",
+          "override": false,
+          "special": ""
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "type": "",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false,
+            "type": "self"
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": 0,
+          "recovery": [],
+          "max": ""
+        },
+        "roll": {
+          "prompt": false,
+          "visible": false,
+          "name": "",
+          "formula": ""
+        },
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "confirmTargets": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "automationOnly": false,
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "identifier": "",
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "otherActivityAsParentType": true,
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      }
+    },
+    "uses": {
+      "spent": 0,
+      "recovery": [
+        {
+          "period": "lr",
+          "type": "recoverAll"
+        }
+      ],
+      "max": "max(1, @abilities.int.mod)"
+    },
+    "advancement": {},
+    "identifier": "bladesong",
+    "source": {
+      "revision": 1,
+      "rules": "2024"
+    },
+    "crewed": false,
+    "enchant": {},
+    "properties": [
+      "mgc"
+    ],
+    "requirements": "",
+    "type": {
+      "value": "class",
+      "subtype": ""
+    }
+  },
+  "img": "icons/skills/melee/maneuver-sword-katana-yellow.webp",
+  "effects": [
+    {
+      "name": "Bladesong",
+      "img": "icons/skills/melee/maneuver-sword-katana-yellow.webp",
+      "origin": "Compendium.dnd-heroes-faerun.options.Item.hofBldBladesong0",
+      "transfer": true,
+      "_id": "gN3MtriIRf3KApfA",
+      "type": "base",
+      "system": {},
+      "changes": [
+        {
+          "key": "system.attributes.ac.bonus",
+          "mode": 2,
+          "value": "max(1, @abilities.int.mod)",
+          "priority": null
+        },
+        {
+          "key": "system.attributes.movement.walk",
+          "mode": 2,
+          "value": "10",
+          "priority": null
+        },
+        {
+          "key": "system.skills.acr.roll.mode",
+          "mode": 2,
+          "value": "1",
+          "priority": null
+        },
+        {
+          "key": "system.attributes.concentration.bonuses.save",
+          "mode": 2,
+          "value": "max(0, @abilities.int.mod)",
+          "priority": null
+        }
+      ],
+      "disabled": true,
+      "duration": {
+        "startTime": 47013996600,
+        "combat": null,
+        "seconds": 60,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "<p>@Embed[Compendium.dnd-heroes-faerun.options.Item.hofBldBladesong0 inline]</p>",
+      "tint": "#ffffff",
+      "statuses": [],
+      "sort": 0,
+      "flags": {
+        "dnd5e": {
+          "riders": {
+            "statuses": []
+          }
+        },
+        "dnd-heroes-faerun": {
+          "bladesong": true
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "flags": {
+    "dnd5e": {
+      "riders": {
+        "activity": []
+      }
+    }
+  },
+  "_stats": {
+    "compendiumSource": "Compendium.dnd-heroes-faerun.options.Item.hofBldBladesong0",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.YRpytVlBzK9kviNK",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784684813399,
+    "modifiedTime": 1784684842768,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

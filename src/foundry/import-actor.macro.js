@@ -32,15 +32,20 @@
   // consumable, feat, spell, tool…) viene trattato come Item standalone.
   const ACTOR_TYPES = new Set(["npc", "character", "vehicle", "group"]);
 
-  // 1) Finestra con la casella dove incollare il JSON + cartella opzionale.
+  // 1) Finestra con la casella dove incollare il JSON + cartelle opzionali
+  //    (una per gli Actor, una per gli Item: sono directory diverse in Foundry).
   const content = `
     <p>Incolla il JSON generato da <strong>Tafy's Actor Forge</strong>:
-    un mostro, un oggetto, oppure un array <code>[ {…}, {…} ]</code> misto.</p>
+    un mostro, un oggetto, un incantesimo, oppure un array <code>[ {…}, {…} ]</code> misto.</p>
     <textarea name="payload" rows="12"
       style="width:100%; font-family:monospace; white-space:pre; overflow:auto;"></textarea>
     <label style="display:block; margin-top:.5rem;">
-      Cartella di destinazione (opzionale, solo per gli Actor)
+      Cartella Actor (opzionale)
       <input type="text" name="folder" placeholder="es. Avernus - Mostri" style="width:100%;" />
+    </label>
+    <label style="display:block; margin-top:.5rem;">
+      Cartella Item / Spell (opzionale)
+      <input type="text" name="folderItems" placeholder="es. Avernus - Oggetti" style="width:100%;" />
     </label>`;
 
   // DialogV2.prompt LANCIA un'eccezione se chiudi senza confermare:
@@ -58,6 +63,7 @@
         callback: (event, button) => ({
           json: button.form.elements.payload.value,
           folder: button.form.elements.folder.value.trim(),
+          folderItems: button.form.elements.folderItems.value.trim(),
         }),
       },
     });
@@ -95,13 +101,16 @@
   const actors = list.filter((a) => ACTOR_TYPES.has(a.type));
   const items = list.filter((a) => !ACTOR_TYPES.has(a.type));
 
-  // 5) Cartella opzionale (solo per gli Actor): la troviamo per nome o la creiamo.
-  let folderId = null;
-  if (choice.folder && actors.length) {
-    let folder = game.folders.find((f) => f.type === "Actor" && f.name === choice.folder);
-    if (!folder) folder = await Folder.create({ name: choice.folder, type: "Actor" });
-    folderId = folder.id;
-  }
+  // 5) Cartelle opzionali: per nome, trovate o create — una di tipo Actor
+  //    per i mostri, una di tipo Item per oggetti/spell/feature.
+  const resolveFolder = async (name, type) => {
+    if (!name) return null;
+    let folder = game.folders.find((f) => f.type === type && f.name === name);
+    if (!folder) folder = await Folder.create({ name, type });
+    return folder.id;
+  };
+  const actorFolderId = actors.length ? await resolveFolder(choice.folder, "Actor") : null;
+  const itemFolderId = items.length ? await resolveFolder(choice.folderItems, "Item") : null;
 
   // 6) Prepariamo i dati per la creazione:
   //    - togliamo l'_id del documento di primo livello → Foundry ne assegna
@@ -110,24 +119,26 @@
   //      ed effetti si riferiscono l'uno all'altro tramite _id (es. il rider
   //      del "morso di lupo" punta all'effetto col suo _id). Rigenerarli
   //      spezzerebbe quei collegamenti e l'automazione non partirebbe.
-  const prep = (a, withFolder) => {
+  const prep = (a, folderId) => {
     const clone = foundry.utils.deepClone(a);
     delete clone._id;
-    if (withFolder && folderId) clone.folder = folderId;
+    if (folderId) clone.folder = folderId;
     return clone;
   };
 
-  // 7) Creazione in blocco, un gruppo per classe di documento.
+  // 7) Creazione in blocco, un gruppo per classe di documento: da un array
+  //    misto, gli Actor finiscono nella cartella Actor e gli Item nella
+  //    cartella Item, ciascuno smistato in automatico.
   const created = [];
   try {
     if (actors.length) {
-      const madeA = await Actor.createDocuments(actors.map((a) => prep(a, true)), { keepId: true });
+      const madeA = await Actor.createDocuments(actors.map((a) => prep(a, actorFolderId)), { keepId: true });
       created.push(...madeA);
     }
     if (items.length) {
       // Item standalone → finiscono negli "Items" del mondo, con dentro
       // già attività ed effetti DAE (transfer per i tratti passivi).
-      const madeI = await Item.createDocuments(items.map((a) => prep(a, false)), { keepId: true });
+      const madeI = await Item.createDocuments(items.map((a) => prep(a, itemFolderId)), { keepId: true });
       created.push(...madeI);
     }
     ui.notifications.info(

@@ -10,7 +10,8 @@
 // ============================================================
 import { WEAPON_BASE, FEAT_BASE, EQUIPMENT_BASE, CONSUMABLE_BASE } from '../data/item-bases.js';
 import { WEAPON_TYPES, WEAPON_MASTERIES } from '../data/constants.js';
-import { buildItem } from './item.js';
+import { buildItem, parseDamageParts } from './item.js';
+import { buildAAFlags } from './aa.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
 
@@ -46,9 +47,16 @@ export function buildStandaloneItem(d) {
   item.system.uses = behavior.system.uses;
   item.effects = behavior.effects || [];
 
-  // 4) Metadati da oggetto magico.
-  item.system.rarity = RARITIES.includes(d.rarity) ? (d.rarity || '') : '';
-  item.system.attunement = ATTUNEMENTS.includes(d.attunement) ? (d.attunement || '') : '';
+  // 4) Metadati da oggetto magico — SOLO per i tipi che li hanno nello
+  // schema: la FEAT_BASE (golden) NON ha rarity/attunement/unidentified,
+  // aggiungerli sarebbe schema drift.
+  if (type !== 'feat') {
+    item.system.rarity = RARITIES.includes(d.rarity) ? (d.rarity || '') : '';
+    item.system.attunement = ATTUNEMENTS.includes(d.attunement) ? (d.attunement || '') : '';
+    // Descrizione da oggetto NON identificato (quello che si legge finché
+    // l'oggetto è "non identificato" in Foundry).
+    item.system.unidentified = { description: d.unidentified ? `<p>${d.unidentified}</p>` : '' };
+  }
   const props = new Set(item.system.properties || []);
   if (d.magical) props.add('mgc'); else props.delete('mgc');
   // Argentata / adamantina: proprietà che bypassano resistenze (sil/ada);
@@ -57,9 +65,9 @@ export function buildStandaloneItem(d) {
   if (d.adamantine) props.add('ada'); else props.delete('ada');
   item.system.properties = [...props];
 
-  // Descrizione da oggetto NON identificato (quello che si legge finché
-  // l'oggetto è "non identificato" in Foundry).
-  item.system.unidentified = { description: d.unidentified ? `<p>${d.unidentified}</p>` : '' };
+  // Source personalizzata (es. "DMG p.94"): chiavi presenti in tutte le basi.
+  item.system.source.book = String(d.sourceBook || '').trim();
+  item.system.source.page = String(d.sourcePage || '').trim();
 
   // 5) Campi specifici del tipo.
   if (type === 'weapon') {
@@ -88,9 +96,13 @@ export function buildStandaloneItem(d) {
       item.system.damage.base = {
         number: first.number ?? null,
         denomination: first.denomination ?? null,
-        bonus: '',
+        bonus: first.bonus || '',
         types: first.types || [],
-        custom: { enabled: false, formula: '' },
+        // Se la prima parte era una formula composta (custom), la formula
+        // deve seguire il danno base, non andare persa.
+        custom: first.custom?.enabled
+          ? { enabled: true, formula: first.custom.formula || '' }
+          : { enabled: false, formula: '' },
         scaling: { mode: '', number: null, formula: '' },
       };
       atk.damage.parts = rest;
@@ -98,7 +110,16 @@ export function buildStandaloneItem(d) {
     }
   } else if (type === 'equipment' && Number(d.armorValue) > 0) {
     item.system.armor = { value: Number(d.armorValue), dex: null };
+  } else if (type === 'feat') {
+    // Feature di CLASSE o di MOSTRO (golden: Bladesong/Sneak Attack = class,
+    // tratti dei golden actor = monster) + requisiti ("Barbarian 9").
+    item.system.type = { value: d.featType === 'class' ? 'class' : 'monster', subtype: '' };
+    item.system.requirements = String(d.requirements || '').trim();
   }
+
+  // 6) Animazione Automated Animations (facoltativa, Fase 7).
+  const aaFlag = buildAAFlags(d.aa, item.name);
+  if (aaFlag) item.flags = { ...item.flags, autoanimations: aaFlag };
   return item;
 }
 
@@ -109,6 +130,11 @@ export function validateStandaloneItem(d) {
   const img = cleanImagePath(d.img);
   if (img && !/\.(apng|avif|bmp|gif|jpe?g|png|svg|tiff|webp)$/i.test(img)) {
     w.push(`Immagine "${img}": estensione non valida (Foundry rifiuterebbe l'import).`);
+  }
+  // Danni: gli errori del parser bloccano l'export (una parte malformata
+  // verrebbe scartata in silenzio e l'oggetto uscirebbe senza danno).
+  if ((d.kind === 'attack' || d.kind === 'save') && String(d.damage || '').trim()) {
+    w.push(...parseDamageParts(d.damage).errors);
   }
   return w;
 }

@@ -6,6 +6,8 @@
 // ============================================================
 import { buildSpell, validateSpell, SPELL_SCHOOLS, CAST_METHODS, TEMPLATE_TYPES, DURATION_UNITS } from '../builders/spell.js';
 import { effectsSectionHtml, applyEffectsEvent } from './effects-editor.js';
+import { aaSectionHtml, applyAAEvent, loadAAIndex, aaIndexReady } from './aa-editor.js';
+import { defaultAA } from '../builders/aa.js';
 import { ABILITIES, CONDITIONS, CONDITION_LABELS, CONDITION_LABELS_EN, byLang } from '../data/constants.js';
 import { downloadJson } from '../utils/download.js';
 import { t, getLang } from '../i18n.js';
@@ -22,6 +24,7 @@ let addToBatch = () => {};
 function defaultSpell() {
   return {
     name: '', img: '', description: '', rules: '2014',
+    sourceBook: '', sourcePage: '',
     level: '1', school: 'evo',
     vocal: true, somatic: true, material: false, materialText: '', materialConsumed: false,
     concentration: false, ritual: false, method: 'spell',
@@ -35,6 +38,7 @@ function defaultSpell() {
     riderSaveAbility: 'con', riderDc: '',
     upcastFormula: '', usesMode: 'none', usesValue: '',
     effects: [],
+    aa: defaultAA(),
   };
 }
 
@@ -62,6 +66,8 @@ function formHtml(it) {
     <label>${t('f_rules')} <select data-f="rules">${opts([['2014', t('rules_2014')], ['2024', t('rules_2024')]], it.rules)}</select></label>
     <label>${t('sp_method')} <span class="hint">${t('sp_method_hint')}</span><select data-f="method">${opts(METHOD_OPTS(), it.method)}</select></label>
     <label>${t('ed_icon')} <input type="text" data-f="img" value="${esc(it.img)}" placeholder="icons/..." /></label>
+    <label>${t('src_book')} <input type="text" data-f="sourceBook" value="${esc(it.sourceBook)}" placeholder="${t('src_book_ph')}" /></label>
+    <label>${t('src_page')} <input type="text" data-f="sourcePage" value="${esc(it.sourcePage)}" placeholder="241" /></label>
   </div>
 
   <div class="grid-6 sp-comps">
@@ -80,8 +86,8 @@ function formHtml(it) {
   <div class="grid-3">
     <label>${t('sp_cast')} <select data-f="activation">${opts(ACTIVATIONS(), it.activation)}</select></label>
     ${it.activation === 'minute' ? `<label>${t('sp_cast_min')} <input type="number" data-f="castValue" value="${esc(it.castValue)}" /></label>` : ''}
-    <label>${t('sp_range')} <select data-f="rangeMode">${opts([['ft', t('rng_ft')], ['touch', t('rng_touch')], ['self', t('rng_self')]], it.rangeMode)}</select></label>
-    ${it.rangeMode === 'ft' ? `<label>${t('sp_range_val')} <input type="number" data-f="rangeValue" value="${esc(it.rangeValue)}" /></label>` : ''}
+    <label>${t('sp_range')} <select data-f="rangeMode">${opts([['ft', t('rng_ft')], ['touch', t('rng_touch')], ['self', t('rng_self')], ['mi', t('rng_mi')]], it.rangeMode)}</select></label>
+    ${(it.rangeMode === 'ft' || it.rangeMode === 'mi') ? `<label>${it.rangeMode === 'mi' ? t('rng_mi') : t('sp_range_val')} <input type="number" data-f="rangeValue" value="${esc(it.rangeValue)}" /></label>` : ''}
   </div>
 
   <div class="grid-3">
@@ -136,6 +142,7 @@ function formHtml(it) {
   </fieldset>
 
   ${effectsSectionHtml(it, false)}
+  ${aaSectionHtml(it.aa)}
 
   <label>${t('ed_description')} <textarea data-f="description" rows="3">${esc(it.description)}</textarea></label>`;
 }
@@ -146,6 +153,8 @@ const STRUCTURAL = ['kind', 'attackType', 'onHit', 'dcMode', 'targetMode', 'rang
 function render() {
   document.getElementById('spell-form-body').innerHTML = formHtml(state);
   renderPreview();
+  // Indice JB2A in lazy (vedi item-tab): carica e ridisegna al primo uso.
+  if (state.aa.enabled && !aaIndexReady()) loadAAIndex().then(render);
 }
 
 function renderPreview() {
@@ -163,6 +172,8 @@ export function initSpellTab({ onAddToBatch }) {
   body.addEventListener('input', (ev) => {
     const res = applyEffectsEvent(state, ev);
     if (res.handled) { if (res.structural) render(); else renderPreview(); return; }
+    const aaRes = applyAAEvent(state, ev);
+    if (aaRes.handled) { if (aaRes.structural) render(); else renderPreview(); return; }
     const f = ev.target.dataset.f;
     if (!f) return;
     state[f] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;

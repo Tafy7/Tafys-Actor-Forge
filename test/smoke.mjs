@@ -428,6 +428,127 @@ check('validateSpell: nome mancante bloccato', validateSpell({ name: '' }).lengt
 check('validateSpell: upcast malformato segnalato', validateSpell({ name: 'X', upcastFormula: 'abc' }).length > 0);
 check('validateSpell: upcast NdX valido passa', validateSpell({ name: 'X', upcastFormula: '2d8' }).length === 0);
 
+// --- v0.21: validazione danni + formule multi-dado (bug segnalato dall'utente) ---
+console.log('\n— Validazione danni Item/Spell + formule composte —');
+// Il caso dell'utente: danno SENZA tipo → errore mostrato (prima passava in silenzio).
+check('validateSpell: danno senza tipo BLOCCATO ("10d8 + 1d8")',
+  validateSpell({ name: 'X', kind: 'save', damage: '10d8 + 1d8' }).length > 0);
+check('validateSpell: danno col tipo passa ("10d8 + 1d8 fire")',
+  validateSpell({ name: 'X', kind: 'save', damage: '10d8 + 1d8 fire' }).length === 0);
+const { validateStandaloneItem: vsi } = await import('../src/builders/standalone-item.js');
+check('validateStandaloneItem: danno senza tipo BLOCCATO',
+  vsi({ name: 'X', kind: 'attack', damage: '2d6' }).length > 0);
+check('validateStandaloneItem: danno valido passa',
+  vsi({ name: 'X', kind: 'attack', damage: '2d6 slashing' }).length === 0);
+// Formula multi-dado → parte custom (pattern golden Green-Flame Blade).
+const multi = parseDamageParts('10d8 + 1d8 + 1d4 + 1d6 fire');
+check('multi-dado: nessun errore, 1 parte custom', multi.errors.length === 0 && multi.parts.length === 1);
+check('multi-dado: custom.enabled con formula intera',
+  multi.parts[0].custom.enabled === true && multi.parts[0].custom.formula === '10d8 + 1d8 + 1d4 + 1d6');
+check('multi-dado: number null, tipo fire', multi.parts[0].number === null && multi.parts[0].types.includes('fire'));
+// La spell buildata con formula composta la porta nell'activity.
+const multiSpell = buildSpell({ name: 'Sciame', level: '9', school: 'evo', vocal: true, kind: 'save', saveAbility: 'dex',
+  dcMode: 'spellcasting', onSave: 'half', damage: '20d6 fire, 20d6 bludgeoning', durationUnits: 'inst',
+  rangeMode: 'mi', rangeValue: '1', targetMode: 'template', templateType: 'sphere', templateSize: '40', usesMode: 'none', effects: [] });
+const msAct = Object.values(multiSpell.system.activities)[0];
+check('meteor-like: 2 parti di danno (fire + bludgeoning)', msAct.damage.parts.length === 2);
+check('meteor-like: gittata 1 miglio', multiSpell.system.range.units === 'mi' && multiSpell.system.range.value === '1');
+// Arma con danno base composto: la formula custom segue il danno base.
+const customWpn = buildStandaloneItem({ itemType: 'weapon', name: 'X', magical: true, kind: 'attack', ability: 'str',
+  attackType: 'melee', damage: '2d8 + 1d6 slashing', effects: [] });
+check('arma base composta: custom formula in system.damage.base',
+  customWpn.system.damage.base.custom.enabled === true && customWpn.system.damage.base.custom.formula === '2d8 + 1d6');
+
+// --- v0.22: upcast 1ª parte, source, feat di classe, drift feat ---
+console.log('\n— v0.22: upcast/source/feature —');
+
+// Upcast applicato SOLO alla prima parte (bug: +1d8 per OGNI tipo di danno).
+const twoTypes = buildSpell({ name: 'X', level: '3', school: 'evo', vocal: true, kind: 'save', saveAbility: 'dex',
+  dcMode: 'spellcasting', onSave: 'half', damage: '8d6 fire, 2d8 cold', upcastFormula: '1d8',
+  durationUnits: 'inst', rangeMode: 'ft', rangeValue: '150', targetMode: 'template', templateType: 'sphere', templateSize: '20', usesMode: 'none', effects: [] });
+const ttAct = Object.values(twoTypes.system.activities)[0];
+check('upcast: SOLO la 1ª parte scala (fire sì, cold no)',
+  ttAct.damage.parts[0].scaling.formula === '1d8' && !ttAct.damage.parts[1].scaling.formula);
+
+// Source book/page su spell e item.
+const srcSpell = buildSpell({ name: 'X', level: '1', school: 'evo', vocal: true, kind: 'utility',
+  sourceBook: "DMG'14", sourcePage: '94', durationUnits: 'inst', rangeMode: 'self', targetMode: 'self', usesMode: 'none', effects: [] });
+check('source spell: book+page salvati', srcSpell.system.source.book === "DMG'14" && srcSpell.system.source.page === '94');
+const srcItem = buildStandaloneItem({ itemType: 'weapon', name: 'X', magical: true, kind: 'attack', ability: 'str',
+  damage: '1d8 slashing', sourceBook: 'XGE', sourcePage: '12', effects: [] });
+check('source item: book+page salvati', srcItem.system.source.book === 'XGE' && srcItem.system.source.page === '12');
+
+// Feature di classe: tipo class, requisiti, usi con FORMULA e recovery lr
+// (pattern golden Bladesong) — e ZERO drift rispetto alla FEAT_BASE.
+const { FEAT_BASE } = await import('../src/data/item-bases.js');
+const classFeat = buildStandaloneItem({
+  itemType: 'feat', name: 'Canto della Lama', magical: true, featType: 'class', requirements: 'Wizard 3',
+  kind: 'utility', activation: 'bonus', usesMode: 'lr', usesValue: 'max(1, @abilities.int.mod)',
+  effects: [{ name: 'Canto', application: 'target', rounds: '10', img: '', changes: [{ key: 'system.attributes.ac.bonus', mode: 2, value: '@abilities.int.mod', priority: '' }] }],
+});
+check('feat classe: type.value = class + requisiti', classFeat.system.type.value === 'class' && classFeat.system.requirements === 'Wizard 3');
+check('feat classe: uses.max = FORMULA, recovery lr',
+  classFeat.system.uses.max === 'max(1, @abilities.int.mod)' && classFeat.system.uses.recovery[0].period === 'lr');
+check('feat classe: activity consuma itemUses',
+  Object.values(classFeat.system.activities)[0].consumption.targets[0]?.type === 'itemUses');
+check('feat: NIENTE rarity/attunement/unidentified (drift fixato)',
+  !('rarity' in classFeat.system) && !('attunement' in classFeat.system) && !('unidentified' in classFeat.system));
+check('feat: chiavi system identiche alla FEAT_BASE',
+  Object.keys(classFeat.system).sort().join(',') === Object.keys(FEAT_BASE.system).sort().join(','));
+
+// Usi per riposo breve e per turno (Wild Shape 'sr', Sneak Attack 'turn').
+const srFeat = buildStandaloneItem({ itemType: 'feat', name: 'X', featType: 'class', kind: 'utility', usesMode: 'sr', usesValue: '2', effects: [] });
+check('feat: 2 per riposo breve', srFeat.system.uses.max === '2' && srFeat.system.uses.recovery[0].period === 'sr');
+const turnFeat = buildStandaloneItem({ itemType: 'feat', name: 'X', featType: 'class', kind: 'utility', usesMode: 'turn', usesValue: '1', effects: [] });
+check('feat: 1 per turno', turnFeat.system.uses.max === '1' && turnFeat.system.uses.recovery[0].period === 'turn');
+
+// --- v0.23: Automated Animations (flags.autoanimations v5) + source NPC ---
+console.log('\n— Automated Animations + source NPC —');
+const { buildAAFlags, defaultAA } = await import('../src/builders/aa.js');
+
+// Forma del flag identica al golden Power Word Stun (chiavi top e primary).
+const goldenPWS = JSON.parse(readFileSync(new URL('../templates/golden-spell-power-word-stun-overtime.json', import.meta.url)));
+const goldenAA = goldenPWS.flags.autoanimations;
+const aaFlag = buildAAFlags({ ...defaultAA(), enabled: true, path: 'fireball.explosion.orange', playOn: 'target', persistent: false, scale: '1.5' }, 'Palla di Fuoco');
+check('AA: chiavi top-level identiche al golden PWS',
+  Object.keys(aaFlag).sort().join(',') === Object.keys(goldenAA).sort().join(','));
+check('AA: chiavi primary identiche al golden',
+  Object.keys(aaFlag.primary).sort().join(',') === Object.keys(goldenAA.primary).sort().join(',') &&
+  Object.keys(aaFlag.primary.video).sort().join(',') === Object.keys(goldenAA.primary.video).sort().join(','));
+check('AA: customPath con prefisso jb2a + enableCustom',
+  aaFlag.primary.video.enableCustom === true && aaFlag.primary.video.customPath === 'jb2a.fireball.explosion.orange');
+check('AA: playOn target, scala 1.5, abilitata v5',
+  aaFlag.primary.options.playOn === 'target' && aaFlag.primary.options.size === 1.5 && aaFlag.isEnabled === true && aaFlag.version === 5);
+check('AA: id in formato uuid', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(aaFlag.id));
+check('AA: disattivata o senza path → null',
+  buildAAFlags({ ...defaultAA(), enabled: false, path: 'x' }) === null && buildAAFlags({ ...defaultAA(), enabled: true, path: '' }) === null);
+
+// Slot target aggiuntivo.
+const aaTgt = buildAAFlags({ ...defaultAA(), enabled: true, path: 'fireball.beam.orange', tgtEnabled: true, tgtPath: 'impact.fire.01.orange' }, 'X');
+check('AA: slot target abilitato con proprio customPath',
+  aaTgt.target.enable === true && aaTgt.target.video.customPath === 'jb2a.impact.fire.01.orange');
+
+// Integrazione: spell e item portano il flag; senza A-A niente flag.
+const aaSpell = buildSpell({ name: 'X', level: '3', school: 'evo', vocal: true, kind: 'save', saveAbility: 'dex', dcMode: 'spellcasting',
+  damage: '8d6 fire', durationUnits: 'inst', rangeMode: 'ft', rangeValue: '150', targetMode: 'template', templateType: 'sphere', templateSize: '20',
+  usesMode: 'none', effects: [], aa: { ...defaultAA(), enabled: true, path: 'fireball.explosion.orange' } });
+check('AA: la spell porta flags.autoanimations', aaSpell.flags.autoanimations?.isEnabled === true);
+const noAaSpell = buildSpell({ name: 'X', level: '1', school: 'evo', vocal: true, kind: 'utility', durationUnits: 'inst', rangeMode: 'self', targetMode: 'self', usesMode: 'none', effects: [] });
+check('AA: senza sezione, nessun flag', !noAaSpell.flags.autoanimations);
+const aaItem = buildStandaloneItem({ itemType: 'weapon', name: 'X', magical: true, kind: 'attack', ability: 'str', damage: '1d8 slashing',
+  effects: [], aa: { ...defaultAA(), enabled: true, path: 'melee generic.slashing.01.orange'.replace(' generic', '_generic') } });
+check('AA: anche l\'item porta il flag', aaItem.flags.autoanimations?.isEnabled === true);
+
+// Indice JB2A: presente, >1900 voci, path noti risolti.
+const { JB2A_FREE, JB2A_RAW_BASE } = await import('../src/data/jb2a-free-index.js');
+check('JB2A index: 2000+ animazioni free', Object.keys(JB2A_FREE).length >= 1900);
+check('JB2A index: fireball.explosion.orange → webm nel repo',
+  /Fireball.*\.webm$/i.test(JB2A_FREE['fireball.explosion.orange'] || '') && JB2A_RAW_BASE.startsWith('https://raw.githubusercontent.com/'));
+
+// Source NPC → system.source.book/page.
+const srcNpc = buildNpc({ ...sample, sourceBook: "DMG'14", sourcePage: '94' });
+check('source NPC: book+page in system.source', srcNpc.system.source.book === "DMG'14" && srcNpc.system.source.page === '94');
+
 // --- Effetto condizione: forma allineata al golden "Status: Blinded" ---
 console.log('\n— Effetto condizione anti-doppione —');
 const condEff = onHitWpn.effects.find(e => e.statuses?.includes('stunned'));

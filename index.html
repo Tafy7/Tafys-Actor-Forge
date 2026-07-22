@@ -11,7 +11,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.20</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.23</p>
       </div>
       <button type="button" id="btn-lang" class="lang-btn" data-i18n-title="langLabel" title="Lingua">EN</button>
     </div>
@@ -71,6 +71,12 @@
               <option value="2014" data-i18n="rules_2014">2014 (classiche)</option>
               <option value="2024" data-i18n="rules_2024">2024 (revised)</option>
             </select>
+          </label>
+          <label><span data-i18n="src_book">Source (manuale)</span>
+            <input type="text" id="sourceBook" data-i18n-ph="src_book_ph" placeholder="DMG'14" />
+          </label>
+          <label><span data-i18n="src_page">Pagina</span>
+            <input type="text" id="sourcePage" placeholder="94" />
           </label>
         </div>
       </fieldset>
@@ -172,6 +178,10 @@
             <button type="button" id="btn-batch-export" class="secondary small" data-i18n="batch_export">Esporta collezione</button>
             <button type="button" id="btn-batch-clear" class="secondary small" data-i18n="batch_clear">🗑️ Svuota</button>
           </div>
+          <details id="batch-list-box">
+            <summary class="hint" data-i18n="batch_list">📋 Contenuto della collezione</summary>
+            <div id="batch-list"><!-- generato da main.js --></div>
+          </details>
           <span id="batch-msg" class="hint"></span>
         </div>
 

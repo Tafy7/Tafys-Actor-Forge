@@ -6,6 +6,8 @@
 // ============================================================
 import { buildStandaloneItem, validateStandaloneItem, RARITIES, ATTUNEMENTS } from '../builders/standalone-item.js';
 import { effectsSectionHtml, applyEffectsEvent, normalizeEffect } from './effects-editor.js';
+import { aaSectionHtml, applyAAEvent, loadAAIndex, aaIndexReady } from './aa-editor.js';
+import { defaultAA } from '../builders/aa.js';
 import { ABILITIES, CONDITIONS, CONDITION_LABELS, CONDITION_LABELS_EN, byLang, WEAPON_TYPES, WEAPON_MASTERIES } from '../data/constants.js';
 import { downloadJson } from '../utils/download.js';
 import { t, getLang } from '../i18n.js';
@@ -22,8 +24,10 @@ let addToBatch = () => {};
 function defaultItem() {
   return {
     itemType: 'weapon', name: '', img: '', description: '', unidentified: '',
+    sourceBook: '', sourcePage: '',
     rarity: '', attunement: '', magical: true, silvered: false, adamantine: false, armorValue: '',
     weaponBase: '', magicalBonus: '', mastery: '',
+    featType: 'monster', requirements: '',
     kind: 'attack', activation: 'action',
     attackType: 'melee', ability: 'str', reach: '5', range: '30', longRange: '', damage: '', magicalDamage: false,
     saveAbility: 'con', dc: '', onSave: 'none',
@@ -31,6 +35,7 @@ function defaultItem() {
     riderSaveAbility: 'con', riderDc: '',
     usesMode: 'none', usesValue: '',
     effects: [],
+    aa: defaultAA(),
   };
 }
 
@@ -68,11 +73,21 @@ function formHtml(it) {
     <label>${t('ed_name')} <input type="text" data-f="name" value="${esc(it.name)}" placeholder="${t('it_name_ph')}" /></label>
     <label>${t('ed_icon')} <input type="text" data-f="img" value="${esc(it.img)}" placeholder="icons/..." /></label>
   </div>
+  ${it.itemType === 'feat' ? `
+  <div class="grid-3">
+    <label>${t('it_feattype')} <select data-f="featType">${opts([['monster', t('ft_monster')], ['class', t('ft_class')]], it.featType)}</select></label>
+    <label>${t('it_requirements')} <input type="text" data-f="requirements" value="${esc(it.requirements)}" placeholder="${t('it_requirements_ph')}" /></label>
+    <label class="check">${t('it_magical')} <input type="checkbox" data-f="magical" ${it.magical ? 'checked' : ''} /></label>
+  </div>` : `
   <div class="grid-3">
     <label>${t('it_rarity')} <select data-f="rarity">${opts(RARITY_OPTS(), it.rarity)}</select></label>
     <label>${t('it_attunement')} <select data-f="attunement">${opts(ATT_OPTS(), it.attunement)}</select></label>
     <label class="check">${t('it_magical')} <input type="checkbox" data-f="magical" ${it.magical ? 'checked' : ''} /></label>
     ${isEquip ? `<label>${t('it_armor')} <span class="hint">${t('it_armor_hint')}</span><input type="number" data-f="armorValue" value="${esc(it.armorValue)}" /></label>` : ''}
+  </div>`}
+  <div class="grid-3">
+    <label>${t('src_book')} <input type="text" data-f="sourceBook" value="${esc(it.sourceBook)}" placeholder="${t('src_book_ph')}" /></label>
+    <label>${t('src_page')} <input type="text" data-f="sourcePage" value="${esc(it.sourcePage)}" placeholder="94" /></label>
   </div>
   ${it.itemType === 'weapon' ? `
   <div class="grid-3">
@@ -120,12 +135,20 @@ function formHtml(it) {
     ${hasDamage ? `<label>${t('ed_damage')} <span class="hint">${t('ed_damage_hint')}</span><input type="text" data-f="damage" value="${esc(it.damage)}" placeholder="${t('ed_damage_ph')}" /></label>` : ''}
     ${it.kind !== 'passive' ? `
     <div class="grid-3">
-      <label>${t('ed_uses')} <select data-f="usesMode">${opts([['none', t('opt_unlimited')], ['recharge', t('opt_recharge')], ['day', t('opt_perday')]], it.usesMode)}</select></label>
-      ${it.usesMode !== 'none' ? `<label>${it.usesMode === 'recharge' ? t('ed_recharge_x') : t('ed_uses_day')} <input type="number" data-f="usesValue" value="${esc(it.usesValue)}" /></label>` : ''}
+      <label>${t('ed_uses')} <select data-f="usesMode">${opts([
+        ['none', t('opt_unlimited')], ['recharge', t('opt_recharge')], ['day', t('opt_perday')],
+        ['sr', t('opt_sr')], ['lr', t('opt_lr')], ['turn', t('opt_turn')],
+      ], it.usesMode)}</select></label>
+      ${it.usesMode === 'recharge'
+        ? `<label>${t('ed_recharge_x')} <input type="number" data-f="usesValue" value="${esc(it.usesValue)}" /></label>`
+        : it.usesMode !== 'none'
+          ? `<label>${t('ed_uses_n')} <span class="hint">${t('ed_uses_formula_hint')}</span><input type="text" data-f="usesValue" value="${esc(it.usesValue)}" placeholder="2" /></label>`
+          : ''}
     </div>` : ''}
   </fieldset>
 
   ${effectsSectionHtml(it, it.kind === 'passive')}
+  ${aaSectionHtml(it.aa)}
 
   <label>${t('ed_description')} <textarea data-f="description" rows="3">${esc(it.description)}</textarea></label>
   <label>${t('it_unidentified')} <span class="hint">${t('it_unidentified_hint')}</span><textarea data-f="unidentified" rows="2">${esc(it.unidentified)}</textarea></label>`;
@@ -137,6 +160,9 @@ const STRUCTURAL = ['itemType', 'kind', 'attackType', 'usesMode', 'onHit'];
 function render() {
   document.getElementById('item-form-body').innerHTML = formHtml(state);
   renderPreview();
+  // Indice JB2A in lazy: al primo uso della sezione A-A lo carichiamo e
+  // ridisegniamo (il segnaposto "caricamento..." sparisce da solo).
+  if (state.aa.enabled && !aaIndexReady()) loadAAIndex().then(render);
 }
 
 function renderPreview() {
@@ -157,6 +183,9 @@ export function initItemTab({ onAddToBatch }) {
     // Prima gli eventi della sezione effetti (add/remove/preset/changes).
     const res = applyEffectsEvent(state, ev);
     if (res.handled) { if (res.structural) render(); else renderPreview(); return; }
+    // Poi la sezione animazioni A-A.
+    const aaRes = applyAAEvent(state, ev);
+    if (aaRes.handled) { if (aaRes.structural) render(); else renderPreview(); return; }
     const f = ev.target.dataset.f;
     if (!f) return;
     state[f] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;

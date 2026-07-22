@@ -1,0 +1,267 @@
+{
+  "name": "Wild Shape",
+  "type": "feat",
+  "system": {
+    "description": {
+      "value": "<div class=\"rd__b  rd__b--3\"><p>Starting at 2nd level, you can use your action to magically assume the shape of a beast that you have seen before. You can use this feature twice. You regain expended uses when you finish a short or long rest.</p><p>Your druid level determines the beasts you can transform into, as shown in the Beast Shapes table. At 2nd level, for example, you can transform into any beast that has a challenge rating of 1/4 or lower that doesn't have a flying or swimming speed.</p><table class=\"w-100 rd__table  stripe-odd-table\" data-roll-name-ancestor=\"Beast Shapes\"><caption>Beast Shapes</caption><thead><tr><th class=\"rd__th ve-col-2 ve-text-center \" data-rd-isroller=\"false\">Level</th><th class=\"rd__th ve-col-2 ve-text-center \" data-rd-isroller=\"false\">Max. CR</th><th class=\"rd__th ve-col-5 \" data-rd-isroller=\"false\">Limitations</th><th class=\"rd__th ve-col-3 \" data-rd-isroller=\"false\">Example</th></tr></thead><tbody><tr><td class=\"rd__th ve-col-2 ve-text-center \">2nd</td><td class=\"rd__th ve-col-2 ve-text-center \"><a href=\"https://5e.tools/bestiary.html#blankhash,flstchallenge%20rating:min=&amp;0~max=&amp;1/4,flsttype:beast=1,flstspeed%20type:fly=2~swim=2,flstmiscellaneous:swarm=2\">1/4</a></td><td class=\"rd__th ve-col-5 \">No flying or swimming speed</td><td class=\"rd__th ve-col-3 \">Wolf</td></tr><tr><td class=\"rd__th ve-col-2 ve-text-center \">4th</td><td class=\"rd__th ve-col-2 ve-text-center \"><a href=\"https://5e.tools/bestiary.html#blankhash,flstchallenge%20rating:min=&amp;0~max=&amp;1/2,flsttype:beast=1,flstspeed%20type:fly=2,flstmiscellaneous:swarm=2\">1/2</a></td><td class=\"rd__th ve-col-5 \">No flying speed</td><td class=\"rd__th ve-col-3 \">Crocodile</td></tr><tr><td class=\"rd__th ve-col-2 ve-text-center \">8th</td><td class=\"rd__th ve-col-2 ve-text-center \"><a href=\"https://5e.tools/bestiary.html#blankhash,flstchallenge%20rating:min=&amp;0~max=&amp;1,flsttype:beast=1,flstmiscellaneous:swarm=2\">1</a></td><td class=\"rd__th ve-col-5 \">—</td><td class=\"rd__th ve-col-3 \">Giant eagle</td></tr></tbody></table><p>You can stay in a beast shape for a number of hours equal to half your druid level (rounded down). You then revert to your normal form unless you expend another use of this feature. You can revert to your normal form earlier by using a bonus action on your turn. You automatically revert if you fall &amp;Reference[condition=unconscious], drop to 0 hit points, or die.</p><p>While you are transformed, the following rules apply:</p><ul class=\"rd__list\"><li class=\"rd__li \">Your game statistics are replaced by the statistics of the beast, but you retain your alignment, personality, and Intelligence, Wisdom, and Charisma scores. You also retain all of your skill and saving throw proficiencies, in addition to gaining those of the creature. If the creature has the same proficiency as you and the bonus in its stat block is higher than yours, use the creature's bonus instead of yours. If the creature has any legendary or lair actions, you can't use them.</li><li class=\"rd__li \">When you transform, you assume the beast's hit points and Hit Dice. When you revert to your normal form, you return to the number of hit points you had before you transformed. However, if you revert as a result of dropping to 0 hit points, any excess damage carries over to your normal form. For example, if you take 10 damage in animal form and have only 1 hit point left, you revert and take 9 damage. As long as the excess damage doesn't reduce your normal form to 0 hit points, you aren't knocked &amp;Reference[condition=unconscious].</li><li class=\"rd__li \">You can't cast spells, and your ability to speak or take any action that requires hands is limited to the capabilities of your beast form. Transforming doesn't break your @status[concentration] on a spell you've already cast, however, or prevent you from taking actions that are part of a spell, such as @spell[call lightning], that you've already cast.</li><li class=\"rd__li \">You retain the benefit of any features from your class, race, or other source and can use them if the new form is physically capable of doing so. However, you can't use any of your special senses, such as &amp;Reference[rule=darkvision], unless your new form also has that sense.</li><li class=\"rd__li \">You choose whether your equipment falls to the ground in your space, merges into your new form, or is worn by it. Worn equipment functions as normal, but the DM decides whether it is practical for the new form to wear a piece of equipment, based on the creature's shape and size. Your equipment doesn't change size or shape to match the new form, and any equipment that the new form can't wear must either fall to the ground or merge with it. Equipment that merges with the form has no effect until you leave the form.</li></ul></div>",
+      "chat": ""
+    },
+    "source": {
+      "custom": "",
+      "book": "PHB'14",
+      "page": "64",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "uses": {
+      "max": "2",
+      "recovery": [
+        {
+          "period": "sr",
+          "type": "recoverAll"
+        }
+      ],
+      "spent": 0
+    },
+    "type": {
+      "value": "class",
+      "subtype": ""
+    },
+    "requirements": "",
+    "properties": [],
+    "activities": {
+      "dnd5eactivity000": {
+        "_id": "dnd5eactivity000",
+        "type": "utility",
+        "activation": {
+          "type": "action",
+          "value": 1,
+          "condition": "",
+          "override": false
+        },
+        "consumption": {
+          "targets": [
+            {
+              "type": "itemUses",
+              "target": "",
+              "value": "1",
+              "scaling": {
+                "mode": "",
+                "formula": ""
+              }
+            }
+          ],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          },
+          "spellSlot": true
+        },
+        "description": {
+          "chatFlavor": ""
+        },
+        "duration": {
+          "concentration": false,
+          "value": "1",
+          "units": "inst",
+          "special": "",
+          "override": false
+        },
+        "effects": [],
+        "range": {
+          "value": "5",
+          "units": "self",
+          "special": "",
+          "override": false
+        },
+        "target": {
+          "template": {
+            "count": "",
+            "contiguous": false,
+            "type": "",
+            "size": "",
+            "width": "",
+            "height": "",
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "count": "",
+            "type": "self",
+            "choice": false,
+            "special": ""
+          },
+          "prompt": true,
+          "override": false
+        },
+        "uses": {
+          "spent": 0,
+          "max": "",
+          "recovery": []
+        },
+        "roll": {
+          "formula": "",
+          "name": "",
+          "prompt": false,
+          "visible": false
+        },
+        "sort": 0,
+        "useConditionText": "",
+        "effectConditionText": "",
+        "useConditionReason": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "forceDamageDialog": "false",
+          "confirmTargets": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "automationOnly": false,
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "identifier": "",
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "skipConcentrationCheck": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "none",
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        },
+        "otherActivityAsParentType": true
+      }
+    },
+    "enchant": {},
+    "prerequisites": {
+      "level": null,
+      "items": [],
+      "repeatable": false
+    },
+    "identifier": "wild-shape",
+    "advancement": {},
+    "crewed": false
+  },
+  "effects": [],
+  "flags": {
+    "dnd5e": {
+      "riders": {
+        "activity": []
+      }
+    },
+    "chris-premades": {
+      "info": {
+        "name": "Wild Shape",
+        "version": "1.1.0",
+        "identifier": "wildShape",
+        "source": "chris-premades",
+        "rules": "legacy"
+      },
+      "macros": {
+        "midi": {
+          "item": [
+            "wildShape"
+          ]
+        }
+      },
+      "config": {
+        "keepSpells": false
+      }
+    },
+    "midi-qol": {
+      "effectActivation": false,
+      "rollAttackPerTarget": "default",
+      "itemCondition": "",
+      "effectCondition": "",
+      "AoETargetType": "any",
+      "AoETargetTypeIncludeSelf": true,
+      "autoTarget": "default",
+      "removeAttackDamageButtons": "default",
+      "reactionCondition": "",
+      "otherCondition": ""
+    },
+    "midiProperties": {
+      "nodam": false,
+      "fulldam": false,
+      "halfdam": false,
+      "autoFailFriendly": false,
+      "autoSaveFriendly": false,
+      "rollOther": false,
+      "critOther": false,
+      "offHandWeapon": false,
+      "magicdam": false,
+      "magiceffect": false,
+      "concentration": false,
+      "toggleEffect": false,
+      "ignoreTotalCover": false,
+      "confirmTargets": "default",
+      "noConcentrationCheck": false,
+      "idr": false,
+      "idi": false,
+      "idv": false,
+      "ida": false
+    },
+    "core": {}
+  },
+  "img": "https://assets.forge-vtt.com/bazaar/core/icons/creatures/mammals/elk-moose-marked-green.webp",
+  "folder": "dc6TWWX3n94hTwgz",
+  "_stats": {
+    "compendiumSource": "Compendium.u-tian-de-tuttu-demil-2.Feature.Item.Alq2bwkxxVyFIoOQ",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.xMXoQfkV90WitGzv",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784684627448,
+    "modifiedTime": 1784684637260,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

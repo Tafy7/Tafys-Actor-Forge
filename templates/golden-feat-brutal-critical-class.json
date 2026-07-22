@@ -1,0 +1,121 @@
+{
+  "name": "Brutal Critical (1 die)",
+  "type": "feat",
+  "system": {
+    "description": {
+      "value": "<div class=\"rd__b  rd__b--3\"><p>Beginning at 9th level, you can roll one additional weapon damage die when determining the extra damage for a critical hit with a melee attack.</p><p>This increases to two additional dice at 13th level and three additional dice at 17th level.</p></div>",
+      "chat": ""
+    },
+    "source": {
+      "custom": "",
+      "book": "PHB'14",
+      "page": "46",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "uses": {
+      "max": "",
+      "spent": 0,
+      "recovery": []
+    },
+    "type": {
+      "value": "class",
+      "subtype": ""
+    },
+    "requirements": "Barbarian 9",
+    "properties": [],
+    "activities": {},
+    "enchant": {},
+    "prerequisites": {
+      "level": null,
+      "items": [],
+      "repeatable": false
+    },
+    "identifier": "brutal-critical",
+    "advancement": {},
+    "crewed": false
+  },
+  "effects": [
+    {
+      "_id": "UDS5xiXpe9O83z8Q",
+      "name": "Brutal Critical (1 die)",
+      "img": "icons/skills/melee/strike-axe-blood-red.webp",
+      "description": "",
+      "changes": [
+        {
+          "key": "flags.dnd5e.meleeCriticalDamageDice",
+          "mode": 4,
+          "value": "1",
+          "priority": 4
+        }
+      ],
+      "statuses": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null,
+        "combat": null
+      },
+      "origin": null,
+      "transfer": true,
+      "flags": {
+        "plutonium": {
+          "dedupeId": "brutal-critical-1-die"
+        }
+      },
+      "type": "base",
+      "system": {},
+      "tint": "#ffffff",
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.3.3",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "flags": {
+    "plutonium": {
+      "page": "classFeature",
+      "source": "PHB",
+      "hash": "brutal%20critical%20(1%20die)_barbarian_phb_9_phb",
+      "propDroppable": "classFeature"
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": []
+      }
+    }
+  },
+  "img": "https://assets.forge-vtt.com/bazaar/core/icons/skills/melee/strike-axe-blood-red.webp",
+  "folder": "dc6TWWX3n94hTwgz",
+  "_stats": {
+    "compendiumSource": "Compendium.u-tian-de-tuttu-demil-2.Feature.Item.Vzl7SqQA3i2EyfQW",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.sdNgzSoHWDFI3XsM",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784684882210,
+    "modifiedTime": 1784684882258,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

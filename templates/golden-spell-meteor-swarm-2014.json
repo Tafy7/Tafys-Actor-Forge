@@ -1,0 +1,264 @@
+{
+  "name": "Meteor Swarm",
+  "type": "spell",
+  "system": {
+    "source": {
+      "custom": "",
+      "book": "PHB'14",
+      "page": "259",
+      "license": "",
+      "rules": "2014",
+      "revision": 1
+    },
+    "description": {
+      "value": "<div class=\"rd__b  rd__b--3\"><p>Blazing orbs of fire plummet to the ground at four different points you can see within range. Each creature in a 40-foot-radius sphere centered on each point you choose must make a Dexterity saving throw. The sphere spreads around corners. A creature takes [[/damage 20d6 type=fire]] damage and [[/damage 20d6 type=bludgeoning]] damage on a failed save, or half as much damage on a successful one. A creature in the area of more than one fiery burst is affected only once.</p><p>The spell damages objects in the area and ignites flammable objects that aren't being worn or carried.</p></div>",
+      "chat": ""
+    },
+    "level": 9,
+    "school": "evo",
+    "properties": [
+      "vocal",
+      "somatic"
+    ],
+    "materials": {
+      "value": "",
+      "consumed": false,
+      "cost": 0,
+      "supply": 0
+    },
+    "target": {
+      "template": {
+        "count": "",
+        "contiguous": false,
+        "type": "sphere",
+        "size": "40",
+        "width": "",
+        "height": "",
+        "units": "ft",
+        "stationary": false
+      },
+      "affects": {
+        "count": "",
+        "type": "creature",
+        "choice": false,
+        "special": ""
+      }
+    },
+    "range": {
+      "value": "1",
+      "units": "mi"
+    },
+    "activation": {
+      "type": "action",
+      "value": 1,
+      "condition": ""
+    },
+    "duration": {
+      "value": "0",
+      "units": "inst"
+    },
+    "uses": {
+      "max": "",
+      "recovery": [],
+      "spent": 0
+    },
+    "method": "spell",
+    "prepared": 0,
+    "activities": {
+      "FhAserphJf2i7yRC": {
+        "_id": "FhAserphJf2i7yRC",
+        "type": "save",
+        "name": "",
+        "activation": {
+          "type": "action",
+          "override": false
+        },
+        "consumption": {
+          "scaling": {
+            "allowed": false
+          },
+          "spellSlot": true,
+          "targets": []
+        },
+        "description": {},
+        "duration": {
+          "units": "inst",
+          "concentration": false,
+          "override": false
+        },
+        "effects": [],
+        "range": {
+          "units": "self",
+          "override": false
+        },
+        "target": {
+          "template": {
+            "contiguous": false,
+            "units": "ft",
+            "stationary": false
+          },
+          "affects": {
+            "choice": false
+          },
+          "override": false,
+          "prompt": true
+        },
+        "uses": {
+          "spent": 0,
+          "recovery": []
+        },
+        "save": {
+          "ability": [
+            "dex"
+          ],
+          "dc": {
+            "calculation": "spellcasting"
+          }
+        },
+        "damage": {
+          "onSave": "half",
+          "parts": [
+            {
+              "types": [
+                "fire"
+              ],
+              "number": 20,
+              "denomination": 6,
+              "bonus": "",
+              "scaling": {
+                "mode": "",
+                "number": 1
+              },
+              "custom": {
+                "enabled": false
+              }
+            },
+            {
+              "types": [
+                "bludgeoning"
+              ],
+              "number": 20,
+              "denomination": 6,
+              "bonus": "",
+              "scaling": {
+                "mode": "",
+                "number": 1
+              },
+              "custom": {
+                "enabled": false
+              }
+            }
+          ],
+          "critical": {
+            "allow": false
+          }
+        },
+        "midiProperties": {
+          "ignoreTraits": [],
+          "triggeredActivityId": "none",
+          "triggeredActivityConditionText": "",
+          "triggeredActivityTargets": "targets",
+          "triggeredActivityRollAs": "self",
+          "autoConsume": false,
+          "forceConsumeDialog": "default",
+          "forceRollDialog": "default",
+          "forceDamageDialog": "default",
+          "confirmTargets": "default",
+          "autoTargetType": "any",
+          "autoTargetAction": "default",
+          "automationOnly": false,
+          "otherActivityCompatible": true,
+          "otherActivityAsParentType": true,
+          "identifier": "",
+          "displayActivityName": false,
+          "rollMode": "default",
+          "chooseEffects": false,
+          "toggleEffect": false,
+          "ignoreFullCover": false,
+          "removeChatButtons": "default",
+          "magicEffect": false,
+          "magicDamage": false,
+          "noConcentrationCheck": false,
+          "autoCEEffects": "default",
+          "triggeredActivityConsume": true,
+          "triggeredActivityConfigure": true,
+          "skipConcentrationCheck": false
+        },
+        "sort": 0,
+        "useConditionText": "",
+        "useConditionReason": "",
+        "effectConditionText": "",
+        "macroData": {
+          "name": "",
+          "command": ""
+        },
+        "ignoreTraits": {
+          "idi": false,
+          "idr": false,
+          "idv": false,
+          "ida": false,
+          "idm": false
+        },
+        "isOverTimeFlag": false,
+        "overTimeProperties": {
+          "saveRemoves": true,
+          "preRemoveConditionText": "",
+          "postRemoveConditionText": "",
+          "rollAs": "target"
+        },
+        "otherActivityId": "",
+        "otherActivityAsParentType": true,
+        "friendlySave": "default",
+        "img": null,
+        "flags": {},
+        "visibility": {
+          "level": {},
+          "requireAttunement": false,
+          "requireIdentification": false,
+          "requireMagic": false
+        }
+      }
+    },
+    "identifier": "meteor-swarm"
+  },
+  "img": "icons/magic/earth/projectiles-fire-stone-salvo.webp",
+  "flags": {
+    "plutonium": {
+      "page": "spells.html",
+      "source": "PHB",
+      "hash": "meteor%20swarm_phb",
+      "propDroppable": "spell",
+      "spellClassNames": [
+        "Sorcerer",
+        "Wizard"
+      ]
+    },
+    "dnd5e": {
+      "riders": {
+        "activity": []
+      }
+    }
+  },
+  "effects": [],
+  "folder": "dc6TWWX3n94hTwgz",
+  "_stats": {
+    "compendiumSource": "Compendium.shared-compendiums-u-tian-de-tuttu-demil.item-1-spell-2014.Item.rzuag8YN9JKYmg7v",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dungeon-trav-8bbeae6d",
+      "uuid": "Item.ZEQowkHkkLXXEv4O",
+      "coreVersion": "13.351",
+      "systemId": "dnd5e",
+      "systemVersion": "5.3.3"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.3.3",
+    "createdTime": 1784684093086,
+    "modifiedTime": 1784684093127,
+    "lastModifiedBy": "4cxC36k6awfnsWTH"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

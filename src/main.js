@@ -140,7 +140,7 @@ function readForm() {
   return {
     name: val('name'), size: val('size'), creatureType: val('creatureType'),
     subtype: val('subtype'), alignment: val('alignment'), cr: val('cr'),
-    rules: val('rules'),
+    rules: val('rules'), sourceBook: val('sourceBook'), sourcePage: val('sourcePage'),
     str: val('str'), dex: val('dex'), con: val('con'),
     int: val('int'), wis: val('wis'), cha: val('cha'),
     saves, skills,
@@ -333,7 +333,7 @@ function armedConfirm(btn, confirmLabel, action) {
 
 const DEFAULT_STATE = {
   name: '', size: 'med', creatureType: 'humanoid', subtype: '',
-  alignment: '', cr: '1', rules: '2014',
+  alignment: '', cr: '1', rules: '2014', sourceBook: '', sourcePage: '',
   str: '10', dex: '10', con: '10', int: '10', wis: '10', cha: '10',
   saves: [], skills: {},
   hpMax: '', hpFormula: '', acCalc: 'default', acFlat: '',
@@ -405,10 +405,22 @@ function loadBatch() {
 function saveBatch() {
   try { localStorage.setItem(BATCH_KEY, JSON.stringify(batch)); } catch { /* storage pieno */ }
 }
+// Icona per tipo di documento nella lista collezione.
+const BATCH_ICONS = { npc: '🐲', character: '🧝', weapon: '⚔️', equipment: '🛡️', consumable: '🧪', feat: '📜', spell: '✨' };
+
 function updateBatchUI() {
   document.getElementById('batch-count').textContent = batch.length;
   document.getElementById('btn-batch-export').disabled = batch.length === 0;
   document.getElementById('btn-batch-clear').disabled = batch.length === 0;
+  // Lista del contenuto: nome + tipo + ✖ per rimuovere il singolo elemento
+  // (utile per buttare un salvataggio sbagliato senza svuotare tutto).
+  const list = document.getElementById('batch-list');
+  list.innerHTML = batch.map((doc, i) => `
+    <div class="batch-row">
+      <span class="batch-name">${BATCH_ICONS[doc.type] || '📦'} ${escHtml(doc.name || '?')}</span>
+      <span class="hint">${escHtml(doc.type)}</span>
+      <button type="button" class="remove" data-bdel="${i}" title="${t('batch_remove_one')}">✖</button>
+    </div>`).join('') || `<span class="hint">${t('batch_empty')}</span>`;
 }
 function batchMsg(text) {
   const el = document.getElementById('batch-msg');
@@ -547,6 +559,15 @@ document.getElementById('btn-copy-template').addEventListener('click', copyTempl
 document.getElementById('btn-copy-macro').addEventListener('click', copyMacro);
 document.getElementById('btn-copy-preview').addEventListener('click', copyPreview);
 document.getElementById('btn-batch-add').addEventListener('click', addToBatch);
+// Rimozione del singolo elemento dalla lista collezione.
+document.getElementById('batch-list').addEventListener('click', (ev) => {
+  const i = ev.target.dataset.bdel;
+  if (i === undefined) return;
+  const [removed] = batch.splice(Number(i), 1);
+  saveBatch();
+  updateBatchUI();
+  if (removed) batchMsg(t('batch_removed', { name: removed.name }));
+});
 document.getElementById('btn-batch-export').addEventListener('click', exportBatch);
 document.getElementById('btn-batch-clear').addEventListener('click', (ev) => {
   if (!batch.length) return;

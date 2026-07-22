@@ -18,7 +18,8 @@
 // meccanica, cambia solo la "carrozzeria".
 // ============================================================
 import { SPELL_BASE } from '../data/item-bases.js';
-import { buildItem } from './item.js';
+import { buildItem, parseDamageParts } from './item.js';
+import { buildAAFlags } from './aa.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
 
@@ -26,8 +27,9 @@ import { cleanImagePath } from '../utils/img.js';
 // nei golden, con/enc sono gli id standard delle due mancanti).
 export const SPELL_SCHOOLS = ['abj', 'con', 'div', 'enc', 'evo', 'ill', 'nec', 'trs'];
 
-// Metodo di lancio (system.method): 'innate' è quello osservato nei golden
-// (spell di mostri); 'spell' è il metodo standard da incantatore di classe.
+// Metodo di lancio (system.method): 'innate' osservato nei golden di mostri,
+// 'spell' CONFERMATO dagli export utente di spell da PG (Polymorph, Meteor
+// Swarm, Silvery Barbs… tutti method:'spell').
 export const CAST_METHODS = ['spell', 'innate', 'atwill', 'pact'];
 
 // Sagome area: sphere/wall/self osservate nei golden; le altre sono gli
@@ -62,6 +64,9 @@ export function buildSpell(d) {
   if (img) item.img = img;
   item.system.description.value = d.description ? `<p>${d.description}</p>` : '';
   item.system.source.rules = d.rules === '2024' ? '2024' : '2014';
+  // Source personalizzata (come "PHB'14 p.241" dei golden): book + page.
+  item.system.source.book = String(d.sourceBook || '').trim();
+  item.system.source.page = String(d.sourcePage || '').trim();
 
   // 3) Identità dell'incantesimo.
   item.system.level = Math.max(0, Math.min(9, Number(d.level) || 0));
@@ -86,10 +91,12 @@ export function buildSpell(d) {
     value: d.activation === 'minute' ? (Number(d.castValue) || 1) : 1,
     condition: '',
   };
-  // Gittata: come i golden — ft con valore, oppure self/touch con value '0'
-  // (Invisibility touch = {value:'0', units:'touch'}).
+  // Gittata: come i golden — ft con valore, self/touch con value '0'
+  // (Invisibility), oppure miglia (Meteor Swarm: {value:'1', units:'mi'}).
   if (d.rangeMode === 'self' || d.rangeMode === 'touch') {
     item.system.range = { value: '0', units: d.rangeMode, special: '' };
+  } else if (d.rangeMode === 'mi') {
+    item.system.range = { value: String(Number(d.rangeValue) || 1), units: 'mi', special: '' };
   } else {
     item.system.range = { value: String(Number(d.rangeValue) || 30), units: 'ft', special: '' };
   }
@@ -133,13 +140,19 @@ export function buildSpell(d) {
     }
     // Upcast: +formula dadi per ogni slot sopra il livello base
     // (Fireball: scaling {mode:'whole', number:null, formula:'1d6'}).
+    // SOLO sulla PRIMA parte di danno: dnd5e applica la scala a OGNI parte
+    // che la dichiara, quindi metterla su tutte significherebbe +1d8 per
+    // TIPO di danno a ogni slot (comportamento segnalato dall'utente).
+    // Nei golden multi-parte (Meteor Swarm) le parti non scalano affatto.
     const up = String(d.upcastFormula || '').trim();
-    if (up && act.damage && Array.isArray(act.damage.parts)) {
-      for (const part of act.damage.parts) {
-        part.scaling = { mode: 'whole', number: null, formula: up };
-      }
+    if (up && act.damage && Array.isArray(act.damage.parts) && act.damage.parts.length) {
+      act.damage.parts[0].scaling = { mode: 'whole', number: null, formula: up };
     }
   }
+
+  // 7) Animazione Automated Animations (facoltativa, Fase 7).
+  const aaFlag = buildAAFlags(d.aa, item.name);
+  if (aaFlag) item.flags = { ...item.flags, autoanimations: aaFlag };
   return item;
 }
 
@@ -154,6 +167,12 @@ export function validateSpell(d) {
   const up = String(d.upcastFormula || '').trim();
   if (up && !/^\d+d\d+$/i.test(up)) {
     w.push(`Upcast "${up}": usa il formato NdX (es. 1d6 = +1d6 per slot superiore).`);
+  }
+  // Danni: gli errori del parser (tipo mancante, formula rotta) BLOCCANO
+  // l'export — altrimenti la parte viene scartata in silenzio e l'incantesimo
+  // esce senza danno (bug segnalato dall'utente sulla spell di prova).
+  if ((d.kind === 'attack' || d.kind === 'save') && String(d.damage || '').trim()) {
+    w.push(...parseDamageParts(d.damage).errors);
   }
   return w;
 }
