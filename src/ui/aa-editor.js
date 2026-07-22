@@ -68,37 +68,57 @@ function slotHtml(aa, slot) {
       <div class="aa-prev-box">${url ? `<video class="aa-prev" src="${esc(url)}" autoplay loop muted playsinline></video>` : `<span class="hint">${t('aa_noprev')}</span>`}</div>
     </div>
     <div class="grid-3">
-      ${isPrimary ? `<label>${t('aa_playon')} <select data-aa="playOn">
+      ${isPrimary && showPlayOn(aa.menu) ? `<label>${t('aa_playon')} <select data-aa="playOn">
         <option value="target" ${aa.playOn !== 'source' ? 'selected' : ''}>${t('aa_on_target')}</option>
         <option value="source" ${aa.playOn === 'source' ? 'selected' : ''}>${t('aa_on_source')}</option>
       </select></label>` : ''}
-      <label class="check">${t('aa_persistent')} <input type="checkbox" data-aa="persistent" ${persistent ? 'checked' : ''} /></label>
-      <label>${t('aa_scale')} <input type="number" step="0.1" data-aa="scale" value="${esc(scale)}" placeholder="1" /></label>
+      ${(!isPrimary || showPersistent(aa.menu)) ? `<label class="check">${t('aa_persistent')} <input type="checkbox" data-aa="persistent" ${persistent ? 'checked' : ''} /></label>` : ''}
+      ${(!isPrimary || showScale(aa.menu)) ? `<label>${aa.menu === 'aura' ? t('aa_radius') : t('aa_scale')} <input type="number" step="0.1" data-aa="scale" value="${esc(scale)}" placeholder="${aa.menu === 'aura' ? '3' : '1'}" /></label>` : ''}
     </div>
   </div>`;
 }
 
+// Quali controlli mostrare per ogni menu (fedele ai golden):
+//  - playOn: solo On Token (melee=arma, range=proiettile, aura=source, template=area)
+//  - persistent: On Token / Aura / Template FX
+//  - scale/raggio: tutti tranne Range (il proiettile non ha size)
+const showPlayOn = (menu) => menu === 'ontoken';
+const showPersistent = (menu) => menu === 'ontoken' || menu === 'templatefx';
+const showScale = (menu) => menu !== 'range';
+
 /**
- * Sezione completa. `aa` = stato (defaultAA()). Se l'indice non è ancora
+ * Sezione completa, A SCOMPARSA (details). `item` = stato con campo `aa`
+ * e flag `_openAA` per lo stato aperto/chiuso. Se l'indice non è ancora
  * caricato mostra il segnaposto: la tab lo carica e ridisegna.
  */
-export function aaSectionHtml(aa) {
+export function aaSectionHtml(item) {
+  const aa = item.aa;
   return `
-  <fieldset class="inner aa-block">
-    <legend>
-      <label class="check">🎞️ ${t('aa_legend')}
-        <input type="checkbox" data-aa="enabled" ${aa.enabled ? 'checked' : ''} />
-      </label>
-      <span class="hint">${t('aa_legend_hint')}</span>
-    </legend>
-    ${!aa.enabled ? '' : !aaIndexReady() ? `<span class="hint">${t('aa_loading')}</span>` : `
-      ${slotHtml(aa, 'primary')}
-      <label class="check aa-tgt-toggle">${t('aa_target')} <span class="hint">${t('aa_target_hint')}</span>
-        <input type="checkbox" data-aa="tgtEnabled" ${aa.tgtEnabled ? 'checked' : ''} />
-      </label>
-      ${aa.tgtEnabled ? slotHtml(aa, 'target') : ''}
-      <p class="hint">${t('aa_note')}</p>`}
-  </fieldset>`;
+  <details class="opt-block aa-block" data-open="_openAA" ${item._openAA ? 'open' : ''}>
+    <summary>🎞️ ${t('aa_legend')}${aa.enabled && aa.path ? ' <em>●</em>' : ''} <span class="hint">${t('aa_legend_hint')}</span></summary>
+    <div class="aa-body">
+      <div class="grid-3">
+        <label class="check">${t('aa_enable')} <input type="checkbox" data-aa="enabled" ${aa.enabled ? 'checked' : ''} /></label>
+        ${aa.enabled ? `<label>${t('aa_menu')} <span class="hint">${t('aa_menu_hint')}</span><select data-aa="menu">
+          ${[['ontoken', 'aam_ontoken'], ['melee', 'aam_melee'], ['range', 'aam_range'], ['aura', 'aam_aura'], ['templatefx', 'aam_templatefx']]
+            .map(([v, k]) => `<option value="${v}" ${aa.menu === v ? 'selected' : ''}>${t(k)}</option>`).join('')}
+        </select></label>` : ''}
+      </div>
+      ${!aa.enabled ? '' : !aaIndexReady() ? `<span class="hint">${t('aa_loading')}</span>` : `
+        ${slotHtml(aa, 'primary')}
+        <div class="grid-3 aa-sound">
+          <label class="check">${t('aa_sound')} <input type="checkbox" data-aa="soundEnable" ${aa.soundEnable ? 'checked' : ''} /></label>
+          ${aa.soundEnable ? `
+          <label>${t('aa_sound_file')} <input type="text" data-aa="soundFile" value="${esc(aa.soundFile)}" placeholder="worlds/…/effects/boom.ogg" /></label>
+          <label>${t('aa_sound_vol')} <input type="number" step="0.05" min="0" max="1" data-aa="soundVolume" value="${esc(aa.soundVolume)}" /></label>` : ''}
+        </div>
+        <label class="check aa-tgt-toggle">${t('aa_target')} <span class="hint">${t('aa_target_hint')}</span>
+          <input type="checkbox" data-aa="tgtEnabled" ${aa.tgtEnabled ? 'checked' : ''} />
+        </label>
+        ${aa.tgtEnabled ? slotHtml(aa, 'target') : ''}
+        <p class="hint">${t('aa_note')}</p>`}
+    </div>
+  </details>`;
 }
 
 /**
@@ -118,6 +138,10 @@ export function applyAAEvent(state, ev) {
 
   if (f === 'enabled') { aa.enabled = val; return { handled: true, structural: true }; }
   if (f === 'tgtEnabled') { aa.tgtEnabled = val; return { handled: true, structural: true }; }
+  if (f === 'menu') { aa.menu = val; return { handled: true, structural: true }; }
+  if (f === 'soundEnable') { aa.soundEnable = val; return { handled: true, structural: true }; }
+  if (f === 'soundFile') { aa.soundFile = val; return { handled: true, structural: false }; }
+  if (f === 'soundVolume') { aa.soundVolume = val; return { handled: true, structural: false }; }
 
   if (f === 'search') {
     if (isTgt) aa.tgtSearch = val; else aa.search = val;

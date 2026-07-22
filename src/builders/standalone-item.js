@@ -10,8 +10,7 @@
 // ============================================================
 import { WEAPON_BASE, FEAT_BASE, EQUIPMENT_BASE, CONSUMABLE_BASE } from '../data/item-bases.js';
 import { WEAPON_TYPES, WEAPON_MASTERIES } from '../data/constants.js';
-import { buildItem, parseDamageParts } from './item.js';
-import { buildAAFlags } from './aa.js';
+import { buildItem, parseDamageParts, applyExtraFlags } from './item.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
 
@@ -117,10 +116,8 @@ export function buildStandaloneItem(d) {
     item.system.requirements = String(d.requirements || '').trim();
   }
 
-  // 6) Animazione Automated Animations (facoltativa, Fase 7).
-  const aaFlag = buildAAFlags(d.aa, item.name);
-  if (aaFlag) item.flags = { ...item.flags, autoanimations: aaFlag };
-  return item;
+  // 6) Flag opzionali: animazione A-A + On-Use Macros (Fase 7).
+  return applyExtraFlags(item, d);
 }
 
 /** Controlli minimi prima dell'export di un item standalone. */

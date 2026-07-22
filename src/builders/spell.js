@@ -18,8 +18,7 @@
 // meccanica, cambia solo la "carrozzeria".
 // ============================================================
 import { SPELL_BASE } from '../data/item-bases.js';
-import { buildItem, parseDamageParts } from './item.js';
-import { buildAAFlags } from './aa.js';
+import { buildItem, parseDamageParts, applyExtraFlags } from './item.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
 
@@ -150,10 +149,8 @@ export function buildSpell(d) {
     }
   }
 
-  // 7) Animazione Automated Animations (facoltativa, Fase 7).
-  const aaFlag = buildAAFlags(d.aa, item.name);
-  if (aaFlag) item.flags = { ...item.flags, autoanimations: aaFlag };
-  return item;
+  // 7) Flag opzionali: animazione A-A + On-Use Macros (Fase 7).
+  return applyExtraFlags(item, d);
 }
 
 /** Controlli minimi prima dell'export di un incantesimo. */

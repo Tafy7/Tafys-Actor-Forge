@@ -159,18 +159,22 @@ export function applyEffectsEvent(item, ev) {
 }
 
 /**
- * Sezione "Effetti DAE" completa di una card azione.
+ * Sezione "Effetti DAE" completa di una card azione — A SCOMPARSA
+ * (details): l'opzionale resta nascosto finché non serve, ma il
+ * conteggio nel titolo dice subito se ci sono effetti configurati.
+ * Lo stato aperto/chiuso vive in `item._openEff` (preservato dai
+ * re-render strutturali tramite l'evento toggle, vedi le tab).
  * `forcePassive` = true per i tratti passivi (niente activity → gli
  * effetti possono solo essere transfer).
  */
 export function effectsSectionHtml(item, forcePassive) {
   const effects = item.effects || [];
   return `
-  <div class="effects-block">
-    <div class="effects-head">
-      <strong>${t('ef_dae')}</strong>
+  <details class="opt-block" data-open="_openEff" ${item._openEff || effects.length ? 'open' : ''}>
+    <summary>⚡ ${t('ef_dae')}${effects.length ? ` <em>(${effects.length})</em>` : ''}
       <span class="hint">${forcePassive ? t('ef_passive_hint') : t('ef_mixed_hint')}</span>
-    </div>
+    </summary>
+    <div class="effects-block">
     ${effects.map((e, j) => effectCardHtml(e, j, forcePassive)).join('')}
     <div class="row">
       <button type="button" class="secondary small" data-eff-add>${t('ef_add')}</button>
@@ -179,5 +183,6 @@ export function effectsSectionHtml(item, forcePassive) {
         ${EFFECT_PRESETS.map(p => `<option value="${p.id}">${p.label}</option>`).join('')}
       </select>
     </div>
-  </div>`;
+    </div>
+  </details>`;
 }

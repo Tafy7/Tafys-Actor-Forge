@@ -549,12 +549,92 @@ check('JB2A index: fireball.explosion.orange → webm nel repo',
 const srcNpc = buildNpc({ ...sample, sourceBook: "DMG'14", sourcePage: '94' });
 check('source NPC: book+page in system.source', srcNpc.system.source.book === "DMG'14" && srcNpc.system.source.page === '94');
 
+// --- v0.24: menu A-A melee/range, suono, On-Use Macros, embedded ---
+console.log('\n— A-A menu estesi + On-Use Macros —');
+const { buildOnUseMacroName } = await import('../src/builders/onuse.js');
+
+// Menu MELEE: chiave meleeSwitch presente, opzioni identiche al golden Fireball export.
+const goldenMelee = JSON.parse(readFileSync(new URL('../templates/golden-spell-fireball-aa-melee.json', import.meta.url))).flags.autoanimations;
+const aaMelee = buildAAFlags({ ...defaultAA(), enabled: true, menu: 'melee', path: 'melee_generic.slashing.one_handed', scale: '1' }, 'X');
+check('AA melee: chiavi top identiche al golden (con meleeSwitch)',
+  Object.keys(aaMelee).sort().join(',') === Object.keys(goldenMelee).sort().join(','));
+check('AA melee: opzioni primary identiche al golden',
+  Object.keys(aaMelee.primary.options).sort().join(',') === Object.keys(goldenMelee.primary.options).sort().join(','));
+check('AA melee: meleeSwitch shape dal golden',
+  JSON.stringify(Object.keys(aaMelee.meleeSwitch).sort()) === JSON.stringify(Object.keys(goldenMelee.meleeSwitch).sort()));
+
+// Menu RANGE: niente meleeSwitch, opzioni con isReturning/onlyX e SENZA size,
+// suono con file (golden "Prova del Tafy" range).
+const goldenRange = JSON.parse(readFileSync(new URL('../templates/golden-spell-tafy-aa-range.json', import.meta.url))).flags.autoanimations;
+const aaRange = buildAAFlags({ ...defaultAA(), enabled: true, menu: 'range', path: 'fireball.beam.orange',
+  soundEnable: true, soundFile: 'worlds/avernus/audio/boom.ogg', soundVolume: '0.5' }, 'X');
+check('AA range: NIENTE meleeSwitch, top keys = golden range',
+  !('meleeSwitch' in aaRange) && Object.keys(aaRange).sort().join(',') === Object.keys(goldenRange).sort().join(','));
+check('AA range: opzioni primary identiche al golden (isReturning/onlyX, no size)',
+  Object.keys(aaRange.primary.options).sort().join(',') === Object.keys(goldenRange.primary.options).sort().join(','));
+check('AA range: suono con file e volume (shape golden)',
+  aaRange.primary.sound.enable === true && aaRange.primary.sound.file === 'worlds/avernus/audio/boom.ogg' &&
+  aaRange.primary.sound.volume === 0.5 &&
+  Object.keys(aaRange.primary.sound).sort().join(',') === Object.keys(goldenRange.primary.sound).sort().join(','));
+
+// Menu AURA (golden Shield): opzioni con size/playOn source/isRadius, niente meleeSwitch.
+const goldenAura = JSON.parse(readFileSync(new URL('../templates/golden-spell-shield-aa-aura.json', import.meta.url))).flags.autoanimations;
+const aaAura = buildAAFlags({ ...defaultAA(), enabled: true, menu: 'aura', path: 'template_circle.aura.01.complete.blue', scale: '3' }, 'X');
+check('AA aura: menu aura, opzioni primary identiche al golden',
+  aaAura.menu === 'aura' && Object.keys(aaAura.primary.options).sort().join(',') === Object.keys(goldenAura.primary.options).sort().join(','));
+check('AA aura: raggio (size) e playOn source dal golden',
+  aaAura.primary.options.size === 3 && aaAura.primary.options.playOn === 'source' && aaAura.primary.options.isRadius === true);
+check('AA aura: niente meleeSwitch', !('meleeSwitch' in aaAura));
+
+// Menu TEMPLATEFX (golden Chromatic Orb "Preset"): scale STRINGA, occlusion/persistType.
+const goldenTfx = JSON.parse(readFileSync(new URL('../templates/golden-spell-chromatic-orb-aa-templatefx.json', import.meta.url))).flags.autoanimations;
+const aaTfx = buildAAFlags({ ...defaultAA(), enabled: true, menu: 'templatefx', path: 'lightning.ray.02.red', scale: '2' }, 'X');
+check('AA templatefx: opzioni primary identiche al golden',
+  aaTfx.menu === 'templatefx' && Object.keys(aaTfx.primary.options).sort().join(',') === Object.keys(goldenTfx.primary.options).sort().join(','));
+check('AA templatefx: scale è STRINGA + persistType/occlusion dal golden',
+  aaTfx.primary.options.scale === '2' && typeof aaTfx.primary.options.scale === 'string' &&
+  aaTfx.primary.options.persistType === 'sequencerground' && aaTfx.primary.options.occlusionMode === '3');
+check('AA templatefx: customPath con prefisso jb2a',
+  aaTfx.primary.video.enableCustom === true && aaTfx.primary.video.customPath === 'jb2a.lightning.ray.02.red');
+
+// On-Use Macros: formato osservato nei golden Fireball/PWS.
+check('onUse: "[timing]macro" separati da virgola',
+  buildOnUseMacroName([
+    { timing: 'postDamageRoll', macro: 'La Mia Macro' },
+    { timing: 'preActiveEffects', macro: 'ItemMacro' },
+  ]) === '[postDamageRoll]La Mia Macro,[preActiveEffects]ItemMacro');
+check('onUse: righe vuote/invalidi scartate', buildOnUseMacroName([{ timing: 'postDamageRoll', macro: '  ' }, { timing: 'boh', macro: 'X' }]) === '');
+
+// Integrazione: spell con onUse → flags['midi-qol'].onUseMacroName; item EMBEDDED di mostro con AA.
+const ouSpell = buildSpell({ name: 'X', level: '1', school: 'evo', vocal: true, kind: 'utility', durationUnits: 'inst',
+  rangeMode: 'self', targetMode: 'self', usesMode: 'none', effects: [],
+  onUse: [{ timing: 'postActiveEffects', macro: 'Trasformazione' }] });
+check('onUse: flag scritto sulla spell', ouSpell.flags['midi-qol'].onUseMacroName === '[postActiveEffects]Trasformazione');
+const npcWithAA = buildNpc({ ...sample, items: [{ ...sample.items[0],
+  aa: { ...defaultAA(), enabled: true, menu: 'melee', path: 'melee_generic.slashing.one_handed' },
+  onUse: [{ timing: 'postAttackRoll', macro: 'Scia di Sangue' }] }] });
+const embItem = npcWithAA.items.find(i => i.name === 'Coda Spinata');
+check('embedded: item del mostro con flags.autoanimations (menu melee)',
+  embItem.flags.autoanimations?.menu === 'melee' && embItem.flags.autoanimations.primary.video.customPath === 'jb2a.melee_generic.slashing.one_handed');
+check('embedded: item del mostro con onUseMacroName', embItem.flags['midi-qol']?.onUseMacroName === '[postAttackRoll]Scia di Sangue');
+
 // --- Effetto condizione: forma allineata al golden "Status: Blinded" ---
 console.log('\n— Effetto condizione anti-doppione —');
 const condEff = onHitWpn.effects.find(e => e.statuses?.includes('stunned'));
 check('condizione: forceCEOff = true', condEff.flags['midi-qol']?.forceCEOff === true);
 check('condizione: dae.stackable = noneNameOnly', condEff.flags.dae?.stackable === 'noneNameOnly');
 check('condizione: dae.transfer = false, transfer top = false', condEff.flags.dae?.transfer === false && condEff.transfer === false);
+
+// --- v0.25: preset di macro sintatticamente validi (li incolla l'utente) ---
+console.log('\n— Preset di macro (Tab Info) —');
+const { MACRO_PRESETS } = await import('../src/data/macro-presets.js');
+check('preset: 5 macro presenti (cinematica…massa)', MACRO_PRESETS.length === 5);
+for (const preset of MACRO_PRESETS) {
+  let parseOk = true;
+  try { new Function(preset.code); } catch { parseOk = false; }
+  check(`preset "${preset.id}": codice JS valido + id/icona`,
+    parseOk && !!preset.icon && preset.code.length > 40);
+}
 
 if (failures) {
   console.error(`\n${failures} test falliti.`);

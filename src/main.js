@@ -8,6 +8,8 @@ import { parseStatblock, emptyTemplate } from './parsers/statblock.js';
 import { initDprTab } from './ui/dpr-tab.js';
 import { initItemTab } from './ui/item-tab.js';
 import { initSpellTab } from './ui/spell-tab.js';
+import { initInfoTab } from './ui/info-tab.js';
+import { initThemePicker } from './ui/theme.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
 // La macro vive come vero file .js (lintabile), qui la copiamo solo negli appunti.
 import importerMacro from './foundry/import-actor.macro.js?raw';
@@ -527,6 +529,7 @@ document.documentElement.lang = LANG;
 const langBtn = document.getElementById('btn-lang');
 langBtn.textContent = t('langToggle');
 langBtn.addEventListener('click', () => setLang(LANG === 'en' ? 'it' : 'en'));
+initThemePicker(); // selettore tema nell'header (scambio istantaneo, no reload)
 
 buildStaticOptions();
 buildAbilitiesGrid();
@@ -613,5 +616,8 @@ initItemTab({ onAddToBatch: pushDocToBatch });
 // Tab Incantesimo: le spell sono Item di tipo 'spell' → la macro le
 // smista già su Item.createDocuments, nessuna modifica alla macro.
 initSpellTab({ onAddToBatch: pushDocToBatch });
+
+// Tab Info: mini-guida + preset di macro copiabili.
+initInfoTab();
 
 renderPreview(); // prima anteprima

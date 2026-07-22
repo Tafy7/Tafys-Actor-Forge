@@ -9,6 +9,8 @@
 // tiro per colpire o tiro salvezza, e le parti di danno.
 // ============================================================
 import { WEAPON_BASE, FEAT_BASE, ACTIVITY_BASES, DAMAGE_PART_BASE, EFFECT_BASE } from '../data/item-bases.js';
+import { buildAAFlags } from './aa.js';
+import { applyOnUseFlag } from './onuse.js';
 import { DAMAGE_TYPES } from '../data/constants.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
@@ -186,6 +188,17 @@ function applyUses(item, activity, usesMode, usesValue) {
 }
 
 /**
+ * Flag opzionali extra (animazione A-A + On-Use Macros di Midi) — validi
+ * per QUALSIASI item, embedded nei mostri o standalone.
+ */
+export function applyExtraFlags(item, d) {
+  const aaFlag = buildAAFlags(d.aa, item.name);
+  if (aaFlag) item.flags = { ...item.flags, autoanimations: aaFlag };
+  applyOnUseFlag(item, d);
+  return item;
+}
+
+/**
  * Costruisce un Item embedded a partire da un descrittore del form.
  * `d` (descrittore): { name, kind, activation, attackType, ability, reach,
  *   range, longRange, damage, magical, saveAbility, dc, onSave,
@@ -208,7 +221,7 @@ export function buildItem(d) {
   //     "Resistenza al Fuoco" e simili bonus permanenti del mostro. ---
   if (d.kind === 'passive') {
     for (const e of d.effects || []) item.effects.push(buildDaeEffect(e, item.name, true));
-    return item;
+    return applyExtraFlags(item, d);
   }
 
   // --- Effetti DAE (Fase 3.2): i passivi vanno solo in item.effects;
@@ -281,7 +294,7 @@ export function buildItem(d) {
       attachApplied(rider, true);
       applyUses(item, activity, d.usesMode, d.usesValue);
       item.system.activities = { [activity._id]: activity, [rider._id]: rider };
-      return item;
+      return applyExtraFlags(item, d);
     }
   }
 
@@ -309,5 +322,5 @@ export function buildItem(d) {
   attachApplied(activity, d.kind === 'save');
   applyUses(item, activity, d.usesMode, d.usesValue);
   item.system.activities = { [activity._id]: activity };
-  return item;
+  return applyExtraFlags(item, d);
 }

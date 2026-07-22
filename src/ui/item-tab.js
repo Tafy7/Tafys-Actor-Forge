@@ -8,6 +8,8 @@ import { buildStandaloneItem, validateStandaloneItem, RARITIES, ATTUNEMENTS } fr
 import { effectsSectionHtml, applyEffectsEvent, normalizeEffect } from './effects-editor.js';
 import { aaSectionHtml, applyAAEvent, loadAAIndex, aaIndexReady } from './aa-editor.js';
 import { defaultAA } from '../builders/aa.js';
+import { applyOnUseEvent } from './onuse-editor.js';
+import { extrasSectionHtml } from './extras-editor.js';
 import { ABILITIES, CONDITIONS, CONDITION_LABELS, CONDITION_LABELS_EN, byLang, WEAPON_TYPES, WEAPON_MASTERIES } from '../data/constants.js';
 import { downloadJson } from '../utils/download.js';
 import { t, getLang } from '../i18n.js';
@@ -36,6 +38,7 @@ function defaultItem() {
     usesMode: 'none', usesValue: '',
     effects: [],
     aa: defaultAA(),
+    onUse: [],
   };
 }
 
@@ -147,8 +150,7 @@ function formHtml(it) {
     </div>` : ''}
   </fieldset>
 
-  ${effectsSectionHtml(it, it.kind === 'passive')}
-  ${aaSectionHtml(it.aa)}
+  ${extrasSectionHtml(it, it.kind === 'passive')}
 
   <label>${t('ed_description')} <textarea data-f="description" rows="3">${esc(it.description)}</textarea></label>
   <label>${t('it_unidentified')} <span class="hint">${t('it_unidentified_hint')}</span><textarea data-f="unidentified" rows="2">${esc(it.unidentified)}</textarea></label>`;
@@ -186,14 +188,25 @@ export function initItemTab({ onAddToBatch }) {
     // Poi la sezione animazioni A-A.
     const aaRes = applyAAEvent(state, ev);
     if (aaRes.handled) { if (aaRes.structural) render(); else renderPreview(); return; }
+    const ouRes = applyOnUseEvent(state, ev);
+    if (ouRes.handled) { if (ouRes.structural) render(); else renderPreview(); return; }
     const f = ev.target.dataset.f;
     if (!f) return;
     state[f] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;
     if (STRUCTURAL.includes(f)) render(); else renderPreview();
   });
+  // Stato aperto/chiuso delle sezioni a scomparsa (details): va ricordato
+  // nello stato, altrimenti ogni re-render strutturale le richiuderebbe.
+  // 'toggle' non fa bubbling → serve la fase di capture.
+  body.addEventListener('toggle', (ev) => {
+    const k = ev.target.dataset?.open;
+    if (k) state[k] = ev.target.open;
+  }, true);
   body.addEventListener('click', (ev) => {
     const res = applyEffectsEvent(state, ev);
-    if (res.handled) { if (res.structural) render(); else renderPreview(); }
+    if (res.handled) { if (res.structural) render(); else renderPreview(); return; }
+    const ouRes = applyOnUseEvent(state, ev);
+    if (ouRes.handled) { if (ouRes.structural) render(); else renderPreview(); }
   });
 
   document.getElementById('item-export').addEventListener('click', exportItem);

@@ -14,6 +14,10 @@ import {
   effectsSectionHtml, ensureChangeKeysDatalist,
 } from './effects-editor.js';
 import { keyDefaults, presetById } from '../data/effect-keys.js';
+import { aaSectionHtml, applyAAEvent, loadAAIndex, aaIndexReady } from './aa-editor.js';
+import { defaultAA } from '../builders/aa.js';
+import { applyOnUseEvent } from './onuse-editor.js';
+import { extrasSectionHtml } from './extras-editor.js';
 
 // Coppie [id, etichetta localizzata] per le select delle condizioni.
 const _condLabels = byLang(CONDITION_LABELS, CONDITION_LABELS_EN, getLang());
@@ -37,6 +41,8 @@ export function setItems(items) {
       ...newItem(),
       ...it,
       effects: (it.effects || []).map(normalizeEffect),
+      aa: { ...defaultAA(), ...(it.aa || {}) },
+      onUse: it.onUse || [],
     });
   }
   render();
@@ -53,6 +59,8 @@ function newItem() {
     usesMode: 'none', usesValue: '',
     img: '', description: '',
     effects: [], // effetti DAE (Fase 3.2), vedi effects-editor.js
+    aa: defaultAA(), // animazione Automated Animations (Fase 7)
+    onUse: [], // On-Use Macros di Midi-QOL
   };
 }
 
@@ -187,7 +195,7 @@ function cardHtml(item, idx) {
       <label>${t('ed_icon')} <input type="text" data-f="img" value="${item.img.replace(/"/g, '&quot;')}" /></label>
     </div>` : ''}
 
-    ${effectsSectionHtml(item, item.kind === 'passive')}
+    ${extrasSectionHtml(item, item.kind === 'passive')}
 
     <label>${t('ed_description')}
       <textarea data-f="description" rows="2">${item.description}</textarea>
@@ -201,6 +209,8 @@ let onStructureChange = () => {};
 /** Ridisegna tutte le card (solo per cambi strutturali). */
 function render() {
   container.innerHTML = itemsState.map(cardHtml).join('');
+  // Indice JB2A in lazy: al primo uso della sezione A-A in una card.
+  if (itemsState.some(it => it.aa?.enabled) && !aaIndexReady()) loadAAIndex().then(render);
 }
 
 /** Campi che cambiano la struttura della card → serve un re-render. */
@@ -273,6 +283,13 @@ export function initItemsEditor({ listEl, addBtn, onChange }) {
       return;
     }
 
+    // --- Sezione animazione A-A ---
+    const aaRes = applyAAEvent(item, ev);
+    if (aaRes.handled) { if (aaRes.structural) render(); onStructureChange(); return; }
+    // --- Sezione On-Use Macros ---
+    const ouRes = applyOnUseEvent(item, ev);
+    if (ouRes.handled) { if (ouRes.structural) render(); onStructureChange(); return; }
+
     // --- Campi della card azione (comportamento originale) ---
     const field = ds.f;
     if (!field) return;
@@ -283,7 +300,22 @@ export function initItemsEditor({ listEl, addBtn, onChange }) {
     }
   });
 
+  // Stato aperto/chiuso dei details (effetti/AA/OnUse) per card: senza
+  // questo, ogni re-render richiuderebbe le sezioni ('toggle' non bubbla).
+  container.addEventListener('toggle', (ev) => {
+    const k = ev.target.dataset?.open;
+    const card = ev.target.closest('[data-idx]');
+    if (k && card) itemsState[Number(card.dataset.idx)][k] = ev.target.open;
+  }, true);
+
   container.addEventListener('click', (ev) => {
+    // --- Bottoni On-Use Macros (aggiungi/rimuovi riga) ---
+    const cardOu = ev.target.closest('[data-idx]');
+    if (cardOu && ('ouAdd' in ev.target.dataset || 'ouRemove' in ev.target.dataset)) {
+      const itemOu = itemsState[Number(cardOu.dataset.idx)];
+      const ouRes = applyOnUseEvent(itemOu, ev);
+      if (ouRes.handled) { if (ouRes.structural) render(); onStructureChange(); return; }
+    }
     // --- Bottoni della sezione effetti (aggiungi/rimuovi effetto o riga) ---
     const ds = ev.target.dataset;
     const card = ev.target.closest('[data-idx]');

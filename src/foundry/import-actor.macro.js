@@ -41,11 +41,11 @@
       style="width:100%; font-family:monospace; white-space:pre; overflow:auto;"></textarea>
     <label style="display:block; margin-top:.5rem;">
       Cartella Actor (opzionale)
-      <input type="text" name="folder" placeholder="es. Avernus - Mostri" style="width:100%;" />
+      <input type="text" name="folder" placeholder="es. I Miei Mostri" style="width:100%;" />
     </label>
     <label style="display:block; margin-top:.5rem;">
       Cartella Item / Spell (opzionale)
-      <input type="text" name="folderItems" placeholder="es. Avernus - Oggetti" style="width:100%;" />
+      <input type="text" name="folderItems" placeholder="es. I Miei Oggetti" style="width:100%;" />
     </label>`;
 
   // DialogV2.prompt LANCIA un'eccezione se chiudi senza confermare:

@@ -87,7 +87,7 @@ export function keyDefaults(key) {
 // colpito / che fallisce il TS (stile MagIRA LOCA).
 export const EFFECT_PRESETS = [
   {
-    id: 'res-fire', label: 'Fire resistance (Avernus)',
+    id: 'res-fire', label: 'Fire resistance',
     name: 'Fire Resistance', application: 'passive',
     changes: [{ key: 'system.traits.dr.value', mode: 2, value: 'fire', priority: 1 }],
   },

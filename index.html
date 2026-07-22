@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tafy's Actor Forge</title>
+  <!-- Tema applicato PRIMA del paint per evitare il flash del tema di default. -->
+  <script>
+    try { var _t = localStorage.getItem('tafys-forge-theme') || 'taf'; if (_t === 'infernal') _t = 'taf'; if (_t === 'aurora') _t = 'spelljammer'; document.documentElement.dataset.theme = _t; }
+    catch (e) { document.documentElement.dataset.theme = 'taf'; }
+  </script>
   <link rel="stylesheet" href="./src/styles.css" />
 </head>
 <body>
@@ -11,9 +16,12 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.23</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.28</p>
       </div>
-      <button type="button" id="btn-lang" class="lang-btn" data-i18n-title="langLabel" title="Lingua">EN</button>
+      <div class="header-controls">
+        <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
+        <button type="button" id="btn-lang" class="lang-btn" data-i18n-title="langLabel" title="Lingua">EN</button>
+      </div>
     </div>
   </header>
 
@@ -22,6 +30,7 @@
     <button type="button" class="tab" data-tab="item" data-i18n="tab_item">🎒 Oggetto</button>
     <button type="button" class="tab" data-tab="spell" data-i18n="tab_spell">✨ Incantesimo</button>
     <button type="button" class="tab" data-tab="dpr" data-i18n="tab_dpr">📊 Calcolatore DPR</button>
+    <button type="button" class="tab" data-tab="info" data-i18n="tab_info">ℹ️ Info & Macro</button>
   </nav>
 
   <main>
@@ -154,7 +163,7 @@
       <fieldset>
         <legend><span data-i18n="img_legend">Immagini</span> <span class="hint" data-i18n="img_legend_hint">(percorso Foundry o URL web)</span></legend>
         <div class="grid-2">
-          <label><span data-i18n="f_avatar">Avatar scheda</span> <input type="text" id="img" data-i18n-ph="ph_avatar" placeholder="https://... oppure worlds/avernus/img/mostro.webp" /></label>
+          <label><span data-i18n="f_avatar">Avatar scheda</span> <input type="text" id="img" data-i18n-ph="ph_avatar" placeholder="https://... oppure worlds/mio-mondo/img/mostro.webp" /></label>
           <label><span data-i18n="f_token">Immagine token</span> <input type="text" id="tokenImg" data-i18n-ph="ph_token" placeholder="vuoto = usa l'avatar" /></label>
         </div>
         <p class="hint" data-i18n="img_warn">⚠ Il percorso deve finire con .webp/.png/.jpg (le ?query vengono rimosse in automatico). Gli URL esterni si vedono in scheda ma spesso NON in mappa (CORS): meglio caricare l'immagine dentro il server (worlds/...).</p>
@@ -278,6 +287,11 @@
           <p class="hint" data-i18n="dpr_chart_hint">La curva mostra come cambia il DPR al variare della CA del bersaglio; il punto rosso è la CA scelta.</p>
         </div>
       </div>
+    </section>
+
+    <!-- ===== Tab: Info & Macro utili ===== -->
+    <section class="tab-panel" id="tab-info" hidden>
+      <div id="info-body" class="info-grid"><!-- generato da info-tab.js --></div>
     </section>
   </main>
 
