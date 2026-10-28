@@ -502,6 +502,30 @@ check('2024: Bonus Action riconosciuta (Head Fruits)', it9.find(i => i.name === 
 check('2024: tratto Overhanging Branches passivo', it9.find(i => i.name === 'Overhanging Branches')?.kind === 'passive');
 check('2024: nessuna riga ignorata', r9.skipped.length === 0);
 
+// --- Artefatto PDF: glifi in grassetto RADDOPPIATI (nome + intestazioni) ---
+const doubled = `
+SSaaffii''jjiiiivvaa
+Gargantuan dragon (elder), unaligned
+Armor Class 24 (natural armor)
+Hit Points 451 (22d20 + 220)
+STR DEX CON INT WIS CHA
+27 (+8) 12 (+1) 30 (+10) 18 (+4) 24 (+7) 16 (+3)
+Challenge 29 (135,000 XP)
+Suppressed Power. The dragon can't use its sapphire star above half its hit points (225).
+AAccttiioonnss
+Bite. Melee Weapon Attack: +17 to hit, reach 10 ft., one target. Hit: 26 (4d8 + 8) piercing damage.
+LLeeggeennddaarryy AAccttiioonnss
+The dragon can take 3 legendary actions, choosing from the options below.
+Tail Attack. The dragon makes a Tail attack.
+Blue Flame Breath (Costs 2 Actions). The dragon exhales flames in a 120-foot line. Each creature must make a DC 27 Dexterity saving throw, taking 38 (11d6) fire damage on a failed save, or half as much on a success.
+`;
+const { state: sd, report: rd } = parseStatblock(doubled);
+check('sdoppiamento: nome "Safi\'jiiva" ripristinato', sd.name === "Safi'jiiva");
+check('sdoppiamento: intestazione "Actions" riconosciuta → legact letto', sd.legact === '3');
+check('sdoppiamento: azioni leggendarie riconosciute', (sd.items || []).some(i => i.name === 'Blue Flame Breath' && i.activation === 'legendary'));
+check('sdoppiamento: nessun residuo raddoppiato negli item', !(sd.items || []).some(i => /AAcc|LLee|jjii/.test(i.name + ' ' + (i.description || ''))));
+check('sdoppiamento: numeri NON toccati (HP 451, 225 intatti)', sd.hpMax === '451' && (sd.items || []).some(i => /\(225\)/.test(i.description || '')));
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);

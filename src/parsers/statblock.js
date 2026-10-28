@@ -130,9 +130,33 @@ const DIST = "(\\d+(?:[.,]\\d+)?)\\s*(ft|m)\\b";
 
 // ---------- Pulizia del testo incollato dai PDF ----------
 
+/**
+ * Ripara l'artefatto del copia-incolla dai PDF che estrae il testo in
+ * GRASSETTO con ogni glifo RADDOPPIATO: il nome e le intestazioni di sezione
+ * arrivano sdoppiati ("Actions" → "AAccttiioonnss", "Legendary Actions" →
+ * "LLeeggeennddaarryy AAccttiioonnss", "Safi'jiiva" → "SSaaffii''jjiiiivvaa").
+ * Se le intestazioni non vengono riconosciute, le sezioni collassano e le
+ * azioni leggendarie si perdono: per questo si ripara PRIMA di tutto.
+ *
+ * Collassiamo SOLO i token interamente "a coppie": lunghezza pari ≥4, che
+ * contengono lettere, senza cifre, con ogni carattere uguale al successivo.
+ * Il testo normale non ha questa struttura (è praticamente impossibile che
+ * una parola reale abbia ogni coppia adiacente identica), quindi resta intatto;
+ * i numeri sono esclusi apposta (es. "1100" diventerebbe "10").
+ */
+function undoubleGlyphs(text) {
+  return text.replace(/\S+/g, (tok) => {
+    if (tok.length < 4 || tok.length % 2 !== 0) return tok;
+    if (!/[A-Za-zÀ-ÿ]/.test(tok) || /\d/.test(tok)) return tok;
+    for (let i = 0; i < tok.length; i += 2) if (tok[i] !== tok[i + 1]) return tok;
+    let out = '';
+    for (let i = 0; i < tok.length; i += 2) out += tok[i];
+    return out;
+  });
+}
+
 function normalizeText(raw) {
-  return String(raw || '')
-    .replace(/\r/g, '')
+  return undoubleGlyphs(String(raw || '').replace(/\r/g, ''))
     // en-dash (–), em-dash (—) E il SEGNO MENO Unicode (−, U+2212) → trattino ASCII.
     // Il 2024 usa il vero segno meno per i modificatori negativi (DEX 8 −1): senza
     // questa conversione la regex [+-] non lo riconosce e le caratteristiche falliscono.
