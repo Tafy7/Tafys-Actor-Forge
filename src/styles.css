@@ -821,3 +821,52 @@ html[data-theme="parchment"] #parse-report {
   padding: 0.5rem 0.6rem;
 }
 html[data-theme="parchment"] #parse-report { color: #d8ccb4; }
+
+/* ============================================================
+   Expected CR — cartellino di stima del Grado di Sfida (tab Mostro)
+   ============================================================ */
+.cr-panel { margin: 0.6rem 0; }
+.cr-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.cr-top h2 { margin: 0; font-size: 1rem; }
+.cr-ma { display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: var(--muted); }
+.cr-ma input { width: 3.2rem; }
+
+.cr-card {
+  margin-top: 0.4rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--muted);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  box-shadow: var(--shadow);
+  padding: 0.65rem 0.75rem;
+}
+.cr-card.cr-ok    { border-left-color: var(--ok); }
+.cr-card.cr-strong{ border-left-color: var(--err); }
+.cr-card.cr-weak  { border-left-color: var(--accent-2); }
+
+.cr-verdict { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.cr-big, .cr-decl { display: flex; flex-direction: column; line-height: 1; }
+.cr-est { font-size: 1.9rem; font-weight: 800; color: var(--accent); }
+.cr-declval { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+.cr-vs { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-top: 0.15rem; }
+.cr-tag {
+  margin-left: auto; font-size: 0.8rem; font-weight: 600;
+  padding: 0.22rem 0.6rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 25%, transparent);
+  color: var(--text);
+}
+.cr-ok .cr-tag     { background: color-mix(in srgb, var(--ok) 28%, transparent); }
+.cr-strong .cr-tag { background: color-mix(in srgb, var(--err) 30%, transparent); }
+.cr-weak .cr-tag   { background: color-mix(in srgb, var(--accent-2) 30%, transparent); }
+
+.cr-stats { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin-top: 0.55rem; font-size: 0.82rem; color: var(--muted); }
+.cr-stats b { color: var(--text); font-weight: 600; }
+.cr-sub { font-size: 0.75rem; color: var(--accent-2); }
+
+.cr-suggest { margin-top: 0.55rem; font-size: 0.8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem; align-items: baseline; }
+.cr-suggest span {
+  padding: 0.1rem 0.45rem; border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+}
+.cr-legendary { margin: 0.5rem 0 0; font-size: 0.78rem; color: var(--accent-2); }

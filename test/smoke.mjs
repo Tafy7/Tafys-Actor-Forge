@@ -636,6 +636,39 @@ for (const preset of MACRO_PRESETS) {
     parseOk && !!preset.icon && preset.code.length > 40);
 }
 
+// --- Expected CR (metodo DMG 2014), validato su mostri a CR noto ---
+console.log('\n— Expected CR (stima Grado di Sfida) —');
+const { expectedCR: ecr, computeMonsterCR: cmc, crToNum: crn, DMG_TABLE: DMGT } = await import('../src/tools/expected-cr.js');
+const crRow = (n) => DMGT.findIndex(r => r.cr === n);
+const CANON = [
+  ['Goblin', '1/4', 7, 15, 5.5, 4], ['Orco', '1/2', 15, 13, 9.5, 5], ['Ogre', '2', 59, 11, 13, 6],
+  ['Owlbear', '3', 59, 13, 24.5, 7], ['Veterano', '3', 58, 17, 21.5, 5], ['Gigante Collina', '5', 105, 13, 37, 8],
+  ['Bulette', '5', 94, 17, 30, 7], ['Gigante Fuoco', '9', 162, 18, 56, 11],
+];
+for (const [name, cr, hp, ac, dpr, atk] of CANON) {
+  const r = ecr({ hpMax: hp, ac, dpr, atkBonus: atk });
+  check(`CR ${name}: stimato ${r.label} entro ±1 di ${cr}`, Math.abs(crRow(crn(cr)) - r.row) <= 1);
+}
+// HP effettivi: resistenza fisica a CR basso usa il moltiplicatore calibrato ×1.5.
+check('HP effettivi ×1.5 con resistenza fisica a CR basso',
+  ecr({ hpMax: 100, ac: 15, dpr: 20, atkBonus: 5, resTypes: ['bludgeoning', 'piercing', 'slashing'] }).effHP === 150);
+// Immunità a un danno NON comune (veleno) non deve gonfiare il CR.
+check('immunità al veleno non moltiplica gli HP',
+  ecr({ hpMax: 100, ac: 15, dpr: 20, atkBonus: 5, immTypes: ['poison'] }).effHP === 100);
+// Mostri con resistenze a CR noto cadono entro ±1 col moltiplicatore calibrato.
+for (const [name, cr, hp, ac, dpr, atk, res, imm] of [
+  ['Gargoyle', '2', 52, 15, 11, 4, ['bludgeoning', 'piercing', 'slashing'], ['poison']],
+  ['Salamander', '5', 90, 15, 21, 7, [], ['fire']],
+  ['Golem Pietra', '10', 178, 17, 39, 10, ['bludgeoning', 'piercing', 'slashing'], ['poison']],
+]) {
+  const r = ecr({ hpMax: hp, ac, dpr, atkBonus: atk, resTypes: res, immTypes: imm });
+  check(`CR ${name} (con resistenze): ${r.label} entro ±1 di ${cr}`, Math.abs(crRow(crn(cr)) - r.row) <= 1);
+}
+// Ponte dal descrittore del form: un Ogre cade entro ±1 di CR 2.
+const ogreCR = cmc({ cr: '2', hpMax: '59', acFlat: '11', str: 19, dex: 8, dr: '', di: '',
+  items: [{ kind: 'attack', ability: 'str', name: 'Greatclub', damage: '2d8 + @mod bludgeoning' }] }, {});
+check('computeMonsterCR Ogre entro ±1 di CR 2', Math.abs(crRow(crn('2')) - ogreCR.row) <= 1);
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);

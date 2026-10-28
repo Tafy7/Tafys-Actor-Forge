@@ -16,7 +16,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.28</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.29</p>
       </div>
       <div class="header-controls">
         <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
@@ -204,6 +204,18 @@
           <input type="file" id="draft-file" accept=".json" hidden />
         </div>
         <span id="warnings"></span>
+
+        <!-- Expected CR: stima live del Grado di Sfida (metodo DMG) -->
+        <div id="cr-panel" class="cr-panel">
+          <div class="cr-top">
+            <h2 data-i18n="cr_title">CR stimato</h2>
+            <label class="cr-ma" data-i18n-title="cr_multiattack_hint">
+              <span data-i18n="cr_multiattack">Multiattacco ×</span>
+              <input type="number" id="cr-multiattack" min="1" step="1" value="1" />
+            </label>
+          </div>
+          <div id="cr-readout"></div>
+        </div>
 
         <div class="preview-head">
           <h2 data-i18n="preview_title">Anteprima JSON</h2>

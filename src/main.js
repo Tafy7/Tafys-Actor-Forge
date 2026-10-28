@@ -10,6 +10,7 @@ import { initItemTab } from './ui/item-tab.js';
 import { initSpellTab } from './ui/spell-tab.js';
 import { initInfoTab } from './ui/info-tab.js';
 import { initThemePicker } from './ui/theme.js';
+import { initCRReadout, renderCR } from './ui/cr-readout.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
 // La macro vive come vero file .js (lintabile), qui la copiamo solo negli appunti.
 import importerMacro from './foundry/import-actor.macro.js?raw';
@@ -201,10 +202,13 @@ function schedulePreview() {
 
 function renderPreview() {
   try {
-    const actor = buildNpc(readForm());
+    const data = readForm();
+    const actor = buildNpc(data);
     document.getElementById('preview').textContent = JSON.stringify(actor, null, 2);
     // Validazione strutturale live: confronta il JSON coi golden template.
     renderValidation(validateActor(actor));
+    // Cartellino CR stimato (metodo DMG) — a lato dell'anteprima.
+    renderCR(data);
   } catch (err) {
     // Se qualcosa va storto lo mostriamo nell'anteprima invece di rompere la pagina.
     document.getElementById('preview').textContent = `Errore: ${err.message}`;
@@ -608,6 +612,7 @@ document.getElementById('tabs').addEventListener('click', (ev) => {
 });
 // Il calcolatore DPR legge il mostro corrente tramite readForm().
 initDprTab({ getData: readForm });
+initCRReadout(readForm); // input multiattacco del cartellino CR
 
 // Tab Oggetto: crea Item standalone. Condivide la collezione batch con la
 // tab NPC (la macro importer smista Actor vs Item in fase d'import).
