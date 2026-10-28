@@ -5,6 +5,7 @@
 import { buildNpc, validateNpc } from './builders/npc.js';
 import { validateActor } from './builders/validate.js';
 import { parseStatblock, emptyTemplate } from './parsers/statblock.js';
+import { importActor } from './parsers/actor-import.js';
 import { initDprTab } from './ui/dpr-tab.js';
 import { initItemTab } from './ui/item-tab.js';
 import { initSpellTab } from './ui/spell-tab.js';
@@ -350,6 +351,40 @@ const DEFAULT_STATE = {
   items: [],
 };
 
+/**
+ * Round-trip (Fase 8): importa un JSON actor di Foundry nel form, così lo si
+ * può modificare e ri-esportare. Riusa restoreForm (il descrittore prodotto da
+ * importActor ha la stessa forma di readForm) e mostra un report come lo
+ * statblock. `text` = JSON grezzo.
+ */
+function applyActorImport(text) {
+  const reportBox = document.getElementById('import-report');
+  if (!text || !text.trim()) {
+    reportBox.hidden = false;
+    reportBox.textContent = t('imp_paste_first');
+    return;
+  }
+  let actor;
+  try { actor = JSON.parse(text); } catch {
+    reportBox.hidden = false;
+    reportBox.textContent = t('imp_bad_json');
+    return;
+  }
+  const { data, report } = importActor(actor);
+  restoreForm({ ...DEFAULT_STATE, ...data });
+  autosave();
+
+  const lines = [`${t('imp_head_ok')} (${report.ok.length}):`];
+  for (const r of report.ok) lines.push(`   ${r}`);
+  if (report.warn.length) {
+    lines.push('', `${t('imp_head_warn')} (${report.warn.length}):`);
+    for (const r of report.warn) lines.push(`   ${r}`);
+  }
+  lines.push('', t('imp_reminder'));
+  reportBox.hidden = false;
+  reportBox.textContent = lines.join('\n');
+}
+
 function applyStatblock() {
   const text = document.getElementById('statblock-input').value;
   const reportBox = document.getElementById('parse-report');
@@ -561,6 +596,31 @@ document.getElementById('btn-parse-statblock').addEventListener('click', (ev) =>
   } else {
     applyStatblock();
   }
+});
+
+// Round-trip: import di un JSON actor (incolla o file), con conferma se il
+// form contiene già dati (come lo statblock).
+function triggerActorImport(ev) {
+  const run = () => applyActorImport(document.getElementById('actor-import-input').value);
+  const hasData = document.getElementById('name').value.trim() || getItems().length > 0;
+  if (hasData && document.getElementById('actor-import-input').value.trim()) {
+    armedConfirm(ev.currentTarget, t('imp_confirm_btn'), run);
+  } else {
+    run();
+  }
+}
+document.getElementById('btn-import-actor').addEventListener('click', triggerActorImport);
+document.getElementById('btn-import-actor-file').addEventListener('click', () => document.getElementById('actor-import-file').click());
+document.getElementById('actor-import-file').addEventListener('change', (ev) => {
+  const file = ev.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('actor-import-input').value = String(reader.result || '');
+    applyActorImport(String(reader.result || ''));
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
 });
 document.getElementById('btn-copy-template').addEventListener('click', copyTemplate);
 document.getElementById('btn-copy-macro').addEventListener('click', copyMacro);

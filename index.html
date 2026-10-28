@@ -16,7 +16,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.29.1</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.30</p>
       </div>
       <div class="header-controls">
         <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
@@ -50,6 +50,17 @@
             <button type="button" id="btn-copy-template" class="secondary" data-i18n="sb_template">📋 Copia template vuoto</button>
           </div>
           <pre id="parse-report" hidden></pre>
+        </details>
+        <details id="actor-import-details" style="margin-top:0.5rem">
+          <summary class="hint" data-i18n="imp_summary">Importa un JSON actor di Foundry per modificarlo e ri-esportarlo (round-trip)</summary>
+          <textarea id="actor-import-input" rows="6" data-i18n-ph="imp_placeholder"
+            placeholder="Incolla qui il JSON dell'actor esportato da Foundry..."></textarea>
+          <div class="row" style="margin-top:0.4rem">
+            <button type="button" id="btn-import-actor" class="secondary" data-i18n="imp_analyze">📥 Carica nel form</button>
+            <input type="file" id="actor-import-file" accept=".json" hidden />
+            <button type="button" id="btn-import-actor-file" class="secondary" data-i18n="imp_file">📂 Da file…</button>
+          </div>
+          <pre id="import-report" hidden></pre>
         </details>
       </fieldset>
 

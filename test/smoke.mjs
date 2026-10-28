@@ -669,6 +669,46 @@ const ogreCR = cmc({ cr: '2', hpMax: '59', acFlat: '11', str: 19, dex: 8, dr: ''
   items: [{ kind: 'attack', ability: 'str', name: 'Greatclub', damage: '2d8 + @mod bludgeoning' }] }, {});
 check('computeMonsterCR Ogre entro ±1 di CR 2', Math.abs(crRow(crn('2')) - ogreCR.row) <= 1);
 
+// --- Round-trip (Fase 8): buildNpc → importActor deve ricostruire il form ---
+console.log('\n— Round-trip import actor —');
+const { importActor } = await import('../src/parsers/actor-import.js');
+const rtSrc = {
+  name: 'Diavolo RT', size: 'lg', creatureType: 'fiend', subtype: 'Devil', alignment: 'Lawful Evil',
+  cr: '1/2', rules: '2014', sourceBook: 'DMG', sourcePage: '94',
+  str: '18', dex: '14', con: '16', int: '10', wis: '12', cha: '15',
+  saves: ['con', 'cha'], skills: { prc: '1', ste: '2' },
+  hpMax: '112', hpFormula: '15d10 + 30', acCalc: 'natural', acFlat: '16',
+  walk: '30', fly: '60', swim: '0', climb: '0', burrow: '0', hover: false,
+  darkvision: '120', blindsight: '0', tremorsense: '0', truesight: '0', telepathy: '120',
+  dr: 'cold, bludgeoning, nonmagical, silvered', di: 'poison', dv: '', ci: 'poisoned',
+  languages: 'common, infernal', legact: '3', legres: '2', img: '', tokenImg: '', bio: 'RT.',
+  items: [
+    { name: 'Coda', kind: 'attack', activation: 'action', attackType: 'melee', ability: 'str',
+      reach: '10', range: '30', longRange: '', damage: '2d8 + 4 piercing', magical: true,
+      onHit: 'condition', condition: 'poisoned', condRounds: '2', saveAbility: 'con', dc: '', onSave: 'none',
+      usesMode: 'none', usesValue: '', img: '', description: 'x', effects: [], onUse: [] },
+    { name: 'Soffio', kind: 'save', activation: 'action', attackType: 'melee', ability: 'str',
+      reach: '5', range: '30', longRange: '', damage: '8d6 fire', magical: false,
+      saveAbility: 'dex', dc: '15', onSave: 'half', onHit: 'none', condition: 'prone', condRounds: '',
+      usesMode: 'recharge', usesValue: '5', img: '', description: 'y', effects: [], onUse: [] },
+  ],
+};
+const rtActor = buildNpc(rtSrc);
+const { data: rtData } = importActor(rtActor);
+check('round-trip: identità (nome/CR/HP/CA)', rtData.name === rtSrc.name && rtData.cr === '1/2' && rtData.hpMax === '112' && rtData.acFlat === '16');
+check('round-trip: tratti con bypass (dr nonmagical/silvered)', rtData.dr.includes('cold') && rtData.dr.includes('nonmagical') && rtData.dr.includes('silvered'));
+check('round-trip: saves e telepatia', rtData.saves.sort().join() === 'cha,con' && rtData.telepathy === '120');
+check('round-trip: attacco (danno + condizione su colpito)', rtData.items[0].kind === 'attack' && rtData.items[0].damage === '2d8 + 4 piercing' && rtData.items[0].onHit === 'condition' && rtData.items[0].condition === 'poisoned');
+check('round-trip: save (CD + metà + recharge)', rtData.items[1].kind === 'save' && rtData.items[1].dc === '15' && rtData.items[1].onSave === 'half' && rtData.items[1].usesMode === 'recharge' && rtData.items[1].usesValue === '5');
+// Golden reali: core preservato e tutti gli item importati.
+for (const gf of ['zariel-2014', 'dracolich-2024']) {
+  const g = JSON.parse(readFileSync(new URL(`../templates/golden-actor-${gf}.json`, import.meta.url)));
+  const { data: gd } = importActor(g);
+  const rb = buildNpc(gd);
+  check(`round-trip golden ${gf}: nome/CR/HP e tutti gli item`,
+    rb.name === g.name && rb.system.details.cr === g.system.details.cr && rb.system.attributes.hp.max === g.system.attributes.hp.max && rb.items.length === g.items.length);
+}
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);
