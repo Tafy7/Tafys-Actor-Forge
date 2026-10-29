@@ -733,6 +733,52 @@ check('sforamento del livello massimo in % (2×CR8 = 7800 vs Alta 4400 → +77%)
   ce({ rules: '2024', party: p5, monsters: [{ cr: '8', count: 2 }] }).overTopPct === 77);
 check('2014: suggerimento da Difficile → Letale = CR 2', sa({ rules: '2014', party: [{ level: 3, count: 4 }], monsters: [{ cr: '1', count: 1 }, { cr: '1/2', count: 3 }] }, 'deadly')?.label === '2');
 
+// Regola DMG: i mostri molto più deboli non contano per il moltiplicatore.
+const pg2 = [{ level: 3, count: 2 }];
+const ogre18 = ce({ rules: '2014', party: pg2, monsters: [{ cr: '2', count: 1 }, { cr: '1/8', count: 1 }] });
+check('2014: un CR 1/8 accanto a un Ogre non fa scattare il moltiplicatore (resta ×1.5)', ogre18.multiplier === 1.5 && ogre18.ignoredForMult === 1);
+check('2014: suggerimento sensato da Difficile → Letale = CR 1/2 (non CR 1/8)', sa({ rules: '2014', party: pg2, monsters: [{ cr: '2', count: 1 }] }, 'deadly')?.label === '1/2');
+check('2014: capitano hobgoblin + 6 hobgoblin contano tutti (×2.5)',
+  ce({ rules: '2014', party: [{ level: 3, count: 4 }], monsters: [{ cr: '3', count: 1 }, { cr: '1/2', count: 6 }] }).multiplier === 2.5);
+
+// --- Import PG da JSON Foundry (HP e CA ricostruiti: nel JSON sono null) ---
+console.log('\n— Import PG —');
+const { importPC, importPCs } = await import('../src/parsers/pc-import.js');
+const shaq = importPC(JSON.parse(readFileSync(new URL('../templates/golden-actor-shaqira-pc.json', import.meta.url))));
+check('Shaq Ira: livello 3 dalle classi', shaq.ok && shaq.pc.level === 3);
+check('Shaq Ira: 35 PF dall\'avanzamento (12+7+7) + 3×COS', shaq.pc.hp === '35');
+check('Shaq Ira: CA 15 da Barbaro senza armatura (10+DES+COS)', shaq.pc.ac === '15');
+check('Shaq Ira: attacco +5 (competenza 2 + FOR 3)', shaq.pc.atk === '5');
+const pcBase = (calc, items = [], extra = {}) => ({ type: 'character', name: calc,
+  system: { abilities: { str: { value: 16 }, dex: { value: 16 }, con: { value: 14 }, int: { value: 10 }, wis: { value: 14 }, cha: { value: 10 } },
+    attributes: { hp: { max: null }, ac: { calc, ...extra } } },
+  items: [{ type: 'class', system: { levels: 5, hd: { denomination: 'd10' }, advancement: { a: { type: 'HitPoints', value: { 1: 'max', 2: 'avg', 3: 'avg', 4: 'avg', 5: 'avg' } } } } }, ...items] });
+const armorItem = (type, value, mb = null) => ({ type: 'equipment', system: { equipped: true, type: { value: type }, armor: { value, dex: null, magicalBonus: mb } } });
+check('CA: armatura pesante 18 + scudo = 20', importPC(pcBase('default', [armorItem('heavy', 18), armorItem('shield', 2)])).pc.ac === '20');
+check('CA: armatura media 15 con DES limitata a +2 = 17', importPC(pcBase('default', [armorItem('medium', 15)])).pc.ac === '17');
+check('CA: Monaco senza armatura 10+DES+SAG = 15', importPC(pcBase('unarmoredMonk')).pc.ac === '15');
+check('CA: formula personalizzata "12 + @abilities.dex.mod" = 15', importPC(pcBase('custom', [], { formula: '12 + @abilities.dex.mod' })).pc.ac === '15');
+check('import: un NPC viene rifiutato con un motivo', importPCs([{ type: 'npc', name: 'Goblin' }]).pcs.length === 0);
+
+// Il modulo UI deve inizializzarsi senza errori: un TDZ (const usata prima
+// della dichiarazione al caricamento del modulo) fermava l'INTERA app.
+let encTabOk = true;
+try { await import('../src/ui/encounter-tab.js'); } catch (e) { encTabOk = false; console.error(e.message); }
+check('modulo UI Scontro si inizializza senza errori (niente TDZ)', encTabOk);
+
+// --- Simulazione a due lati (valore atteso) ---
+console.log('\n— Simulazione scontro —');
+const { simulateCombat: sim } = await import('../src/tools/encounter.js');
+const ogre = { cr: '2', hp: 59, ac: 11, atk: 6, dpr: 13 };
+const sD = sim({ party: [{ level: 5, count: 4 }], monsters: [{ ...ogre, count: 4 }] });
+check('sim: 4 PG L5 vs 4 Ogre → vince il party, perde 40-65% dei PF (Dura)', sD.winner === 'party' && sD.verdict === 'tough');
+check('sim: probabilità di colpo coerenti col DPR (85% vs CA 11, 60% vs CA 15)', sD.partyHitPct === 85 && sD.monsterHitPct === 60);
+check('sim: 4 PG L5 vs 1 Ogre → Tranquilla in 1 round', (() => { const s = sim({ party: [{ level: 5, count: 4 }], monsters: [{ ...ogre, count: 1 }] }); return s.verdict === 'smooth' && s.rounds === 1; })());
+check('sim: scontro alla pari → TPK, senza loop infinito', sim({ party: [{ level: 1, count: 1, hp: 10, ac: 10, atk: 10, dpr: 10 }], monsters: [{ cr: '1', count: 1, hp: 10, ac: 10, atk: 10, dpr: 10 }] }).verdict === 'tpk');
+check('sim: party senza danno → vincono i mostri', sim({ party: [{ level: 5, count: 4, dpr: 0 }], monsters: [{ cr: '2', count: 1 }] }).winner === 'monsters');
+check('sim: campi vuoti → stime segnalate', sim({ party: [{ level: 5, count: 4 }], monsters: [{ cr: '2', count: 1 }] }).estimated === true);
+check('sim: tutti i valori dati → nessuna stima', sim({ party: [{ level: 5, count: 4, hp: 40, ac: 16, atk: 7, dpr: 18 }], monsters: [{ ...ogre, count: 1 }] }).estimated === false);
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);

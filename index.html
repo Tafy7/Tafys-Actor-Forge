@@ -16,7 +16,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.31</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.32</p>
       </div>
       <div class="header-controls">
         <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
@@ -327,8 +327,19 @@
           </div>
           <div class="enc-block">
             <h3 data-i18n="enc_party">🧙 Party</h3>
+            <div class="enc-add-row">
+              <button type="button" id="enc-add-group" class="secondary small" data-i18n="enc_add_group">➕ PG / gruppo</button>
+              <button type="button" id="enc-import-pc" class="secondary small" data-i18n="enc_import_pc">📂 Importa PG (JSON)</button>
+              <input type="file" id="enc-pc-file" accept=".json,application/json" multiple hidden />
+            </div>
+            <details class="enc-paste">
+              <summary class="hint" data-i18n="enc_paste_pc">📋 …oppure incolla il JSON dei PG</summary>
+              <textarea id="enc-pc-paste" rows="4" data-i18n-ph="enc_paste_ph" placeholder="Incolla qui uno o più PG esportati da Foundry (un actor o un array)..."></textarea>
+              <button type="button" id="enc-pc-paste-go" class="secondary small" data-i18n="enc_paste_go">Aggiungi al party</button>
+            </details>
+            <span id="enc-pc-msg" class="hint"></span>
+            <pre id="enc-pc-report" class="enc-report" hidden></pre>
             <div id="enc-party"></div>
-            <button type="button" id="enc-add-group" class="secondary small" data-i18n="enc_add_group">➕ Gruppo di PG</button>
           </div>
           <div class="enc-block">
             <h3 data-i18n="enc_monsters">🐲 Mostri</h3>

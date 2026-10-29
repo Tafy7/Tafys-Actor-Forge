@@ -934,8 +934,8 @@ button.enc-mini {
 .enc-card .remove { min-width: 40px; min-height: 40px; margin-left: auto; padding: 0; background: none; border: none; color: var(--muted); font-size: 1rem; }
 .enc-card .remove:hover:not(:disabled) { color: var(--err); filter: none; }
 .enc-card .remove:disabled { opacity: 0.35; cursor: default; }
-.enc-mon-row input[type="text"] { flex: 1 1 100%; min-height: 40px; min-width: 0; }
-.enc-mon-ctrls { display: flex; align-items: flex-end; gap: 0.5rem 0.75rem; flex: 1 1 100%; flex-wrap: wrap; min-width: 0; }
+.enc-card > input[type="text"] { flex: 1 1 100%; min-height: 40px; min-width: 0; }
+.enc-row-ctrls { display: flex; align-items: flex-end; gap: 0.5rem 0.75rem; flex: 1 1 100%; flex-wrap: wrap; min-width: 0; }
 .enc-cr { flex: 0 1 6.5rem; }
 .enc-cr select, .enc-lvl select { min-height: 40px; }
 button.enc-est { font-size: 0.78rem; padding: 0.3rem 0.6rem; border-style: solid; }
@@ -973,3 +973,32 @@ button.enc-est { font-size: 0.78rem; padding: 0.3rem 0.6rem; border-style: solid
 .enc-d-medium, .enc-d-moderate { --enc-c: var(--accent-2); }
 .enc-d-hard { --enc-c: var(--accent); }
 .enc-d-deadly, .enc-d-high { --enc-c: var(--err); }
+
+/* --- Scontro v0.32: stat richiudibili, import PG, simulazione --- */
+.enc-stats { flex: 1 1 100%; min-width: 0; border-top: 1px dashed var(--border); padding-top: 0.35rem; }
+.enc-stats > summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.5rem; min-height: 32px; font-size: 0.8rem; color: var(--muted); }
+.enc-stats-label { color: var(--accent-2); font-weight: 600; }
+.enc-stat-sum { color: var(--text); font-variant-numeric: tabular-nums; }
+.enc-stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.45rem; }
+@media (min-width: 560px) { .enc-stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.enc-stats-grid input { min-height: 40px; }
+.enc-stats .hint { margin: 0.35rem 0 0; font-size: 0.72rem; }
+
+.enc-paste > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.enc-paste textarea { margin: 0.35rem 0; min-height: 5rem; }
+.enc-report { white-space: pre-wrap; font-size: 0.75rem; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.6rem; margin: 0; max-height: 12rem; overflow: auto; }
+
+.enc-sim { --enc-c: var(--muted); margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+.enc-sim-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.enc-sim-val { font-size: 1.4rem; font-weight: 800; color: var(--enc-c); }
+.enc-sim-line { margin: 0.35rem 0 0; font-size: 0.9rem; color: var(--text); }
+.enc-nums em { font-style: normal; font-size: 0.7rem; color: var(--muted); }
+.enc-mini-sim { font-size: 0.78rem; color: var(--muted); margin-left: auto; }
+.enc-mini-sim b { color: var(--enc-c); }
+
+/* Colori del verdetto della simulazione. */
+.enc-s-smooth { --enc-c: var(--ok); }
+.enc-s-fair { --enc-c: var(--accent-2); }
+.enc-s-tough { --enc-c: var(--accent); }
+.enc-s-brutal, .enc-s-tpk { --enc-c: var(--err); }
+.enc-s-stall { --enc-c: var(--muted); }

@@ -12,6 +12,7 @@
 // Gli XP per CR vengono dalla stessa tabella DMG usata dall'Expected CR.
 // ============================================================
 import { DMG_TABLE, crToNum, xpForCR } from './expected-cr.js';
+import { hitChance } from './dpr.js';
 
 // DMG 2014 — "XP Thresholds by Character Level": [facile, media, difficile, mortale].
 export const THRESHOLDS_2014 = {
@@ -53,6 +54,8 @@ export function multiplier2014(monsterCount, partySize) {
   return MULT_STEPS[Math.max(0, Math.min(MULT_STEPS.length - 1, i))];
 }
 
+// Soglia "mostro trascurabile" per il moltiplicatore 2014 (vedi computeEncounter).
+const WEAK_FRACTION = 0.2;
 const lvl = (l) => Math.max(1, Math.min(20, Math.round(Number(l) || 1)));
 const cnt = (c) => Math.max(0, Math.round(Number(c) || 0));
 
@@ -75,7 +78,23 @@ export function computeEncounter({ rules = '2014', party = [], monsters = [] }) 
   const sums = keys.map((_, i) => party.reduce((s, g) => s + table[lvl(g.level)][i] * cnt(g.count), 0));
   const tiers = keys.map((key, i) => ({ key, xp: sums[i] }));
 
-  const multiplier = is2024 ? 1 : multiplier2014(monsterCount, partySize);
+  // DMG 2014: per il moltiplicatore NON si contano i mostri con CR molto
+  // inferiore alla media degli altri (a meno che pesino davvero). Il DMG non
+  // quantifica "molto": lo traduciamo in "meno di 1/5 dei PE medi degli altri
+  // mostri". Senza questa regola un CR 1/8 accanto a un Ogre faceva scattare
+  // ×1.5 → ×2 da solo. I loro PE restano comunque nel totale.
+  let countedForMult = monsterCount;
+  if (!is2024 && monsterCount > 1) {
+    countedForMult = monsters.reduce((s, m) => {
+      const n = cnt(m.count);
+      if (!n) return s;
+      const xp = xpForCR(crToNum(m.cr));
+      const avgOthers = (baseXP - xp) / (monsterCount - 1);
+      return s + (xp >= avgOthers * WEAK_FRACTION ? n : 0);
+    }, 0);
+    countedForMult = Math.max(1, countedForMult);
+  }
+  const multiplier = is2024 ? 1 : multiplier2014(countedForMult, partySize);
   const adjustedXP = Math.round(baseXP * multiplier);
 
   let difficulty;
@@ -98,6 +117,7 @@ export function computeEncounter({ rules = '2014', party = [], monsters = [] }) 
 
   return {
     rules: is2024 ? '2024' : '2014', partySize, monsterCount,
+    ignoredForMult: is2024 ? 0 : monsterCount - countedForMult,
     baseXP, multiplier, adjustedXP, tiers, difficulty, overTopPct,
     perPC: partySize ? Math.floor(baseXP / partySize) : 0,
   };
@@ -130,4 +150,108 @@ export function nextTier(enc) {
   if (enc.difficulty === 'none') return null;
   const r = difficultyRank(enc.difficulty);
   return order.find(k => difficultyRank(k) > r) || null;
+}
+
+// ============================================================
+// SIMULAZIONE A DUE LATI (valore atteso, round per round).
+//
+// Ogni round ciascun lato infligge il suo danno atteso = danno grezzo ×
+// probabilità di colpire la CA media avversaria (stesso hitChance del
+// calcolatore DPR, col cap 5%-95%). Il danno di un lato CALA in proporzione
+// ai PF che gli restano (logoramento: chi cade smette di colpire). I danni
+// dei due lati si applicano insieme (l'iniziativa non è nota). Un lato è
+// fuori combattimento sotto il 5% dei PF iniziali: senza questa soglia uno
+// scontro alla pari tenderebbe a zero senza mai finire.
+// ============================================================
+
+const DEFEAT_FRACTION = 0.05;
+const MAX_ROUNDS = 30;
+const clampLvl = (l) => Math.max(1, Math.min(20, Math.round(Number(l) || 1)));
+const given = (v) => String(v ?? '').trim() !== '' && Number.isFinite(Number(v));
+
+/**
+ * Stime generiche per un PG quando un campo è vuoto. NON sono regole
+ * ufficiali: medie ragionevoli per un party misto (classe a d8 con COS +2,
+ * caratteristica d'attacco +3/+4/+5, una CA che sale col livello, danno
+ * grezzo che cresce con attacchi extra e trucchetti). La UI le marca "~".
+ */
+export function pcEstimates(level) {
+  const L = clampLvl(level);
+  const prof = 2 + Math.floor((L - 1) / 4);
+  const abil = L >= 8 ? 5 : L >= 4 ? 4 : 3;
+  return { hp: 10 + 7 * (L - 1), ac: 14 + Math.floor(L / 5), atk: prof + abil, dpr: 4 + 3 * L };
+}
+
+/** Medie del DMG (tabella dei CR) per un mostro del CR dato. */
+export function monsterEstimates(cr) {
+  const row = DMG_TABLE.find(r => r.cr === crToNum(cr)) || DMG_TABLE[1];
+  return {
+    hp: Math.round((row.hpMin + row.hpMax) / 2), ac: row.ac, atk: row.atk,
+    dpr: Math.round(((row.dprMin + row.dprMax) / 2) * 10) / 10,
+  };
+}
+
+function resolve(entry, est) {
+  const out = { est: {} };
+  for (const k of ['hp', 'ac', 'atk', 'dpr']) {
+    out[k] = given(entry[k]) ? Number(entry[k]) : est[k];
+    out.est[k] = !given(entry[k]);
+  }
+  out.n = Math.max(0, Math.round(Number(entry.count) || 0));
+  return out;
+}
+export const resolvePC = (pc) => resolve(pc, pcEstimates(pc.level));
+export const resolveMonster = (m) => resolve(m, monsterEstimates(m.cr));
+
+/**
+ * Ritorna null se manca un lato; altrimenti esito, round, % di PF persi dal
+ * party, danni attesi per round e percentuali di colpo, verdetto.
+ */
+export function simulateCombat({ party = [], monsters = [] }) {
+  const P = party.map(resolvePC).filter(x => x.n > 0 && x.hp > 0);
+  const M = monsters.map(resolveMonster).filter(x => x.n > 0 && x.hp > 0);
+  if (!P.length || !M.length) return null;
+
+  const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
+  const partyHP0 = sum(P, x => x.hp * x.n);
+  const monsterHP0 = sum(M, x => x.hp * x.n);
+  // Bersagli: i mostri colpiscono i PG (CA media per numero); il party passa
+  // più tempo sui mostri con più PF (CA media pesata sui PF).
+  const partyAC = sum(P, x => x.ac * x.n) / sum(P, x => x.n);
+  const monsterAC = sum(M, x => x.ac * x.hp * x.n) / monsterHP0;
+
+  const partyRaw = sum(P, x => x.dpr * x.n);
+  const monsterRaw = sum(M, x => x.dpr * x.n);
+  const partyEff = sum(P, x => x.dpr * hitChance(monsterAC, x.atk) * x.n);
+  const monsterEff = sum(M, x => x.dpr * hitChance(partyAC, x.atk) * x.n);
+
+  let pHP = partyHP0;
+  let mHP = monsterHP0;
+  let rounds = 0;
+  const pOut = () => pHP <= partyHP0 * DEFEAT_FRACTION;
+  const mOut = () => mHP <= monsterHP0 * DEFEAT_FRACTION;
+  while (rounds < MAX_ROUNDS && !pOut() && !mOut()) {
+    rounds += 1;
+    const toMonsters = partyEff * (pHP / partyHP0);
+    const toParty = monsterEff * (mHP / monsterHP0);
+    mHP -= toMonsters;
+    pHP -= toParty;
+  }
+  const winner = pOut() && mOut() ? 'both' : mOut() ? 'party' : pOut() ? 'monsters' : 'stall';
+  const lostPct = Math.min(100, Math.round((1 - Math.max(0, pHP) / partyHP0) * 100));
+
+  let verdict;
+  if (winner === 'monsters' || winner === 'both') verdict = 'tpk';
+  else if (winner === 'stall') verdict = 'stall';
+  else verdict = lostPct < 20 ? 'smooth' : lostPct < 40 ? 'fair' : lostPct < 65 ? 'tough' : 'brutal';
+
+  const r1 = (x) => Math.round(x * 10) / 10;
+  return {
+    winner, rounds, lostPct, verdict,
+    partyHP0, monsterHP0, partyAC: r1(partyAC), monsterAC: r1(monsterAC),
+    partyEff: r1(partyEff), monsterEff: r1(monsterEff),
+    partyHitPct: partyRaw ? Math.round((partyEff / partyRaw) * 100) : 0,
+    monsterHitPct: monsterRaw ? Math.round((monsterEff / monsterRaw) * 100) : 0,
+    estimated: [...P, ...M].some(x => Object.values(x.est).some(Boolean)),
+  };
 }
