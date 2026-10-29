@@ -147,7 +147,10 @@ export function importPC(actor) {
 
 /** JSON incollato/caricato (un actor o un array di actor) → righe PG + report. */
 export function importPCs(json) {
-  const list = Array.isArray(json) ? json : [json];
+  // Accetta anche il file della scheda Esporta della macro (es. la cartella
+  // "Party" esportata da Foundry): { tafysForgeExport, entries: [{ path, data }] }.
+  const src = json && json.tafysForgeExport ? (json.entries || []).map(e => e.data) : json;
+  const list = Array.isArray(src) ? src : [src];
   const pcs = [];
   const report = [];
   for (const a of list) {

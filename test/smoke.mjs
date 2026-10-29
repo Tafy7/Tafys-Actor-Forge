@@ -759,6 +759,13 @@ check('CA: armatura media 15 con DES limitata a +2 = 17', importPC(pcBase('defau
 check('CA: Monaco senza armatura 10+DES+SAG = 15', importPC(pcBase('unarmoredMonk')).pc.ac === '15');
 check('CA: formula personalizzata "12 + @abilities.dex.mod" = 15', importPC(pcBase('custom', [], { formula: '12 + @abilities.dex.mod' })).pc.ac === '15');
 check('import: un NPC viene rifiutato con un motivo', importPCs([{ type: 'npc', name: 'Goblin' }]).pcs.length === 0);
+// File della scheda Esporta della macro (es. cartella "Party" esportata da Foundry).
+const shaqJson = JSON.parse(readFileSync(new URL('../templates/golden-actor-shaqira-pc.json', import.meta.url)));
+const partyExport = { tafysForgeExport: 1, documentName: 'Actor', rootName: 'Party', entries: [
+  { path: '', data: shaqJson }, { path: 'Famigli', data: { type: 'npc', name: 'Corvo' } }] };
+const fromExport = importPCs(partyExport);
+check('import: legge il file esportato dalla macro (PG presi, NPC scartati con avviso)',
+  fromExport.pcs.length === 1 && fromExport.pcs[0].name === 'Shaq Ira' && fromExport.report.some(r => /Corvo/.test(r)));
 
 // Il modulo UI deve inizializzarsi senza errori: un TDZ (const usata prima
 // della dichiarazione al caricamento del modulo) fermava l'INTERA app.

@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node test/smoke.mjs && node test/statblock.mjs"
+    "test": "node test/smoke.mjs && node test/statblock.mjs && node test/macro-io.mjs"
   },
   "devDependencies": {
     "vite": "^7.0.0"

@@ -371,7 +371,22 @@ function applyActorImport(text) {
     reportBox.textContent = t('imp_bad_json');
     return;
   }
+  // File della scheda Esporta della macro (o un array): il form contiene UN
+  // mostro, quindi prendiamo il primo NPC e diciamo quanti ce n'erano.
+  let manyNote = '';
+  if (actor && (actor.tafysForgeExport || Array.isArray(actor))) {
+    const list = actor.tafysForgeExport ? (actor.entries || []).map(e => e.data) : actor;
+    const npcs = list.filter(d => d && d.type === 'npc');
+    if (!npcs.length) {
+      reportBox.hidden = false;
+      reportBox.textContent = t('imp_no_npc');
+      return;
+    }
+    if (npcs.length > 1) manyNote = t('imp_many', { n: npcs.length, name: npcs[0].name });
+    actor = npcs[0];
+  }
   const { data, report } = importActor(actor);
+  if (manyNote) report.warn.unshift(manyNote);
   restoreForm({ ...DEFAULT_STATE, ...data });
   autosave();
 
