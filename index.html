@@ -16,7 +16,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.30</p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span> · v0.31</p>
       </div>
       <div class="header-controls">
         <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
@@ -30,6 +30,7 @@
     <button type="button" class="tab" data-tab="item" data-i18n="tab_item">🎒 Oggetto</button>
     <button type="button" class="tab" data-tab="spell" data-i18n="tab_spell">✨ Incantesimo</button>
     <button type="button" class="tab" data-tab="dpr" data-i18n="tab_dpr">📊 Calcolatore DPR</button>
+    <button type="button" class="tab" data-tab="enc" data-i18n="tab_enc">⚔️ Scontro</button>
     <button type="button" class="tab" data-tab="info" data-i18n="tab_info">ℹ️ Info & Macro</button>
   </nav>
 
@@ -309,6 +310,39 @@
           <div id="dpr-chart"></div>
           <p class="hint" data-i18n="dpr_chart_hint">La curva mostra come cambia il DPR al variare della CA del bersaglio; il punto rosso è la CA scelta.</p>
         </div>
+      </div>
+    </section>
+
+    <!-- ===== Tab: Scontro (encounter builder, mobile-first) ===== -->
+    <section class="tab-panel" id="tab-enc" hidden>
+      <div class="enc-wrap">
+        <div class="enc-setup">
+          <h2 data-i18n="enc_title">⚔️ Bilanciatore di scontri</h2>
+          <p class="hint" data-i18n="enc_intro">Componi il party e i mostri: la difficoltà si aggiorna mentre modifichi.</p>
+          <button type="button" id="enc-mini" class="secondary enc-mini"></button>
+          <div class="enc-rules" role="group">
+            <span data-i18n="enc_rules">Regole</span>
+            <button type="button" class="secondary seg" data-enc-rules="2014">2014</button>
+            <button type="button" class="secondary seg" data-enc-rules="2024">2024</button>
+          </div>
+          <div class="enc-block">
+            <h3 data-i18n="enc_party">🧙 Party</h3>
+            <div id="enc-party"></div>
+            <button type="button" id="enc-add-group" class="secondary small" data-i18n="enc_add_group">➕ Gruppo di PG</button>
+          </div>
+          <div class="enc-block">
+            <h3 data-i18n="enc_monsters">🐲 Mostri</h3>
+            <div class="enc-add-row">
+              <button type="button" id="enc-add-monster" class="secondary small" data-i18n="enc_add_monster">➕ Mostro</button>
+              <button type="button" id="enc-add-current" class="secondary small" data-i18n="enc_add_current">📥 Dal mostro in scheda</button>
+              <button type="button" id="enc-add-batch" class="secondary small" data-i18n="enc_add_batch">📦 Dalla collezione</button>
+            </div>
+            <span id="enc-msg" class="hint"></span>
+            <div id="enc-monsters"></div>
+            <button type="button" id="enc-clear" class="secondary small" data-i18n="enc_clear">🗑️ Svuota mostri</button>
+          </div>
+        </div>
+        <aside class="enc-result" id="enc-result"></aside>
       </div>
     </section>
 

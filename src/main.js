@@ -12,6 +12,7 @@ import { initSpellTab } from './ui/spell-tab.js';
 import { initInfoTab } from './ui/info-tab.js';
 import { initThemePicker } from './ui/theme.js';
 import { initCRReadout, renderCR } from './ui/cr-readout.js';
+import { initEncounterTab } from './ui/encounter-tab.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
 // La macro vive come vero file .js (lintabile), qui la copiamo solo negli appunti.
 import importerMacro from './foundry/import-actor.macro.js?raw';
@@ -673,6 +674,8 @@ document.getElementById('tabs').addEventListener('click', (ev) => {
 // Il calcolatore DPR legge il mostro corrente tramite readForm().
 initDprTab({ getData: readForm });
 initCRReadout(readForm); // input multiattacco del cartellino CR
+// Tab Scontro: legge il mostro in scheda e la collezione batch (per aggiungerli).
+initEncounterTab({ getData: readForm, getBatch: () => batch });
 
 // Tab Oggetto: crea Item standalone. Condivide la collezione batch con la
 // tab NPC (la macro importer smista Actor vs Item in fase d'import).

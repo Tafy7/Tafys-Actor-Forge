@@ -709,6 +709,30 @@ for (const gf of ['zariel-2014', 'dracolich-2024']) {
     rb.name === g.name && rb.system.details.cr === g.system.details.cr && rb.system.attributes.hp.max === g.system.attributes.hp.max && rb.items.length === g.items.length);
 }
 
+// --- Encounter builder: soglie 2014 (+moltiplicatori) e budget 2024 ---
+console.log('\n— Encounter builder —');
+const { computeEncounter: ce, suggestAddition: sa, nextTier: nxt } = await import('../src/tools/encounter.js');
+const eA = ce({ rules: '2014', party: [{ level: 3, count: 4 }], monsters: [{ cr: '1', count: 1 }, { cr: '1/2', count: 3 }] });
+check('2014: 4×L3 vs CR1+3×CR1/2 → 500×2 = 1000, Difficile', eA.adjustedXP === 1000 && eA.difficulty === 'hard' && eA.perPC === 125);
+check('2014: party piccolo (2 PG) → moltiplicatore uno scalino sopra (×1.5)',
+  ce({ rules: '2014', party: [{ level: 5, count: 2 }], monsters: [{ cr: '5', count: 1 }] }).multiplier === 1.5);
+check('2014: party grande (6 PG) vs mostro singolo → ×0.5',
+  ce({ rules: '2014', party: [{ level: 1, count: 6 }], monsters: [{ cr: '1', count: 1 }] }).multiplier === 0.5);
+check('2014: party misto 3×L5+1×L6 → soglie 1050/2100/3150/4700',
+  ce({ rules: '2014', party: [{ level: 5, count: 3 }, { level: 6, count: 1 }], monsters: [{ cr: '1', count: 1 }] }).tiers.map(x => x.xp).join('/') === '1050/2100/3150/4700');
+const p5 = [{ level: 5, count: 4 }];
+check('2024: niente moltiplicatore; 1800 PE sotto il budget Basso (2000) → Sotto Bassa',
+  ce({ rules: '2024', party: p5, monsters: [{ cr: '2', count: 4 }] }).difficulty === 'under');
+check('2024: budget come soglia da RAGGIUNGERE → 2000 PE = Bassa',
+  ce({ rules: '2024', party: p5, monsters: [{ cr: '2', count: 4 }, { cr: '1', count: 1 }] }).difficulty === 'low');
+check('2024: 3300 PE (≥3000, <4400) → Moderata',
+  ce({ rules: '2024', party: p5, monsters: [{ cr: '4', count: 3 }] }).difficulty === 'moderate');
+const enc2000 = { rules: '2024', party: p5, monsters: [{ cr: '2', count: 4 }, { cr: '1', count: 1 }] };
+check('2024: suggerimento sensato da Bassa → Moderata = CR 4 (non CR 1/8)', sa(enc2000, nxt(ce(enc2000)))?.label === '4');
+check('sforamento del livello massimo in % (2×CR8 = 7800 vs Alta 4400 → +77%)',
+  ce({ rules: '2024', party: p5, monsters: [{ cr: '8', count: 2 }] }).overTopPct === 77);
+check('2014: suggerimento da Difficile → Letale = CR 2', sa({ rules: '2014', party: [{ level: 3, count: 4 }], monsters: [{ cr: '1', count: 1 }, { cr: '1/2', count: 3 }] }, 'deadly')?.label === '2');
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);

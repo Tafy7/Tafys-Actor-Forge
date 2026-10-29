@@ -870,3 +870,106 @@ html[data-theme="parchment"] #parse-report { color: #d8ccb4; }
   color: var(--text);
 }
 .cr-legendary { margin: 0.5rem 0 0; font-size: 0.78rem; color: var(--accent-2); }
+
+/* ============================================================
+   Barra dei tab scorrevole su schermi stretti (fix minimo mobile):
+   con 6 tab un telefono da 390px sbordava e trascinava in orizzontale
+   tutta la pagina. Il resto del lavoro mobile è un blocco a parte.
+   ============================================================ */
+@media (max-width: 760px) {
+  .tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding: 0.5rem 0.75rem 0; -webkit-overflow-scrolling: touch; }
+  .tab { flex: 0 0 auto; white-space: nowrap; padding: 0.55rem 0.8rem; }
+}
+
+/* ============================================================
+   Tab Scontro — encounter builder (mobile-first)
+   ============================================================ */
+.enc-wrap { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; max-width: 1100px; }
+/* .enc-result è un <aside>: azzera la cornice/sticky/altezza globali degli
+   aside (pensati per l'anteprima JSON), altrimenti doppia cornice su desktop
+   e risultato incollato in alto su mobile. */
+.enc-result { position: static; background: none; border: 0; padding: 0; max-height: none; overflow: visible; display: block; box-shadow: none; }
+@media (min-width: 900px) {
+  .enc-wrap { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  .enc-result { position: sticky; top: 0.75rem; }
+  .enc-mini { display: none !important; }
+}
+.enc-setup, .enc-result { min-width: 0; }
+
+/* Riepilogo compatto sticky (solo telefono): il verdetto resta visibile
+   mentre si modifica party e mostri; un tocco porta al risultato. */
+button.enc-mini {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  margin: 0.5rem 0 0; padding: 0.55rem 0.8rem; min-height: 44px;
+  background: var(--panel-2); border: 1px solid var(--border); border-left: 5px solid var(--enc-c, var(--muted));
+  border-radius: var(--radius); box-shadow: var(--shadow); color: var(--text); text-align: left;
+}
+.enc-mini-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.enc-mini-val { color: var(--enc-c, var(--muted)); font-size: 1rem; }
+.enc-mini-xp { margin-left: auto; font-size: 0.85rem; color: var(--muted); }
+.enc-mini-go { color: var(--muted); }
+.enc-setup h2 { margin: 0 0 0.25rem; }
+.enc-block { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.enc-block h3 { margin: 0; font-size: 1rem; }
+
+/* Selettore regole (segmented control) */
+.enc-rules { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.6rem; font-size: 0.85rem; color: var(--muted); }
+.enc-rules .seg { min-width: 4.2rem; min-height: 40px; border-style: solid; color: var(--muted); }
+.enc-rules .seg.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+/* Card di party e mostri */
+.enc-card {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.5rem 0.75rem;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.6rem 0.7rem; min-width: 0;
+}
+.enc-party-row .enc-lvl { flex: 1 1 6rem; max-width: 9rem; }
+.enc-qty { display: flex; flex-direction: column; gap: 0.2rem; }
+.enc-qty-label { font-size: 0.82rem; color: var(--muted); }
+.enc-stepper { display: inline-flex; align-items: center; gap: 0.35rem; }
+.enc-stepper button { min-width: 40px; min-height: 40px; padding: 0; font-size: 1.15rem; line-height: 1; border-style: solid; }
+.enc-count { min-width: 1.8rem; text-align: center; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+/* ✖ "fantasma" come nel resto dell'app: discreta, rossa solo al passaggio. */
+.enc-card .remove { min-width: 40px; min-height: 40px; margin-left: auto; padding: 0; background: none; border: none; color: var(--muted); font-size: 1rem; }
+.enc-card .remove:hover:not(:disabled) { color: var(--err); filter: none; }
+.enc-card .remove:disabled { opacity: 0.35; cursor: default; }
+.enc-mon-row input[type="text"] { flex: 1 1 100%; min-height: 40px; min-width: 0; }
+.enc-mon-ctrls { display: flex; align-items: flex-end; gap: 0.5rem 0.75rem; flex: 1 1 100%; flex-wrap: wrap; min-width: 0; }
+.enc-cr { flex: 0 1 6.5rem; }
+.enc-cr select, .enc-lvl select { min-height: 40px; }
+button.enc-est { font-size: 0.78rem; padding: 0.3rem 0.6rem; border-style: solid; }
+.enc-add-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.enc-add-row button { min-height: 40px; }
+.enc-empty { margin: 0.2rem 0; }
+
+/* Risultato */
+.enc-res-card {
+  --enc-c: var(--muted);
+  border: 1px solid var(--border); border-left: 5px solid var(--enc-c); border-radius: var(--radius);
+  background: var(--panel-2); box-shadow: var(--shadow); padding: 0.85rem 0.95rem;
+}
+.enc-verdict { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.enc-verdict-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.enc-verdict-val { font-size: 1.9rem; font-weight: 800; color: var(--enc-c); line-height: 1.1; }
+.enc-bar { position: relative; height: 14px; border-radius: 999px; background: color-mix(in srgb, var(--muted) 22%, transparent); margin: 0.75rem 0 0.4rem; overflow: hidden; }
+.enc-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--enc-c); transition: width 0.25s ease; }
+.enc-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--text); opacity: 0.55; transform: translateX(-1px); }
+.enc-legend { list-style: none; padding: 0; margin: 0.3rem 0 0; display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.8rem; color: var(--muted); }
+.enc-legend li.reached { color: var(--text); }
+.enc-legend b { color: inherit; font-weight: 600; margin-left: 0.2rem; }
+.enc-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.3rem; background: var(--enc-c); vertical-align: middle; }
+.enc-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); gap: 0.5rem; margin-top: 0.8rem; }
+.enc-nums div { display: flex; flex-direction: column; background: color-mix(in srgb, var(--panel) 70%, transparent); border: 1px solid var(--border); border-radius: 6px; padding: 0.35rem 0.5rem; }
+.enc-nums span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+.enc-nums b { font-size: 1.15rem; color: var(--text); }
+.enc-suggest { margin: 0.75rem 0 0; font-size: 0.86rem; color: var(--text); }
+.enc-suggest.enc-warn { color: var(--err); }
+.enc-note { margin: 0.6rem 0 0; font-size: 0.75rem; }
+
+/* Un'unica variabile per livello pilota bordo, barra, verdetto e pallini. */
+.enc-d-trivial, .enc-d-under { --enc-c: var(--muted); }
+.enc-d-easy, .enc-d-low { --enc-c: var(--ok); }
+.enc-d-medium, .enc-d-moderate { --enc-c: var(--accent-2); }
+.enc-d-hard { --enc-c: var(--accent); }
+.enc-d-deadly, .enc-d-high { --enc-c: var(--err); }
