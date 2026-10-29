@@ -1002,3 +1002,195 @@ button.enc-est { font-size: 0.78rem; padding: 0.3rem 0.6rem; border-style: solid
 .enc-s-tough { --enc-c: var(--accent); }
 .enc-s-brutal, .enc-s-tpk { --enc-c: var(--err); }
 .enc-s-stall { --enc-c: var(--muted); }
+
+/* ============================================================
+   v0.35 — UI MOBILE
+   Prima le correzioni valide a ogni larghezza (niente sbordi), poi il
+   blocco ≤ 760px: barra delle tab in basso, barra azioni + foglio
+   anteprima nelle tab con un form, campi da 16px (iOS non zooma),
+   bersagli da 40px, griglie più dense, righe DPR/effetti a due piani.
+   ============================================================ */
+
+/* Un <fieldset> per default non si stringe sotto il suo contenuto
+   (min-inline-size: min-content): con un <select> dalle opzioni lunghe
+   allargava la pagina oltre lo schermo. Idem le celle di griglia. */
+fieldset { min-width: 0; }
+.npc-grid > *, .grid-2 > *, .grid-3 > *, .grid-6 > * { min-width: 0; }
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+select { max-width: 100%; text-overflow: ellipsis; }
+
+/* Spunta con nota (es. "Adamantina (armatura: …)"): la nota va a capo
+   sotto invece di schiacciarsi accanto alla casella. */
+label.check:has(.hint) { flex-wrap: wrap; row-gap: 0; }
+label.check:has(.hint) .hint { order: 3; flex-basis: 100%; }
+
+/* La ✖ delle righe DPR è "fantasma" come nel resto dell'app. */
+.dpr-row .remove { background: none; border: none; color: var(--muted); padding: 0.2rem 0.4rem; font-size: 0.9rem; }
+.dpr-row .remove:hover { color: var(--err); filter: none; }
+
+/* Versione nel sottotitolo: separatore solo dove c'è il testo lungo. */
+.subtitle .ver::before { content: " · "; }
+
+/* Sezioni richiudibili (titolo cliccabile, anche su desktop). */
+legend.fold-toggle { cursor: pointer; user-select: none; }
+legend.fold-toggle::before {
+  content: "▾"; display: inline-block; width: 1em; color: var(--muted);
+  transition: transform 0.15s ease;
+}
+fieldset.folded > legend.fold-toggle::before { transform: rotate(-90deg); }
+fieldset.folded > :not(legend) { display: none !important; }
+/* Chiusa: il titolo entra DENTRO il riquadro (float sulla legend, il trucco
+   classico) → una riga compatta invece di un titolo sopra un box vuoto. */
+fieldset.folded { padding-top: 0.15rem; padding-bottom: 0.15rem; }
+fieldset.folded > legend.fold-toggle { float: left; width: 100%; padding: 0.4rem 0.1rem; }
+fieldset.folded::after { content: ""; display: block; clear: both; }
+legend.fold-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* Elementi solo-telefono: nascosti altrove. */
+.tab-m, .m-bar, .m-sheet-head { display: none; }
+
+/* Barra azioni + foglio anteprima: telefono E tablet in verticale (fino a
+   980px la colonna di destra finirebbe sotto al form). Le tab restano in
+   alto fino a 760px, quindi qui la barra parte dal fondo (--nav-h: 0). */
+@media (max-width: 980px) {
+  :root { --nav-h: 0px; --bar-h: 58px; }
+  /* --- Tab con form: l'aside esce dal flusso e diventa un foglio --- */
+  .npc-grid { padding-bottom: var(--bar-h); }
+  .npc-grid > aside { display: none; }
+  .m-bar {
+    position: fixed; left: 0; right: 0; z-index: 55;
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; align-items: center;
+    padding: 0.45rem 0.6rem; min-height: var(--bar-h);
+    background: var(--panel); border-top: 1px solid var(--border);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+  .m-bar button { min-height: 44px; }
+  button.m-open {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    min-width: 0; text-align: left; border-style: solid;
+  }
+  .m-open-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .m-status { flex: none; font-weight: 700; color: var(--muted); }
+  .m-status[data-state="ok"] { color: var(--ok); }
+  .m-status[data-state="warn"] { color: var(--accent-2); }
+  .m-status[data-state="err"] { color: var(--err); }
+  .m-export { padding: 0.5rem 1rem; white-space: nowrap; }
+  .m-msg { display: none; grid-column: 1 / -1; font-size: 0.78rem; color: var(--err); }
+  .m-bar.has-msg .m-msg { display: block; }
+  .npc-grid:has(.m-bar.has-msg) { padding-bottom: calc(var(--bar-h) + 2.2rem); }
+
+  /* Foglio aperto: aside a tutto schermo sopra al form, sotto alle tab. */
+  .npc-grid.sheet-open > aside, html[data-theme] .npc-grid.sheet-open > aside {
+    display: block; position: fixed; z-index: 58; inset: 0 0 calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)) 0;
+    max-height: none; overflow-y: auto; overscroll-behavior: contain;
+    margin: 0; padding: 0 0.8rem 1rem; border: 0; border-radius: 0;
+    background: var(--bg); box-shadow: none;
+  }
+  .npc-grid.sheet-open .m-bar { display: none; }
+  .npc-grid.sheet-open > aside .m-sheet-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    position: sticky; top: 0; z-index: 1; margin: 0 -0.8rem 0.6rem; padding: 0.4rem 0.8rem;
+    background: var(--panel); border-bottom: 2px solid var(--accent);
+  }
+  .m-sheet-head strong { color: var(--accent-2); }
+  button.m-close { min-width: 44px; border-style: solid; font-size: 1rem; }
+  .npc-grid.sheet-open > aside :is(#preview, #item-preview, #spell-preview) { max-height: none; overflow: visible; }
+  .npc-grid.sheet-open > aside .main-actions button { flex: 1 1 auto; }
+  html.sheet-lock, html.sheet-lock body { overflow: hidden; }
+
+  html.typing .m-bar { display: none !important; }
+
+  /* Tab in alto (761–980px): icona + nome breve su una riga, niente a capo. */
+  .tab-full { display: none; }
+  .tab-m { display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+}
+
+@media (max-width: 760px) {
+  :root { --nav-h: 58px; --bar-h: 58px; }
+  body { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)); }
+  main { padding: 0.6rem 0.6rem 1rem; }
+
+  /* --- Testata compatta: titolo su una riga, solo la versione --- */
+  header { padding: 0.5rem 0.75rem; }
+  .header-row { gap: 0.5rem; }
+  .header-row > div:first-child { min-width: 0; }
+  header h1 { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .subtitle { font-size: 0.72rem; margin-top: 0.05rem; }
+  .subtitle [data-i18n="subtitle"] { display: none; }
+  .subtitle .ver::before { content: none; }
+  .theme-picker { max-width: 7.2rem; padding: 0.3rem 0.5rem; min-height: 36px; font-size: 0.78rem; }
+  .lang-btn { min-height: 36px; padding: 0.3rem 0.75rem; }
+
+  /* --- Tab: barra fissa in basso (zona del pollice), 6 voci uguali --- */
+  .tabs, html[data-theme] .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0;
+    padding: 0 0 env(safe-area-inset-bottom, 0px); margin: 0;
+    overflow: visible; border-bottom: 0; border-top: 1px solid var(--border);
+    border-radius: 0; box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+  }
+  html[data-theme] .tabs .tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    min-height: var(--nav-h); margin: 0; padding: 0.3rem 0.1rem;
+    background: none; border: 0; border-radius: 0; box-shadow: none;
+    font-size: 0.68rem; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden;
+  }
+  html[data-theme] .tabs .tab.active {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent-2); box-shadow: inset 0 3px 0 var(--accent);
+  }
+  .tab-full { display: none; }
+  .tab-m { display: contents; }
+  .tab-ico { font-size: 1.25rem; line-height: 1.1; }
+  .tab-m > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+  /* --- Campi: 16px (sotto, iOS zooma al tocco) e 40px d'altezza --- */
+  input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea { font-size: 16px; }
+  input:not([type=checkbox]):not([type=radio]):not([type=file]), select { min-height: 40px; }
+  input[type=checkbox] { width: 1.25rem; height: 1.25rem; }
+  button { min-height: 40px; }
+  button.small { min-height: 36px; font-size: 0.8rem; }
+  .chip { min-height: 34px; padding: 0.3rem 0.75rem; font-size: 0.8rem; }
+  .item-card .remove, .batch-row .remove, .onuse-row .remove, .change-row .remove, .dpr-row .remove { min-width: 40px; min-height: 40px; }
+  label { font-size: 0.8rem; }
+  fieldset { padding: 0.6rem 0.7rem; margin-bottom: 0.6rem; }
+  details > summary { padding: 0.45rem 0; } /* bersaglio più alto, triangolino intatto */
+  legend.fold-toggle { padding: 0.35rem 0.4rem; }
+
+  /* --- Griglie più dense --- */
+  .grid-2, .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem 0.6rem; }
+  .grid-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem 0.6rem; }
+  .row > select { flex: 1 1 auto; min-width: 0; }
+  .row > input[type=number] { flex: 0 0 4.5rem; }
+  .chips-custom { max-width: none; }
+  /* V/S/M + Concentrazione/Rituale: in fila e a capo, non in celle da 1/3. */
+  .sp-comps { display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; }
+
+  /* --- Righe a più campi: due piani invece di una riga schiacciata --- */
+  .dpr-row { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.8fr) 40px; gap: 0.35rem; }
+  .dpr-row > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  .dpr-row > :nth-child(2) { grid-column: 2 / -1; grid-row: 1; }
+  .dpr-row > :nth-child(3) { grid-column: 1; grid-row: 2; }
+  .dpr-row > :nth-child(4) { grid-column: 2; grid-row: 2; }
+  .dpr-row > :nth-child(5) { grid-column: 3; grid-row: 2; }
+  .dpr-row > :nth-child(6) { grid-column: 4; grid-row: 2; }
+  .dpr-row input { width: 100% !important; }
+  .dpr-row:not(.dpr-head) { padding-bottom: 0.45rem; margin-bottom: 0.45rem; border-bottom: 1px dashed var(--border); }
+  .dpr-head { font-size: 0.7rem; }
+  .dpr-head span { text-align: left !important; padding-left: 0.2rem !important; }
+  .dpr-targets { flex-wrap: wrap; }
+  .change-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 4rem 40px; }
+  .change-row > :first-child { grid-column: 1 / -1; }
+  .onuse-row { grid-template-columns: minmax(0, 1fr) 40px; }
+  .onuse-row > :first-child { grid-column: 1 / -1; }
+
+  /* Mentre si scrive, la tastiera occupa metà schermo: via le barre fisse. */
+  html.typing .tabs { display: none !important; }
+  html.typing body { padding-bottom: 0; }
+
+  /* Scontro: il riepilogo sticky resta sotto la testata della pagina. */
+  button.enc-mini { top: 0.25rem; }
+}

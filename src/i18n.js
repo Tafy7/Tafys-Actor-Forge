@@ -201,6 +201,8 @@ export const UI = {
     sp_upcast: 'Upcast per slot', sp_upcast_hint: '(dadi extra per slot superiore, es. 1d6 — applicati alla PRIMA parte di danno)',
     sp_export: '⬇️ Esporta incantesimo', sp_batch: '➕ Aggiungi alla collezione', sp_preview_title: 'Anteprima JSON incantesimo',
     // Tab + calcolatore DPR
+    tab_npc_s: 'Mostro', tab_item_s: 'Oggetto', tab_spell_s: 'Spell', tab_dpr_s: 'DPR', tab_enc_s: 'Scontro', tab_info_s: 'Info',
+    m_sheet: 'JSON e azioni', m_export: '⬇️ Esporta', m_close: 'Chiudi', m_fold: 'Tocca per aprire / chiudere la sezione',
     tab_npc: '🐲 Mostro / NPC', tab_dpr: '📊 Calcolatore DPR', tab_info: 'ℹ️ Info & Macro',
     // Blocco Extra (DAE + Midi + A-A raggruppati)
     xt_legend: 'Extra: DAE, Midi, A-A',
@@ -429,6 +431,8 @@ export const UI = {
     sp_dc: 'Save DC', dc_auto: 'Automatic (spellcasting)', dc_flat: 'Flat',
     sp_upcast: 'Upcast per slot', sp_upcast_hint: '(extra dice per higher slot, e.g. 1d6 — applied to the FIRST damage part)',
     sp_export: '⬇️ Export spell', sp_batch: '➕ Add to collection', sp_preview_title: 'Spell JSON preview',
+    tab_npc_s: 'Monster', tab_item_s: 'Item', tab_spell_s: 'Spell', tab_dpr_s: 'DPR', tab_enc_s: 'Encounter', tab_info_s: 'Info',
+    m_sheet: 'JSON & actions', m_export: '⬇️ Export', m_close: 'Close', m_fold: 'Tap to open / close the section',
     tab_npc: '🐲 Monster / NPC', tab_dpr: '📊 DPR Calculator', tab_info: 'ℹ️ Info & Macros',
     // Extra block (DAE + Midi + A-A grouped)
     xt_legend: 'Extra: DAE, Midi, A-A',

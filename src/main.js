@@ -20,6 +20,7 @@ import { downloadJson } from './utils/download.js';
 import { ABILITIES, SIZES, CREATURE_TYPES } from './data/constants.js';
 import { initItemsEditor, getItems, setItems } from './ui/items-editor.js';
 import { createChipGroup } from './ui/chips.js';
+import { initMobile } from './ui/mobile.js';
 import {
   DAMAGE_TYPES, CONDITIONS, LANGUAGES, CRS, ALIGNMENTS,
   DAMAGE_TYPE_LABELS, CONDITION_LABELS, LANGUAGE_LABELS, CREATURE_TYPE_LABELS,
@@ -704,3 +705,6 @@ initSpellTab({ onAddToBatch: pushDocToBatch });
 initInfoTab();
 
 renderPreview(); // prima anteprima
+
+// Telefono: barra azioni + foglio anteprima, sezioni richiudibili.
+initMobile();
