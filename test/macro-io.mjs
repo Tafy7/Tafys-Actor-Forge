@@ -2,7 +2,7 @@
 // Banco di prova della macro Importa/Esporta con un FOUNDRY FINTO.
 //
 // La macro gira solo dentro Foundry: qui ricostruiamo la parte minima di API
-// che usa (DialogV2.prompt, game.folders/packs/collections, Folder con
+// che usa (DialogV2.wait, document per stile e listener, game.folders/packs/collections, Folder con
 // genitori e sottocartelle, classi documento con createDocuments che
 // rifiutano gli ID duplicati come quelle vere, compendi bloccabili,
 // saveDataToFile, notifiche) ed eseguiamo il codice VERO della macro.
@@ -23,6 +23,8 @@ function check(desc, cond) {
 
 // ---------- Foundry finto ----------
 class Coll extends Map {
+  // Come la Collection di Foundry: iterare dà i VALORI, non le coppie.
+  *[Symbol.iterator]() { yield* this.values(); }
   find(fn) { for (const v of this.values()) if (fn(v)) return v; return undefined; }
   filter(fn) { return [...this.values()].filter(fn); }
 }
@@ -119,22 +121,39 @@ function makeEnv() {
 }
 
 // Esegue la macro VERA simulando la finestra: `fields` = valori dei campi.
-const FIELD_NAMES = ['tfxTab', 'payload', 'files', 'dest', 'folder', 'folderItems', 'folderOther', 'keepIds', 'unlock', 'source', 'subfolders', 'filename'];
+// La scheda attiva si legge dalla classe is-import/is-export della radice.
+const FIELD_NAMES = ['payload', 'files', 'dest', 'folder', 'folderItems', 'folderOther', 'keepIds', 'unlock',
+  'source', 'pack', 'exFolder', 'subfolders', 'format', 'filename'];
 async function runMacro(F, fields) {
   const v = {
-    tfxTab: 'import', payload: '', files: [], dest: 'world', folder: '', folderItems: '', folderOther: '',
-    keepIds: false, unlock: false, source: '', subfolders: true, filename: '', ...fields,
+    tab: 'import', payload: '', files: [], dest: 'world', folder: '', folderItems: '', folderOther: '',
+    keepIds: false, unlock: false, source: '', pack: '', exFolder: '', subfolders: true, format: 'single', filename: '', ...fields,
   };
   const elements = {
-    tfxTab: { value: v.tfxTab }, payload: { value: v.payload }, files: { files: v.files }, dest: { value: v.dest },
+    payload: { value: v.payload }, files: { files: v.files }, dest: { value: v.dest },
     folder: { value: v.folder }, folderItems: { value: v.folderItems }, folderOther: { value: v.folderOther },
-    keepIds: { checked: v.keepIds }, unlock: { checked: v.unlock }, source: { value: v.source },
-    subfolders: { checked: v.subfolders }, filename: { value: v.filename },
+    keepIds: { checked: v.keepIds }, unlock: { checked: v.unlock }, source: { value: v.source }, pack: { value: v.pack },
+    exFolder: { value: v.exFolder }, subfolders: { checked: v.subfolders }, format: { value: v.format }, filename: { value: v.filename },
+  };
+  const root = { classList: { contains: (c) => c === (v.tab === 'export' ? 'is-export' : 'is-import') } };
+  const form = { elements, querySelector: (sel) => (sel === '.tfx-io' ? root : null) };
+  // document finto: stile nell'head + listener delegati (contati per
+  // verificare che la macro li rimuova alla chiusura).
+  const listeners = F.env.listeners ??= new Set();
+  const head = F.env.head ??= [];
+  const document = {
+    head: { append: (el) => head.push(el) },
+    getElementById: (id) => { const el = head.find((e) => e.id === id && !e.removed); return el ? { remove: () => { el.removed = true; } } : null; },
+    createElement: (tag) => ({ tag, id: '', textContent: '' }),
+    addEventListener: (type, fn) => listeners.add(`${type}`) && (F.env.added = (F.env.added ?? 0) + 1),
+    removeEventListener: (type) => listeners.delete(`${type}`),
   };
   const foundry = {
-    applications: { api: { DialogV2: { prompt: async (cfg) => {
-      F.env.content = cfg.content;
-      return cfg.ok.callback({}, { form: { elements } });
+    applications: { api: { DialogV2: { wait: async (cfg) => {
+      F.env.content = cfg.content; F.env.cfg = cfg;
+      if (v.closeDialog) return null; // finestra chiusa con la X
+      const go = cfg.buttons.find((b) => b.action === 'go');
+      return go.callback({}, { form });
     } } } },
     utils: {
       deepClone: (x) => structuredClone(x), randomID: () => 'u1',
@@ -145,8 +164,8 @@ async function runMacro(F, fields) {
   // va saltato: un return seguito da a-capo restituirebbe undefined).
   const i = MACRO.indexOf('(async () => {');
   const body = MACRO.slice(0, i) + 'return ' + MACRO.slice(i);
-  const run = new Function('foundry', 'game', 'ui', 'CONFIG', 'Folder', body);
-  await run(foundry, F.game, F.ui, F.CONFIG, F.Folder);
+  const run = new Function('foundry', 'game', 'ui', 'CONFIG', 'Folder', 'document', body);
+  await run(foundry, F.game, F.ui, F.CONFIG, F.Folder, document);
 }
 const file = (name, obj) => ({ name, text: async () => (typeof obj === 'string' ? obj : JSON.stringify(obj)) });
 const notes = (F, level) => F.env.notes.filter(n => n[0] === level).map(n => n[1]);
@@ -178,11 +197,31 @@ const embeddedIds = npc.items.map(i => i._id);
 console.log('— Finestra —');
 {
   const F = makeEnv();
-  await runMacro(F, { tfxTab: 'import', payload: '' });
-  const missing = FIELD_NAMES.filter(n => !new RegExp(`name="${n}"`).test(F.env.content));
+  const party = await F.Folder.create({ name: 'Party', type: 'Actor' });
+  await F.Folder.create({ name: 'Eroi', type: 'Actor', folder: party.id });
+  F.seed('Actor', { name: 'Capo', type: 'character', system: {}, prototypeToken: {}, folder: party.id });
+  F.seed('Item', { name: 'Spada', type: 'weapon', system: {} });
+  F.makePack('world.mostri', 'Actor', 'Mostri di Avernus', true);
+  await runMacro(F, { tab: 'import', payload: '' });
+  const html = F.env.content;
+  const missing = FIELD_NAMES.filter(n => !new RegExp(`name="${n}"`).test(html));
   check('ogni campo letto dal callback esiste nel modulo HTML', missing.length === 0);
   if (missing.length) console.error('    mancano:', missing);
-  check('due schede (Importa/Esporta) solo CSS, nessuno <script>', /📥 Importa/.test(F.env.content) && /📤 Esporta/.test(F.env.content) && !/<script/i.test(F.env.content));
+  check('due schede, si parte da Importa', /tfx-tab-import/.test(html) && /tfx-tab-export/.test(html) && /class="tfx-io tfx-io-u1 is-import/.test(html));
+  check('niente <style>/<script> nel contenuto (Foundry li toglie): stile iniettato nell\'head',
+    !/<style|<script/i.test(html) && F.env.head.some(e => e.id === 'tafys-forge-io-style' && /is-export .tfx-p-imp/.test(e.textContent)));
+  check('Sorgente: solo i tipi con contenuto + Compendi', /<option value="Actor">Attori \(1\)/.test(html) && /<option value="Item">Oggetti \(1\)/.test(html) && !/value="Scene"/.test(html) && /<option value="pack">Compendi \(1\)/.test(html));
+  check('Cartella: albero della prima sorgente, con rientro', /— tutto \(1\) —/.test(html) && new RegExp(`value="${party.id}">Party<`).test(html) && /└ Eroi/.test(html));
+  check('Compendio bloccato segnalato col lucchetto', /Mostri di Avernus 🔒/.test(html));
+  check('formato: file unico (predefinito) o zip', /name="format" value="single" checked/.test(html) && /name="format" value="zip"/.test(html));
+  check('finestra: DialogV2.wait con un pulsante "go" e altezza contenuta',
+    F.env.cfg.buttons.length === 1 && F.env.cfg.buttons[0].action === 'go' && /max-height: min\(68vh/.test(F.env.head.at(-1).textContent));
+  check('listener delegati rimossi alla chiusura', F.env.added === 2 && F.env.listeners.size === 0);
+  await runMacro(F, { tab: 'import', payload: '' });
+  check('relancio: lo stile vecchio viene sostituito', F.env.head.filter(e => !e.removed).length === 1);
+  const notesBefore = F.env.notes.length;
+  await runMacro(F, { closeDialog: true });
+  check('finestra chiusa con la X: nessuna azione, listener rimossi', F.env.saved.length === 0 && F.env.notes.length === notesBefore && F.env.listeners.size === 0);
 }
 
 console.log('\n— Importa: compatibilità col JSON del Forge —');
@@ -224,27 +263,83 @@ let exported;
   F.seed('Actor', { ...structuredClone(npc), name: 'Elara', folder: elite.id });
   F.seed('Actor', { ...structuredClone(npc), name: 'Estraneo' }); // fuori dalla cartella
 
-  await runMacro(F, { tfxTab: 'export', source: `world|${party.id}`, subfolders: true });
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: party.id, subfolders: true });
   check('un solo file scaricato, .json', F.env.saved.length === 1 && F.env.saved[0].filename === 'Party.json');
   exported = JSON.parse(F.env.saved[0].data);
   check('formato di esportazione: tipo, cartella d\'origine, conteggio', exported.tafysForgeExport === 1 && exported.documentName === 'Actor' && exported.rootName === 'Party' && exported.count === 3);
   check('percorsi delle sottocartelle conservati', exported.entries.map(e => `${e.path}:${e.data.name}`).join('|') === ':Capo|Eroi:Shaq|Eroi/Elite:Elara');
   check('nessun riferimento alla cartella del mondo nei dati (clearFolder)', exported.entries.every(e => !('folder' in e.data)));
 
-  await runMacro(F, { tfxTab: 'export', source: `world|${party.id}`, subfolders: false, filename: 'solo radice' });
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: party.id, subfolders: false, filename: 'solo radice' });
   check('senza sottocartelle → solo i documenti della cartella scelta', JSON.parse(F.env.saved[1].data).count === 1 && F.env.saved[1].filename === 'solo radice.json');
 
   const pk = F.makePack('world.mostri', 'Actor', 'Mostri di Avernus');
   const pf = await F.Folder.create({ name: 'Diavoli', type: 'Actor' }, { pack: 'world.mostri' });
   F.seed('Actor', { name: 'Imp', type: 'npc', system: {}, prototypeToken: {}, folder: pf.id }, pk);
   F.seed('Actor', { name: 'Zariel', type: 'npc', system: {}, prototypeToken: {} }, pk);
-  await runMacro(F, { tfxTab: 'export', source: 'pack|world.mostri|', subfolders: true });
+  await runMacro(F, { tab: 'export', source: 'pack', pack: 'world.mostri', exFolder: '', subfolders: true });
   const whole = JSON.parse(F.env.saved[2].data);
   check('compendio intero: tutti i documenti con i loro percorsi', whole.count === 2 && whole.entries.some(e => e.path === 'Diavoli' && e.data.name === 'Imp') && whole.rootName === 'Mostri di Avernus');
-  await runMacro(F, { tfxTab: 'export', source: `pack|world.mostri|${pf.id}`, subfolders: true });
+  await runMacro(F, { tab: 'export', source: 'pack', pack: 'world.mostri', exFolder: pf.id, subfolders: true });
   check('cartella di un compendio: solo i suoi documenti', JSON.parse(F.env.saved[3].data).entries.map(e => e.data.name).join() === 'Imp');
-  await runMacro(F, { tfxTab: 'export', source: `world|${elite.id}` });
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: elite.id });
   check('cartella vuota di altri tipi non coinvolta', JSON.parse(F.env.saved[4].data).count === 1);
+}
+
+console.log('\n— Esporta: "tutto" e file singoli (.zip) —');
+{
+  const F = makeEnv();
+  const party = await F.Folder.create({ name: 'Party', type: 'Actor' });
+  const eroi = await F.Folder.create({ name: 'Eroi/Erranti', type: 'Actor', folder: party.id }); // "/" nel nome
+  F.seed('Actor', { ...structuredClone(npc), name: 'Capo', folder: party.id });
+  F.seed('Actor', { ...structuredClone(npc), name: 'Shaq: la Rossa', folder: eroi.id });
+  F.seed('Actor', { ...structuredClone(npc), name: 'Shaq: la Rossa', folder: eroi.id }); // nome doppio
+  F.seed('Actor', { ...structuredClone(npc), name: 'Sciolto' });
+
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: '', subfolders: true });
+  const all = JSON.parse(F.env.saved[0].data);
+  check('"tutto": ogni Actor del mondo coi percorsi completi', all.count === 4 && all.rootName === 'Attori' && F.env.saved[0].filename === 'Attori.json' &&
+    all.entries.some(e => e.path === '' && e.data.name === 'Sciolto') && all.entries.some(e => e.path === 'Party' && e.data.name === 'Capo'));
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: '', subfolders: false });
+  check('"tutto" senza sottocartelle → solo i documenti fuori da ogni cartella', JSON.parse(F.env.saved[1].data).entries.map(e => e.data.name).join() === 'Sciolto');
+
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: party.id });
+  const slashFile = JSON.parse(F.env.saved.at(-1).data);
+  check('file unico: livelli espliciti per i nomi con "/"', slashFile.entries.some(e => e.path === 'Eroi/Erranti' && e.folders.length === 1 && e.folders[0] === 'Eroi/Erranti'));
+  const G = makeEnv();
+  await runMacro(G, { files: [file('Party.json', slashFile)] });
+  const shaqG = docsIn(G, 'Actor').find(d => d.name === 'Shaq: la Rossa');
+  check('reimport: la cartella "Eroi/Erranti" resta UNA cartella sotto Party', shaqG.folder?.name === 'Eroi/Erranti' && shaqG.folder.folder?.name === 'Party');
+  const legacy = { ...slashFile, entries: slashFile.entries.map(({ folders, ...e }) => e) }; // file v0.33: solo path
+  const H = makeEnv();
+  await runMacro(H, { files: [file('vecchio.json', legacy)] });
+  check('file v0.33 (solo path) ancora importabili', docsIn(H, 'Actor').length === 3 && docsIn(H, 'Actor').find(d => d.name === 'Capo').folder?.name === 'Party');
+
+  for (const [label, kill] of [['DEFLATE', false], ['senza CompressionStream (STORE)', true]]) {
+    const saved = globalThis.CompressionStream;
+    if (kill) delete globalThis.CompressionStream;
+    try {
+      await runMacro(F, { tab: 'export', source: 'Actor', exFolder: party.id, format: 'zip', filename: 'party zip' });
+    } finally { if (kill) globalThis.CompressionStream = saved; }
+    const out = F.env.saved.at(-1);
+    check(`zip ${label}: scaricato come Blob application/zip`, out.filename === 'party zip.zip' && out.type === 'application/zip' && out.data instanceof Blob);
+    const { writeFileSync, mkdtempSync } = await import('node:fs');
+    const { execFileSync } = await import('node:child_process');
+    const dir = mkdtempSync('/tmp/tfxzip-');
+    writeFileSync(`${dir}/x.zip`, Buffer.from(await out.data.arrayBuffer()));
+    // Il controllo lo fa Python (zipfile verifica CRC e struttura): un lettore
+    // indipendente dal nostro scrittore.
+    const py = `import zipfile,json,sys
+z=zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None
+print(json.dumps({"names":z.namelist(),"methods":[i.compress_type for i in z.infolist()],"utf8":all(i.flag_bits & 0x800 for i in z.infolist()),
+ "docs":[json.loads(z.read(n))["name"] for n in z.namelist()]}))`;
+    const info = JSON.parse(execFileSync('python3', ['-c', py, `${dir}/x.zip`]).toString());
+    check(`zip ${label}: valido (CRC ok), nomi UTF-8`, info.utf8 && info.names.length === 3);
+    check(`zip ${label}: un .json per documento nelle sue cartelle, nomi resi sicuri e doppioni numerati`,
+      info.names.join('|') === 'Party/Capo.json|Party/Eroi_Erranti/Shaq_ la Rossa.json|Party/Eroi_Erranti/Shaq_ la Rossa (2).json');
+    check(`zip ${label}: ogni file è il JSON del documento (va bene per l'Import Data di Foundry)`, info.docs.join() === 'Capo,Shaq: la Rossa,Shaq: la Rossa');
+    check(`zip ${label}: metodo ${kill ? 'STORE (0)' : 'DEFLATE (8)'}`, info.methods.every(m => m === (kill ? 0 : 8)));
+  }
 }
 
 console.log('\n— Catena: party esportato da Foundry → tab Scontro del Forge —');
@@ -257,7 +352,7 @@ console.log('\n— Catena: party esportato da Foundry → tab Scontro del Forge 
     system: { abilities: { str: { value: 8 }, dex: { value: 14 }, con: { value: 12 }, int: { value: 16 }, wis: { value: 12 }, cha: { value: 10 } },
       attributes: { hp: { max: null }, ac: { calc: 'mage' }, spellcasting: 'int' } },
     items: [{ type: 'class', system: { levels: 3, hd: { denomination: 'd6' }, advancement: { h: { type: 'HitPoints', value: { 1: 'max', 2: 'avg', 3: 'avg' } } } } }] });
-  await runMacro(F, { tfxTab: 'export', source: `world|${party.id}` });
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: party.id });
   const partyFile = JSON.parse(F.env.saved[0].data);
   const { importPCs } = await import('../src/parsers/pc-import.js');
   const pcs = importPCs(partyFile).pcs;
