@@ -16,9 +16,9 @@ import { buildSpell } from '../src/builders/spell.js';
 const MACRO = readFileSync(process.env.MACRO_PATH || new URL('../src/foundry/import-actor.macro.js', import.meta.url), 'utf8');
 
 let failures = 0;
-function check(desc, cond) {
+function check(desc, cond, detail) {
   if (cond) console.log(`  ✔ ${desc}`);
-  else { failures++; console.error(`  ✘ ${desc}`); }
+  else { failures++; console.error(`  ✘ ${desc}${detail !== undefined ? ' → ' + JSON.stringify(detail) : ''}`); }
 }
 
 // ---------- Foundry finto ----------
@@ -32,7 +32,7 @@ let seq = 0;
 const rid = () => `id${String(++seq).padStart(14, '0')}`;
 const DOC_NAMES = ['Actor', 'Item', 'JournalEntry', 'Scene', 'RollTable', 'Macro', 'Playlist', 'Cards'];
 
-function makeEnv() {
+function makeEnv(lang = 'it') {
   const env = { log: [], notes: [], saved: [], rendered: [], configured: [] };
   const world = { folders: new Coll(), collections: new Map(DOC_NAMES.map(n => [n, new Coll()])) };
   const packs = new Coll();
@@ -114,7 +114,7 @@ function makeEnv() {
   } };
   const game = {
     folders: world.folders, packs, collections: world.collections,
-    user: { isGM: true }, version: '13.351', system: { id: 'dnd5e', version: '5.3.3' },
+    user: { isGM: true }, version: '13.351', system: { id: 'dnd5e', version: '5.3.3' }, i18n: { lang },
   };
   const CONFIG = Object.fromEntries(DOC_NAMES.map(n => [n, { documentClass: docClass(n) }]));
   return { env, world, packs, Folder, makePack, seed, ui, game, CONFIG };
@@ -428,6 +428,60 @@ console.log('\n— Altri tipi di documento —');
   await runMacro(F, { payload: JSON.stringify([npc, { name: 'Misterioso', foo: 1 }, { type: 'weapon' }]), files: [file('rotto.json', '{ non è json')] });
   check('elementi non validi saltati, quelli buoni importati', docsIn(F, 'Actor').length === 1);
   check('avvisi per tipo sconosciuto, elemento senza nome e JSON rotto', (() => { const w = notes(F, 'warn').join(' '); return /3 avvisi/.test(w); })());
+}
+
+console.log('\n— Lingua: italiano / inglese —');
+{
+  // I due dizionari devono avere le stesse chiavi, e ogni T("…") usato deve esistere.
+  const src = MACRO.slice(MACRO.indexOf('const I18N = ') + 'const I18N = '.length, MACRO.indexOf('// game.i18n.lang'));
+  const I18N = new Function(`return ${src.trim().replace(/;$/, '')}`)();
+  const keys = (o) => Object.keys(o).sort().join();
+  check('dizionari IT ed EN con le stesse chiavi (anche i tipi di documento)', keys(I18N.it) === keys(I18N.en) && keys(I18N.it.docs) === keys(I18N.en.docs));
+  const used = [...MACRO.matchAll(/\bT\("(\w+)"/g)].map(m => m[1]);
+  const missing = [...new Set(used)].filter(k => !(k in I18N.it) || !(k in I18N.en));
+  check(`ogni T("…") usato esiste nei due dizionari (${new Set(used).size} chiavi)`, missing.length === 0, missing);
+  const unused = Object.keys(I18N.it).filter(k => k !== 'docs' && !used.includes(k));
+  check('nessuna chiave inutilizzata', unused.length === 0, unused);
+  const ph = (str) => [...String(str).matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort().join();
+  const phBad = Object.keys(I18N.it).filter(k => k !== 'docs' && ph(I18N.it[k]) !== ph(I18N.en[k]));
+  check('stessi segnaposto {…} in IT ed EN', phBad.length === 0, phBad);
+}
+{
+  const F = makeEnv('en');
+  const party = await F.Folder.create({ name: 'Party', type: 'Actor' });
+  F.seed('Actor', { ...structuredClone(npc), name: 'Capo', folder: party.id });
+  F.makePack('world.mostri', 'Actor', 'Monsters', true);
+  await runMacro(F, { tab: 'import', payload: '' });
+  const html = F.env.content;
+  check('Foundry in inglese → finestra in inglese', /📥 Import</.test(html) && /Destination/.test(html) && /Actors \(1\)/.test(html) && /Compendiums \(1\)/.test(html) && /— all \(1\) —/.test(html) && F.env.cfg.window.title === 'Actor Forge — Import / Export' && F.env.cfg.buttons[0].label === 'Import');
+  const italian = ['Importa', 'Esporta', 'Cartella', 'Destinazione', 'Sorgente', 'tutto', 'oppure', 'Mantieni', 'Sblocca', 'Attori', 'Compendio'];
+  const left = italian.filter(w => new RegExp(`\\b${w}\\b`).test(html));
+  check('nessuna parola italiana nella finestra inglese', left.length === 0, left);
+  check('notifica in inglese (niente da importare)', notes(F, 'warn').some(m => /paste a JSON/.test(m)));
+  await runMacro(F, { tab: 'export', source: 'Actor', exFolder: '' });
+  check('export "all" in inglese: cartella radice "Actors" e notifica', JSON.parse(F.env.saved[0].data).rootName === 'Actors' && F.env.saved[0].filename === 'Actors.json' && notes(F, 'info').some(m => /exported 1 documents from all documents in “Actors”/.test(m)));
+  await runMacro(F, { payload: JSON.stringify([npc, { name: 'Misterioso', foo: 1 }]), folder: 'My Monsters' });
+  check('import in inglese: creati + avvisi', notes(F, 'info').some(m => /created 1 documents · 1 actors/.test(m)) && notes(F, 'warn').some(m => /1 warnings: pasted text: “Misterioso” — unrecognised document type/.test(m)));
+  await runMacro(F, { payload: JSON.stringify({ app: 'tafys-actor-forge', name: 'bozza' }) });
+  check('file di bozza: spiegazione in inglese col pulsante giusto', notes(F, 'error').some(m => /DRAFT file.*“⬇️ Export JSON”/.test(m)));
+  await runMacro(F, { payload: JSON.stringify(npc), dest: 'pack|world.mostri' });
+  check('compendio bloccato: errore in inglese', notes(F, 'error').some(m => /“Monsters” is locked\. Tick “Unlock the compendium”/.test(m)));
+}
+for (const [lang, expect] of [['de', 'Import'], ['fr', 'Import'], ['it', 'Importa'], [null, 'Import']]) {
+  const F = makeEnv(lang);
+  await runMacro(F, { tab: 'import', payload: '' });
+  check(`lingua di Foundry "${lang}" → pulsante "${expect}"`, F.env.cfg.buttons[0].label === expect);
+}
+{
+  // FORCE_LANG vince sulla lingua di Foundry.
+  const forced = MACRO.replace('const FORCE_LANG = "";', 'const FORCE_LANG = "it";');
+  const F = makeEnv('en');
+  const i = forced.indexOf('(async () => {');
+  await new Function('foundry', 'game', 'ui', 'CONFIG', 'Folder', 'document', forced.slice(0, i) + 'return ' + forced.slice(i))(
+    { applications: { api: { DialogV2: { wait: async (cfg) => { F.env.cfg = cfg; return null; } } } }, utils: { randomID: () => 'u1' } },
+    F.game, F.ui, F.CONFIG, F.Folder,
+    { head: { append() {} }, getElementById: () => null, createElement: () => ({}), addEventListener() {}, removeEventListener() {} });
+  check('FORCE_LANG = "it" forza l\'italiano anche con Foundry in inglese', F.env.cfg.buttons[0].label === 'Importa');
 }
 
 if (failures) { console.error(`\n${failures} test della macro falliti.`); process.exit(1); }
