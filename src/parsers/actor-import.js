@@ -94,13 +94,29 @@ function onUseFromFlags(item) {
 // Periodo di recovery dnd5e → modalità "usi" del form.
 const PERIOD_REV = { day: 'day', sr: 'sr', lr: 'lr', turn: 'turn' };
 
+/**
+ * Immagini PORTABILI: il JSON del Forge deve funzionare in qualsiasi mondo.
+ * Un percorso dentro `modules/…` esiste solo dove quel modulo è installato, e
+ * un indirizzo web esterno spesso viene da importatori o siti di terze parti
+ * (e in mappa può non vedersi per il CORS). Al round-trip li togliamo, li
+ * contiamo e lo diciamo nel resoconto: l'utente sceglie un'immagine sua
+ * (icons/…, systems/…, worlds/… o una cartella dei suoi dati).
+ */
+const FOREIGN_IMG = /^\s*(?:(?:https?:)?\/\/|\/?modules\/)/i;
+function portableImg(src, report) {
+  const s = String(src || '').trim();
+  if (!s) return '';
+  if (FOREIGN_IMG.test(s)) { report.droppedImgs = (report.droppedImgs || 0) + 1; return ''; }
+  return s;
+}
+
 /** Effetto DAE "vero" (con changes) → descrittore effetto del form. */
-function daeEffectToDescriptor(eff) {
+function daeEffectToDescriptor(eff, report) {
   return {
     name: eff.name || '',
     application: eff.transfer ? 'passive' : 'target',
     rounds: eff.duration?.rounds ? String(eff.duration.rounds) : '',
-    img: eff.img && eff.img !== 'icons/svg/aura.svg' ? eff.img : '',
+    img: eff.img && eff.img !== 'icons/svg/aura.svg' ? portableImg(eff.img, report) : '',
     changes: (eff.changes || []).map(c => ({
       key: c.key || '', mode: Number.isFinite(Number(c.mode)) ? Number(c.mode) : 2,
       value: String(c.value ?? ''), priority: Number(c.priority) || 20,
@@ -118,7 +134,7 @@ function itemToDescriptor(item, report) {
 
   const d = {
     name: item.name || '', description: stripHtml(sys.description?.value || ''),
-    img: item.img && !/mystery-man|aura\.svg|sword\.svg/.test(item.img) ? item.img : '',
+    img: item.img && !/mystery-man|aura\.svg|sword\.svg/.test(item.img) ? portableImg(item.img, report) : '',
     kind: 'passive', activation: 'action',
     attackType: 'melee', ability: 'str', reach: '5', range: '30', longRange: '',
     damage: '', magical: (sys.properties || []).includes('mgc'),
@@ -126,7 +142,7 @@ function itemToDescriptor(item, report) {
     onHit: 'none', condition: 'prone', condRounds: '',
     riderSaveAbility: 'con', riderDc: '',
     usesMode: 'none', usesValue: '',
-    effects: daeEffects.map(daeEffectToDescriptor),
+    effects: daeEffects.map((e) => daeEffectToDescriptor(e, report)),
     aa: aaFromFlags(item.flags?.autoanimations) || undefined,
     onUse: onUseFromFlags(item),
   };
@@ -227,11 +243,15 @@ export function importActor(actor, report = { ok: [], warn: [], skipped: [] }) {
     dv: traitToString(sys.traits?.dv), ci: knownToString(sys.traits?.ci),
     languages: knownToString(sys.traits?.languages),
     legact: String(sys.resources?.legact?.max || ''), legres: String(sys.resources?.legres?.max || ''),
-    img: actor?.img && !/mystery-man/.test(actor.img) ? actor.img : '',
-    tokenImg: (() => { const ts = actor?.prototypeToken?.texture?.src; return ts && ts !== actor.img && !/mystery-man/.test(ts) ? ts : ''; })(),
+    img: actor?.img && !/mystery-man/.test(actor.img) ? portableImg(actor.img, report) : '',
+    tokenImg: (() => { const ts = actor?.prototypeToken?.texture?.src; return ts && ts !== actor.img && !/mystery-man/.test(ts) ? portableImg(ts, report) : ''; })(),
     bio: stripHtml(sys.details?.biography?.value || ''),
     items: (actor?.items || []).map(it => itemToDescriptor(it, report)),
   };
   report.ok.push(`Importato: ${data.name || 'senza nome'} (${data.items.length} azioni/tratti)`);
+  if (report.droppedImgs) {
+    report.warn.push(`${report.droppedImgs} immagini tolte: venivano da moduli o siti esterni e in un altro mondo non funzionerebbero. Scegline di tue (icons/…, worlds/… o una cartella dei tuoi dati).`);
+    delete report.droppedImgs;
+  }
   return { data, report };
 }

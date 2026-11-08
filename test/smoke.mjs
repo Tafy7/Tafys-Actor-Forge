@@ -786,6 +786,33 @@ check('sim: party senza danno → vincono i mostri', sim({ party: [{ level: 5, c
 check('sim: campi vuoti → stime segnalate', sim({ party: [{ level: 5, count: 4 }], monsters: [{ cr: '2', count: 1 }] }).estimated === true);
 check('sim: tutti i valori dati → nessuna stima', sim({ party: [{ level: 5, count: 4, hp: 40, ac: 16, atk: 7, dpr: 18 }], monsters: [{ ...ogre, count: 1 }] }).estimated === false);
 
+// --- Round-trip: niente tracce di importatori/siti di terze parti nel JSON del Forge ---
+console.log('\n— Round-trip: immagini portabili, niente tracce di terzi —');
+{
+  // Actor come esce da un importatore qualsiasi (nomi inventati): flag propri,
+  // immagine da un sito esterno, icone dentro la cartella di un modulo.
+  const foreign = {
+    name: 'Grifone di Prova', type: 'npc', img: 'https://cdn.example-mirror.net/img/griffon.webp',
+    prototypeToken: { texture: { src: '//cdn.example-mirror.net/img/griffon-token.webp' } },
+    flags: { 'some-importer': { page: 'bestiary.html', source: 'XX', hash: 'grifone_xx' } },
+    system: { abilities: { str: { value: 18 } }, attributes: { hp: { max: 59 } }, details: { cr: 2 }, source: { book: 'XX', rules: '2014' } },
+    items: [
+      { name: 'Becco', type: 'weapon', img: 'modules/some-importer/media/icon/beak.svg', flags: { 'some-importer': { x: 1 } },
+        system: { activities: {}, description: { value: '<p>Colpo di becco.</p>' } },
+        effects: [{ name: 'Furia', img: '/modules/some-importer/icons/rage.svg', changes: [{ key: 'system.bonuses.mwak.damage', mode: 2, value: '2' }] }] },
+      { name: 'Artigli', type: 'weapon', img: 'icons/creatures/claws/claw-talons-glowing-orange.webp', system: { activities: {} } },
+      { name: 'Volo', type: 'feat', img: 'worlds/mio-mondo/img/volo.webp', system: { activities: {} } },
+    ],
+  };
+  const r = importActor(foreign);
+  const out = JSON.stringify(buildNpc(r.data));
+  check('round-trip: nessun flag, nome o percorso dell\'importatore nel JSON prodotto', !/some-importer|example-mirror/.test(out));
+  check('round-trip: immagini di Foundry (icons/) e del mondo (worlds/) conservate',
+    out.includes('icons/creatures/claws/claw-talons-glowing-orange.webp') && out.includes('worlds/mio-mondo/img/volo.webp'));
+  check('round-trip: avviso con il numero di immagini tolte (actor, token, item, effetto = 4)', r.report.warn.some((w) => /^4 immagini tolte/.test(w)));
+  check('round-trip: dati e testi restano (nome, CR, descrizione)', r.data.name === 'Grifone di Prova' && r.data.cr === '2' && r.data.items[0].description === 'Colpo di becco.');
+}
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);
