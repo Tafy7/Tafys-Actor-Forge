@@ -340,6 +340,7 @@ export function initItemsEditor({ listEl, addBtn, onChange }) {
       // Duplica: copia profonda della card, inserita subito dopo l'originale.
       const copy = structuredClone(itemsState[Number(dup)]);
       copy.name = copy.name ? `${copy.name} (copia)` : '';
+      delete copy._srcId; // la copia è una voce NUOVA, non l'originale ricaricato
       itemsState.splice(Number(dup) + 1, 0, copy);
     } else if (remove !== undefined) {
       itemsState.splice(Number(remove), 1);

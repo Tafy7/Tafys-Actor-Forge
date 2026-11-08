@@ -16,7 +16,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span><span class="ver">v0.42</span></p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span><span class="ver">v0.43</span></p>
       </div>
       <div class="header-controls">
         <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
@@ -63,6 +63,11 @@
           </div>
           <pre id="import-report" hidden></pre>
         </details>
+        <div id="npc-editing" class="reload-banner" hidden>
+          <span class="reload-text"></span>
+          <span class="reload-rebuilt" hidden></span>
+          <button type="button" id="npc-reset" class="secondary small" data-i18n="ii_reset">✖ Ricomincia da zero</button>
+        </div>
       </fieldset>
 
       <fieldset>

@@ -4,6 +4,7 @@
 // ============================================================
 import { buildNpc, validateNpc } from './builders/npc.js';
 import { validateActor } from './builders/validate.js';
+import { overlayActor } from './builders/actor-overlay.js';
 import { parseStatblock, emptyTemplate } from './parsers/statblock.js';
 import { importActor } from './parsers/actor-import.js';
 import { initDprTab } from './ui/dpr-tab.js';
@@ -206,10 +207,11 @@ function schedulePreview() {
 function renderPreview() {
   try {
     const data = readForm();
-    const actor = buildNpc(data);
-    document.getElementById('preview').textContent = JSON.stringify(actor, null, 2);
+    const cur = buildCurrentActor(data);
+    document.getElementById('preview').textContent = JSON.stringify(cur.actor, null, 2);
     // Validazione strutturale live: confronta il JSON coi golden template.
-    renderValidation(validateActor(actor));
+    renderValidation(cur.validation);
+    renderReloadBanner(cur.ov);
     // Cartellino CR stimato (metodo DMG) — a lato dell'anteprima.
     renderCR(data);
   } catch (err) {
@@ -219,6 +221,61 @@ function renderPreview() {
     document.getElementById('validation').textContent = '';
     console.error(err);
   }
+}
+
+// ---------- Round-trip "campo toccato" del mostro ----------
+// Un mostro RICARICATO da JSON tiene l'originale ripulito (`source`) e la
+// foto del form appena caricato (`orig`): all'export si riscrive solo ciò
+// che è cambiato (builders/actor-overlay.js). Resta in localStorage insieme
+// alla bozza, così un ricaricamento della pagina non lo perde.
+const RELOAD_KEY = 'tafys-forge-actor-reload';
+let loadedActor = null;
+
+function setLoadedActor(v) {
+  loadedActor = v || null;
+  try {
+    if (loadedActor) localStorage.setItem(RELOAD_KEY, JSON.stringify(loadedActor));
+    else localStorage.removeItem(RELOAD_KEY);
+  } catch { /* storage pieno: vale finché la pagina resta aperta */ }
+}
+
+/**
+ * Mostro corrente → { actor, validation, formData, ov }. `formData` è ciò che
+ * va controllato da validateNpc: per un mostro ricaricato solo le azioni
+ * toccate e i campi cambiati (un originale ufficiale non va "corretto").
+ */
+function buildCurrentActor(data) {
+  const built = buildNpc(data);
+  if (!loadedActor) return { actor: built, validation: validateActor(built), formData: data, ov: null };
+  const ov = overlayActor(loadedActor.source, loadedActor.orig, data, built);
+  const mode = (it, i) => (ov.modes[i] === 'kept' ? 'none' : ov.modes[i] === 'patched' ? 'refs' : 'full');
+  const ch = new Set(ov.changed);
+  const formData = {
+    ...data,
+    hpMax: ch.has('hpMax') ? data.hpMax : '1',
+    acCalc: ch.has('acCalc') || ch.has('acFlat') ? data.acCalc : 'default',
+    img: ch.has('img') ? data.img : '', tokenImg: ch.has('tokenImg') ? data.tokenImg : '',
+    items: (data.items || []).filter((_, i) => ov.modes[i] !== 'kept'),
+  };
+  return { actor: ov.actor, validation: validateActor(ov.actor, { loaded: true, itemMode: mode }), formData, ov };
+}
+
+function renderReloadBanner(ov) {
+  const banner = document.getElementById('npc-editing');
+  if (!banner) return;
+  banner.hidden = !loadedActor;
+  if (!loadedActor) return;
+  banner.querySelector('.reload-text').textContent = t('ai_editing', { name: loadedActor.source.name });
+  const r = ov?.report;
+  const lines = r ? [
+    r.patched.length && t('ai_patched', { list: r.patched.join(', ') }),
+    r.rebuilt.length && t('ai_rebuilt', { list: r.rebuilt.join(', ') }),
+    r.added.length && t('ai_added', { list: r.added.join(', ') }),
+    r.removed.length && t('ai_removed', { list: r.removed.join(', ') }),
+  ].filter(Boolean) : [];
+  const box = banner.querySelector('.reload-rebuilt');
+  box.hidden = !lines.length;
+  box.textContent = lines.join('\n');
 }
 
 // ---------- Bozze: salvataggio/caricamento + autosave ----------
@@ -254,14 +311,18 @@ function restoreForm(state) {
 function saveDraftFile() {
   const state = readForm();
   const slug = (state.name || 'senza-nome').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-  downloadJson({ app: 'tafys-actor-forge', version: 1, savedAt: new Date().toISOString(), ...state }, `bozza-${slug}.json`);
+  // Un mostro ricaricato porta con sé l'originale: la bozza resta "campo toccato".
+  const extra = loadedActor ? { _reload: loadedActor } : {};
+  downloadJson({ app: 'tafys-actor-forge', version: 1, savedAt: new Date().toISOString(), ...state, ...extra }, `bozza-${slug}.json`);
 }
 
 function loadDraftFile(file) {
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      restoreForm(JSON.parse(reader.result));
+      const draft = JSON.parse(reader.result);
+      setLoadedActor(draft._reload?.source && draft._reload?.orig ? draft._reload : null);
+      restoreForm(draft);
     } catch {
       document.getElementById('warnings').textContent = t('draft_invalid');
     }
@@ -283,9 +344,10 @@ function exportJson() {
   const data = readForm();
   const warnBox = document.getElementById('warnings');
 
-  let actor;
+  let actor, cur;
   try {
-    actor = buildNpc(data);
+    cur = buildCurrentActor(data);
+    actor = cur.actor;
   } catch (err) {
     warnBox.textContent = t('build_err') + err.message;
     return;
@@ -295,8 +357,8 @@ function exportJson() {
   //  - validateNpc: problemi del FORM (nome/HP/CA mancanti, danni malformati);
   //  - validateActor: errori STRUTTURALI del JSON (chiavi estranee, riferimenti
   //    pendenti, immagini non valide) — solo il livello 'error' blocca.
-  const formIssues = validateNpc(data);
-  const structErrors = validateActor(actor).filter(i => i.level === 'error').map(i => i.msg);
+  const formIssues = validateNpc(cur.formData);
+  const structErrors = cur.validation.filter(i => i.level === 'error').map(i => i.msg);
   const blocking = [...formIssues, ...structErrors];
   if (blocking.length) {
     warnBox.textContent = '⛔ ' + blocking.join('  •  ');
@@ -386,9 +448,14 @@ function applyActorImport(text) {
     if (npcs.length > 1) manyNote = t('imp_many', { n: npcs.length, name: npcs[0].name });
     actor = npcs[0];
   }
-  const { data, report } = importActor(actor);
+  const { data, source, report } = importActor(actor);
   if (manyNote) report.warn.unshift(manyNote);
+  setLoadedActor(null);
   restoreForm({ ...DEFAULT_STATE, ...data });
+  // Foto del form APPENA caricato (passata da readForm, quindi nella stessa
+  // forma che avrà dopo): è il termine di paragone del "campo toccato".
+  if (source) setLoadedActor({ source, orig: structuredClone(readForm()) });
+  renderPreview();
   autosave();
 
   const lines = [`${t('imp_head_ok')} (${report.ok.length}):`];
@@ -412,6 +479,7 @@ function applyStatblock() {
   }
 
   const { state, report } = parseStatblock(text);
+  setLoadedActor(null); // uno statblock è un mostro nuovo, non un originale da conservare
   restoreForm({ ...DEFAULT_STATE, ...state });
   autosave();
 
@@ -501,16 +569,17 @@ function pushDocToBatch(doc) {
 /** Aggiunge il mostro corrente alla collezione, ma solo se è valido. */
 function addToBatch() {
   const data = readForm();
-  let actor;
+  let cur;
   try {
-    actor = buildNpc(data);
+    cur = buildCurrentActor(data);
   } catch (err) {
     batchMsg('⛔ ' + err.message);
     return;
   }
+  const actor = cur.actor;
   const blocking = [
-    ...validateNpc(data),
-    ...validateActor(actor).filter(i => i.level === 'error').map(i => i.msg),
+    ...validateNpc(cur.formData),
+    ...cur.validation.filter(i => i.level === 'error').map(i => i.msg),
   ];
   if (blocking.length) {
     document.getElementById('warnings').textContent = t('correct_add') + blocking.join('  •  ');
@@ -627,6 +696,13 @@ function triggerActorImport(ev) {
   }
 }
 document.getElementById('btn-import-actor').addEventListener('click', triggerActorImport);
+document.getElementById('npc-reset').addEventListener('click', (ev) => {
+  armedConfirm(ev.currentTarget, t('ii_reset_confirm'), () => {
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(RELOAD_KEY);
+    location.reload();
+  });
+});
 document.getElementById('btn-import-actor-file').addEventListener('click', () => document.getElementById('actor-import-file').click());
 document.getElementById('actor-import-file').addEventListener('change', (ev) => {
   const file = ev.target.files?.[0];
@@ -669,6 +745,7 @@ document.getElementById('draft-file').addEventListener('change', (ev) => {
 document.getElementById('btn-new').addEventListener('click', (ev) => {
   armedConfirm(ev.currentTarget, t('new_confirm_btn'), () => {
     localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(RELOAD_KEY);
     location.reload();
   });
 });
@@ -676,7 +753,10 @@ document.getElementById('btn-new').addEventListener('click', (ev) => {
 // All'avvio: se c'è una bozza autosalvata, la ripristiniamo.
 try {
   const saved = localStorage.getItem(DRAFT_KEY);
-  if (saved) restoreForm(JSON.parse(saved));
+  if (saved) {
+    try { loadedActor = JSON.parse(localStorage.getItem(RELOAD_KEY)) || null; } catch { loadedActor = null; }
+    restoreForm(JSON.parse(saved));
+  }
 } catch { /* bozza corrotta: si riparte puliti */ }
 
 // Tab: mostra il pannello scelto, nasconde gli altri.

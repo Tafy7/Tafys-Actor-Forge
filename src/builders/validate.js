@@ -59,7 +59,7 @@ function extraKeys(obj, base) {
  * Valida l'actor costruito da buildNpc(). `actor` è l'oggetto JSON finale.
  * Non lancia mai: raccoglie e ritorna la lista dei problemi.
  */
-export function validateActor(actor) {
+export function validateActor(actor, opts = {}) {
   const issues = [];
   const err = (msg) => issues.push({ level: 'error', msg });
   const warn = (msg) => issues.push({ level: 'warn', msg });
@@ -70,11 +70,19 @@ export function validateActor(actor) {
   }
 
   // --- 1) Schema drift alla radice e in system (vs golden NPC_BASE) ---
-  for (const k of extraKeys(actor, NPC_BASE)) {
-    err(`Chiave estranea alla radice dell'actor: "${k}" (non esiste nei golden template).`);
-  }
-  for (const k of extraKeys(actor.system, NPC_BASE.system)) {
-    err(`Chiave estranea in system: "${k}".`);
+  // Mostro RICARICATO (round-trip): la struttura viene dall'originale di
+  // Foundry, non dal Forge — si controlla solo ciò che ha costruito il Forge.
+  // opts.loaded = true salta le chiavi della radice; opts.itemMode(item, i)
+  // dice per ogni voce: 'full' (costruita dal Forge), 'refs' (originale
+  // rattoppato: solo riferimenti e immagini) o 'none' (originale intatto).
+  const itemMode = opts.itemMode || (() => 'full');
+  if (!opts.loaded) {
+    for (const k of extraKeys(actor, NPC_BASE)) {
+      err(`Chiave estranea alla radice dell'actor: "${k}" (non esiste nei golden template).`);
+    }
+    for (const k of extraKeys(actor.system, NPC_BASE.system)) {
+      err(`Chiave estranea in system: "${k}".`);
+    }
   }
 
   // --- Formula HP: un refuso non blocca l'import (il max è un numero a
@@ -93,13 +101,18 @@ export function validateActor(actor) {
   }
 
   // --- 2) Item embedded ---
-  for (const item of actor.items || []) {
+  for (const [i, item] of (actor.items || []).entries()) {
+    const mode = itemMode(item, i);
+    if (mode === 'none') continue;
+    const full = mode !== 'refs';
     const tag = `Item "${item.name || '?'}"`;
     const base = item.type === 'weapon' ? WEAPON_BASE : FEAT_BASE;
 
-    for (const k of extraKeys(item, base)) err(`${tag}: chiave estranea "${k}".`);
-    for (const k of extraKeys(item.system, base.system)) err(`${tag}: chiave estranea in system "${k}".`);
-    if (item._id && !ID_RE.test(item._id)) warn(`${tag}: _id malformato.`);
+    if (full) {
+      for (const k of extraKeys(item, base)) err(`${tag}: chiave estranea "${k}".`);
+      for (const k of extraKeys(item.system, base.system)) err(`${tag}: chiave estranea in system "${k}".`);
+      if (item._id && !ID_RE.test(item._id)) warn(`${tag}: _id malformato.`);
+    }
     if (item.img && !hasValidImageExt(item.img)) err(`${tag}: icona "${item.img}" senza estensione valida.`);
 
     // Id di attività ed effetti presenti su QUESTO item: servono per
@@ -109,7 +122,7 @@ export function validateActor(actor) {
     const effectIds = new Set((item.effects || []).map(e => e._id));
 
     // Effetti: chiavi vs EFFECT_BASE + changes ben formate.
-    for (const eff of item.effects || []) {
+    for (const eff of full ? item.effects || [] : []) {
       for (const k of extraKeys(eff, EFFECT_BASE)) warn(`${tag} → effetto "${eff.name || '?'}": chiave estranea "${k}".`);
       for (const c of eff.changes || []) {
         const bad = Object.keys(c).filter(k => !CHANGE_KEYS_ALLOWED.includes(k));
@@ -121,7 +134,7 @@ export function validateActor(actor) {
     // --- 3) Riferimenti incrociati: il cuore del validatore ---
     for (const [actId, act] of Object.entries(activities)) {
       const base2 = ACTIVITY_BASES[act.type];
-      if (base2) {
+      if (base2 && full) {
         for (const k of extraKeys(act, base2)) warn(`${tag} → attività "${act.type}": chiave estranea "${k}".`);
       }
       // otherActivityId (es. il rider del "morso di lupo") deve puntare a

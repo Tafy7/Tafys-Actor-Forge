@@ -1214,5 +1214,5 @@ legend.fold-toggle:focus-visible { outline: 2px solid var(--accent); outline-off
   font-size: 0.9rem;
 }
 .reload-banner .reload-text { flex: 1 1 16rem; min-width: 0; }
-.reload-banner .reload-rebuilt { flex-basis: 100%; color: var(--warn, #e0a030); }
+.reload-banner .reload-rebuilt { flex-basis: 100%; color: var(--warn, #e0a030); white-space: pre-line; }
 .reload-banner[hidden], .reload-banner [hidden] { display: none !important; }

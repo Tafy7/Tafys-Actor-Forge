@@ -810,7 +810,7 @@ console.log('\n— Round-trip: immagini portabili, niente tracce di terzi —');
   check('round-trip: immagini di Foundry (icons/) e del mondo (worlds/) conservate',
     out.includes('icons/creatures/claws/claw-talons-glowing-orange.webp') && out.includes('worlds/mio-mondo/img/volo.webp'));
   check('round-trip: avviso con il numero di immagini tolte (actor, token, item, effetto = 4)', r.report.warn.some((w) => /^4 immagini tolte/.test(w)));
-  check('round-trip: dati e testi restano (nome, CR, descrizione)', r.data.name === 'Grifone di Prova' && r.data.cr === '2' && r.data.items[0].description === 'Colpo di becco.');
+  check('round-trip: dati e testi restano (nome, CR, descrizione)', r.data.name === 'Grifone di Prova' && r.data.cr === '2' && r.data.items[0].description === '<p>Colpo di becco.</p>'); // HTML intatto (round-trip)
 }
 
 if (failures) {

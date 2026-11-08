@@ -127,3 +127,40 @@ export function overlaySpell(source, orig, state, built) {
   if (ch.has('durationValue') || ch.has('durationUnits')) sys.duration = bs.duration;
   return { item: out, rebuilt, changed };
 }
+
+// ---------- Voci dentro un mostro (attacchi, azioni, tratti) ----------
+export const EMBED_FIELDS = ['name', 'img', 'description', 'magical', 'aa', 'onUse', ...ITEM_BEHAVIOR];
+
+/**
+ * Una voce di un mostro ricaricato. `src` = voce originale ripulita, `orig` =
+ * la sua card appena caricata, `d` = la card adesso, `built` = buildItem(d).
+ * Ritorna { item, mode }: 'kept' (identica), 'patched' (solo campi
+ * d'identità o comportamento ricostruito sopra l'originale), 'rebuilt'
+ * (ricostruita da zero: è cambiata la "famiglia", es. da attacco a TS).
+ */
+export function overlayEmbedded(src, orig, d, built) {
+  const changed = changedFields(orig, d, EMBED_FIELDS);
+  if (!changed.length) return { item: structuredClone(src), mode: 'kept', changed };
+  const ch = new Set(changed);
+  const behavior = ITEM_BEHAVIOR.some(f => ch.has(f));
+  // buildItem fa un'ARMA per gli attacchi e una FEATURE per il resto: se la
+  // card cambia famiglia l'originale non si può più "rattoppare".
+  const srcFamily = src.type === 'weapon' ? 'attack' : 'other';
+  const newFamily = d.kind === 'attack' ? 'attack' : 'other';
+  if (behavior && srcFamily !== newFamily) {
+    const item = { ...built, _id: src._id || built._id };
+    if (src.sort != null) item.sort = src.sort;
+    return { item, mode: 'rebuilt', changed };
+  }
+  const out = structuredClone(src);
+  out.system = out.system || {};
+  common(out, built, ch, ITEM_BEHAVIOR);
+  if (ch.has('magical')) toggleProp(out.system, 'mgc', d.magical);
+  if (behavior && src.type === 'weapon') {
+    // Il danno ora è tutto nell'attività: il dado base dell'originale va
+    // svuotato, altrimenti con includeBase verrebbe sommato due volte.
+    out.system.range = built.system.range;
+    if (built.system.damage) out.system.damage = { ...(out.system.damage || {}), base: built.system.damage.base };
+  }
+  return { item: out, mode: 'patched', changed };
+}

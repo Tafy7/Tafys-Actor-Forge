@@ -14,7 +14,10 @@
 //
 // Modulo PURO (niente DOM): si testa con node.
 // ============================================================
-import { itemToDescriptor, partsToString, aaFromFlags, onUseFromFlags, portableImg } from './actor-import.js';
+import { itemToDescriptor, partsToString, aaFromFlags, onUseFromFlags } from './actor-import.js';
+import { cleanSource } from './clean.js';
+
+export { cleanSource };
 import { defaultAA } from '../builders/aa.js';
 import { WEAPON_TYPES, WEAPON_MASTERIES } from '../data/constants.js';
 import { RARITIES, ATTUNEMENTS } from '../builders/standalone-item.js';
@@ -23,60 +26,6 @@ import { t } from '../i18n.js';
 
 /** Tipi gestiti dalla Tab Item (gli altri — loot, tool, container… — non hanno un form). */
 export const ITEM_TYPES = ['weapon', 'equipment', 'consumable', 'feat'];
-
-/**
- * Flag che il Forge conserva: sistema, core e i moduli d'automazione
- * con cui lavora (Midi-QOL, DAE e compagni, Active Auras, A-A, Sequencer,
- * Item Piles, premade di automazione). Tutto il resto (fogli, importatori,
- * strumenti di terze parti) viene tolto: il JSON del Forge deve restare
- * pulito e portabile. Elenco "chi resta", mai "chi va via".
- */
-const KEEP_FLAGS = new Set([
-  'dnd5e', 'core', 'midi-qol', 'midiProperties', 'dae', 'times-up', 'effectmacro',
-  'ActiveAuras', 'autoanimations', 'sequencer', 'item-piles', 'itemacro',
-  'chris-premades', 'gambits-premades', 'walledtemplates',
-]);
-
-function cleanFlags(flags, report) {
-  if (!flags || typeof flags !== 'object') return {};
-  const out = {};
-  for (const [k, v] of Object.entries(flags)) {
-    if (KEEP_FLAGS.has(k)) out[k] = v;
-    else report.droppedFlags = (report.droppedFlags || 0) + 1;
-  }
-  // core.sourceId: vecchio riferimento al compendio d'origine (oggi sta in
-  // _stats, che togliamo): legava il JSON a un compendio di un altro mondo.
-  if (out.core && 'sourceId' in out.core) {
-    out.core = { ...out.core };
-    delete out.core.sourceId;
-    if (!Object.keys(out.core).length) delete out.core;
-  }
-  return out;
-}
-
-/**
- * Copia dell'originale pronta per essere ri-esportata: via i dati legati al
- * mondo d'origine (_stats, permessi, cartella, ordinamento), flag filtrati,
- * immagini portabili (come per i mostri).
- */
-export function cleanSource(doc, report) {
-  const src = structuredClone(doc);
-  delete src._stats; delete src.ownership; delete src.folder; delete src.sort;
-  src.flags = cleanFlags(src.flags, report);
-  const img = portableImg(src.img, report);
-  if (img) src.img = img; else delete src.img; // Foundry mette l'icona di default
-  for (const act of Object.values(src.system?.activities || {})) {
-    if (act && act.flags) act.flags = cleanFlags(act.flags, report);
-  }
-  src.effects = (src.effects || []).map((e) => {
-    const eff = { ...e, flags: cleanFlags(e.flags, report), origin: null };
-    delete eff._stats;
-    const eimg = portableImg(eff.img, report);
-    eff.img = eimg || 'icons/svg/aura.svg';
-    return eff;
-  });
-  return src;
-}
 
 /**
  * Cosa andrebbe perso SE l'utente modificasse il comportamento (attività,
@@ -125,6 +74,10 @@ function finishReport(doc, data, report) {
   if (report.droppedFlags) {
     report.warn.push(t('ii_flags', { n: report.droppedFlags }));
     delete report.droppedFlags;
+  }
+  if (report.droppedRefs) {
+    report.warn.push(t('ii_refs', { n: report.droppedRefs }));
+    delete report.droppedRefs;
   }
 }
 

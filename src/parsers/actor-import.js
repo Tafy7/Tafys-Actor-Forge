@@ -11,6 +11,10 @@
 // silenzio. Modulo PURO (niente DOM): si testa col round-trip sui golden.
 // ============================================================
 import { DAMAGE_BYPASSES } from '../data/constants.js';
+import { portableImg, cleanActorSource } from './clean.js';
+import { t } from '../i18n.js';
+
+export { portableImg };
 
 // Reverse di DAMAGE_BYPASSES: mgc → nonmagical, sil → silvered, ada → adamantine.
 const BYPASS_REV = Object.fromEntries(Object.entries(DAMAGE_BYPASSES).map(([k, v]) => [v, k]));
@@ -97,22 +101,6 @@ export function onUseFromFlags(item) {
 // Periodo di recovery dnd5e → modalità "usi" del form.
 const PERIOD_REV = { day: 'day', sr: 'sr', lr: 'lr', turn: 'turn' };
 
-/**
- * Immagini PORTABILI: il JSON del Forge deve funzionare in qualsiasi mondo.
- * Un percorso dentro `modules/…` esiste solo dove quel modulo è installato, e
- * un indirizzo web esterno spesso viene da importatori o siti di terze parti
- * (e in mappa può non vedersi per il CORS). Al round-trip li togliamo, li
- * contiamo e lo diciamo nel resoconto: l'utente sceglie un'immagine sua
- * (icons/…, systems/…, worlds/… o una cartella dei suoi dati).
- */
-const FOREIGN_IMG = /^\s*(?:(?:https?:)?\/\/|\/?modules\/)/i;
-export function portableImg(src, report) {
-  const s = String(src || '').trim();
-  if (!s) return '';
-  if (FOREIGN_IMG.test(s)) { report.droppedImgs = (report.droppedImgs || 0) + 1; return ''; }
-  return s;
-}
-
 /** Effetto DAE "vero" (con changes) → descrittore effetto del form. */
 function daeEffectToDescriptor(eff, report) {
   return {
@@ -136,7 +124,8 @@ export function itemToDescriptor(item, report) {
   const daeEffects = (item.effects || []).filter(e => !(e.statuses || []).length && (e.changes || []).length);
 
   const d = {
-    name: item.name || '', description: stripHtml(sys.description?.value || ''),
+    // HTML intatto: il builder non riavvolge un testo che comincia con un tag.
+    name: item.name || '', description: String(sys.description?.value || '').trim(),
     img: item.img && !/mystery-man|aura\.svg|sword\.svg/.test(item.img) ? portableImg(item.img, report) : '',
     kind: 'passive', activation: 'action',
     attackType: 'melee', ability: 'str', reach: '5', range: '30', longRange: '',
@@ -198,8 +187,9 @@ export function itemToDescriptor(item, report) {
   else if (rec && PERIOD_REV[rec.period]) { d.usesMode = PERIOD_REV[rec.period]; d.usesValue = String(uses.max || ''); }
 
   // Segnala nel report ciò che il form non modella (perdite note).
-  if (acts.length > 1 && !rider) report.warn.push(`"${item.name}": ha più attività — importata solo la principale.`);
-  if ((main?.damage?.parts || []).length > 1) report.warn.push(`"${item.name}": danno multi-parte importato come lista (ricontrolla).`);
+  // Con il round-trip "campo toccato" l'azione resta com'è finché non se ne
+  // modifica il comportamento: l'avviso dice cosa succederebbe in quel caso.
+  if (acts.length > 1 && !rider) report.warn.push(t('ai_multi', { name: item.name }));
 
   if (!d.aa) delete d.aa;
   return d;
@@ -248,13 +238,29 @@ export function importActor(actor, report = { ok: [], warn: [], skipped: [] }) {
     legact: String(sys.resources?.legact?.max || ''), legres: String(sys.resources?.legres?.max || ''),
     img: actor?.img && !/mystery-man/.test(actor.img) ? portableImg(actor.img, report) : '',
     tokenImg: (() => { const ts = actor?.prototypeToken?.texture?.src; return ts && ts !== actor.img && !/mystery-man/.test(ts) ? portableImg(ts, report) : ''; })(),
-    bio: stripHtml(sys.details?.biography?.value || ''),
-    items: (actor?.items || []).map(it => itemToDescriptor(it, report)),
+    bio: String(sys.details?.biography?.value || '').trim(),
+    // _srcId: a quale voce dell'originale corrisponde la card (round-trip).
+    items: (actor?.items || []).map(it => ({ ...itemToDescriptor(it, report), _srcId: it._id || '' })),
   };
   report.ok.push(`Importato: ${data.name || 'senza nome'} (${data.items.length} azioni/tratti)`);
+  // Originale ripulito (per l'export "campo toccato"): le immagini le conta
+  // QUI, una volta sola e su tutto (actor, token, effetti, voci).
+  let source = null;
+  if (actor && actor.type === 'npc') {
+    delete report.droppedImgs;
+    source = cleanActorSource(actor, report);
+  }
+  if (report.droppedFlags) {
+    report.warn.push(t('ii_flags', { n: report.droppedFlags }));
+    delete report.droppedFlags;
+  }
+  if (report.droppedRefs) {
+    report.warn.push(t('ii_refs', { n: report.droppedRefs }));
+    delete report.droppedRefs;
+  }
   if (report.droppedImgs) {
     report.warn.push(`${report.droppedImgs} immagini tolte: venivano da moduli o siti esterni e in un altro mondo non funzionerebbero. Scegline di tue (icons/…, worlds/… o una cartella dei tuoi dati).`);
     delete report.droppedImgs;
   }
-  return { data, report };
+  return { data, source, report };
 }

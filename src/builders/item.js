@@ -14,6 +14,7 @@ import { applyOnUseFlag } from './onuse.js';
 import { DAMAGE_TYPES } from '../data/constants.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
+import { descriptionHtml } from '../utils/html.js';
 
 /**
  * Converte una stringa di danni in parti strutturate dnd5e.
@@ -224,7 +225,7 @@ export function buildItem(d) {
   item._id = randomID();
   item.name = d.name.trim() || 'Senza nome';
   item.system.identifier = item.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-  item.system.description.value = d.description ? `<p>${d.description}</p>` : '';
+  item.system.description.value = descriptionHtml(d.description);
   const itemImg = cleanImagePath(d.img);
   if (itemImg) item.img = itemImg;
 
