@@ -77,6 +77,18 @@ export function parseDamageParts(input) {
   return { parts, errors };
 }
 
+/**
+ * CD di un tiro salvezza: un numero ("13") oppure una FORMULA di Foundry
+ * ("8 + @prof + @abilities.con.mod", come negli oggetti ufficiali che la
+ * calcolano dalla caratteristica). Vuoto o non valido → 10.
+ */
+export function dcFormula(v) {
+  const s = String(v ?? '').trim();
+  if (/^\d+$/.test(s)) return String(Number(s));
+  if (/@|[+\-*/]/.test(s) && /^[\w@.+\-*/() ]+$/.test(s)) return s.replace(/\s+/g, ' ');
+  return String(Number(s) || 10);
+}
+
 // Icone delle condizioni: dnd5e le fornisce già per tutti gli status standard.
 const conditionIcon = (c) => `systems/dnd5e/icons/svg/statuses/${c}.svg`;
 
@@ -302,7 +314,7 @@ export function buildItem(d) {
     activity.save.ability = [d.saveAbility];
     // CD fissa scritta nel formula (come Horrid Touch: "26"); in futuro
     // aggiungeremo il calcolo automatico da caratteristica.
-    activity.save.dc = { calculation: '', formula: String(Number(d.dc) || 10) };
+    activity.save.dc = { calculation: '', formula: dcFormula(d.dc) };
     activity.damage.onSave = d.onSave; // 'none' = danno pieno, 'half' = metà
     const { parts } = parseDamageParts(d.damage);
     activity.damage.parts = parts;

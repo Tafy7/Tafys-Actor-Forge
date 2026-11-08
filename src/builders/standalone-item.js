@@ -13,6 +13,7 @@ import { WEAPON_TYPES, WEAPON_MASTERIES } from '../data/constants.js';
 import { buildItem, parseDamageParts, applyExtraFlags } from './item.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
+import { descriptionHtml } from '../utils/html.js';
 
 const BASES = { weapon: WEAPON_BASE, equipment: EQUIPMENT_BASE, consumable: CONSUMABLE_BASE, feat: FEAT_BASE };
 export const RARITIES = ['', 'common', 'uncommon', 'rare', 'veryRare', 'legendary', 'artifact'];
@@ -39,7 +40,7 @@ export function buildStandaloneItem(d) {
   item.system.identifier = item.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   const img = cleanImagePath(d.img);
   if (img) item.img = img;
-  item.system.description.value = d.description ? `<p>${d.description}</p>` : '';
+  item.system.description.value = descriptionHtml(d.description);
 
   // 3) Trapianto del comportamento (chiavi presenti in TUTTE le basi item).
   item.system.activities = behavior.system.activities || {};
@@ -54,7 +55,7 @@ export function buildStandaloneItem(d) {
     item.system.attunement = ATTUNEMENTS.includes(d.attunement) ? (d.attunement || '') : '';
     // Descrizione da oggetto NON identificato (quello che si legge finché
     // l'oggetto è "non identificato" in Foundry).
-    item.system.unidentified = { description: d.unidentified ? `<p>${d.unidentified}</p>` : '' };
+    item.system.unidentified = { description: descriptionHtml(d.unidentified) };
   }
   const props = new Set(item.system.properties || []);
   if (d.magical) props.add('mgc'); else props.delete('mgc');
@@ -112,7 +113,10 @@ export function buildStandaloneItem(d) {
   } else if (type === 'feat') {
     // Feature di CLASSE o di MOSTRO (golden: Bladesong/Sneak Attack = class,
     // tratti dei golden actor = monster) + requisiti ("Barbarian 9").
-    item.system.type = { value: d.featType === 'class' ? 'class' : 'monster', subtype: '' };
+    // Altri tipi di feature (feat, race, background…) arrivano solo da un
+    // JSON ricaricato: se sono id puliti restano.
+    const ft = /^[a-zA-Z]+$/.test(d.featType || '') ? d.featType : 'monster';
+    item.system.type = { value: ft, subtype: '' };
     item.system.requirements = String(d.requirements || '').trim();
   }
 

@@ -41,10 +41,13 @@ function knownToString(tr) {
 }
 
 /** Parti di danno dnd5e → stringa del form ("4d8 + 8 piercing, 16d6 force"). */
-function partsToString(parts) {
+export function partsToString(parts) {
   return (parts || []).map((p) => {
     const type = (p.types && p.types[0]) || '';
     if (p.custom && p.custom.enabled && p.custom.formula) return `${p.custom.formula} ${type}`.trim();
+    // Parte senza dadi (es. arma con danno base vuoto, come la Rete): niente
+    // "nulldnull" nel form.
+    if (!p.number || !p.denomination) return '';
     let f = `${p.number}d${p.denomination}`;
     const bonus = String(p.bonus || '').trim();
     if (bonus) f += ` + ${bonus}`;
@@ -53,7 +56,7 @@ function partsToString(parts) {
 }
 
 /** flags.autoanimations → descrittore `aa` del form (reverse di buildAAFlags). */
-function aaFromFlags(flag) {
+export function aaFromFlags(flag) {
   if (!flag || !flag.primary) return null;
   const path = String(flag.primary.video?.customPath || '').replace(/^jb2a\./, '');
   if (!path) return null;
@@ -80,7 +83,7 @@ function aaFromFlags(flag) {
 }
 
 /** flags["midi-qol"].onUseMacroName → righe [{timing, macro}]. */
-function onUseFromFlags(item) {
+export function onUseFromFlags(item) {
   const raw = String(item.flags?.['midi-qol']?.onUseMacroName || '').trim();
   if (!raw) return [];
   const rows = [];
@@ -103,7 +106,7 @@ const PERIOD_REV = { day: 'day', sr: 'sr', lr: 'lr', turn: 'turn' };
  * (icons/…, systems/…, worlds/… o una cartella dei suoi dati).
  */
 const FOREIGN_IMG = /^\s*(?:(?:https?:)?\/\/|\/?modules\/)/i;
-function portableImg(src, report) {
+export function portableImg(src, report) {
   const s = String(src || '').trim();
   if (!s) return '';
   if (FOREIGN_IMG.test(s)) { report.droppedImgs = (report.droppedImgs || 0) + 1; return ''; }
@@ -125,7 +128,7 @@ function daeEffectToDescriptor(eff, report) {
 }
 
 /** Un item embedded → descrittore del form. `report` raccoglie i non-mappati. */
-function itemToDescriptor(item, report) {
+export function itemToDescriptor(item, report) {
   const sys = item.system || {};
   const acts = Object.values(sys.activities || {});
   // Effetti status (condizioni) vs effetti DAE "veri" (con changes).
@@ -202,7 +205,7 @@ function itemToDescriptor(item, report) {
   return d;
 }
 
-const stripHtml = (s) => String(s || '').replace(/<[^>]+>/g, '').trim();
+export const stripHtml = (s) => String(s || '').replace(/<[^>]+>/g, '').trim();
 
 /**
  * IMPORT principale: JSON actor Foundry → { data (descrittore form), report }.

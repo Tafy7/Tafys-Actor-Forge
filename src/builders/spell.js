@@ -21,6 +21,7 @@ import { SPELL_BASE } from '../data/item-bases.js';
 import { buildItem, parseDamageParts, applyExtraFlags } from './item.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
+import { descriptionHtml } from '../utils/html.js';
 
 // Scuole di magia (id dnd5e a 3 lettere; evo/abj/nec/trs/div/ill osservate
 // nei golden, con/enc sono gli id standard delle due mancanti).
@@ -33,10 +34,19 @@ export const CAST_METHODS = ['spell', 'innate', 'atwill', 'pact'];
 
 // Sagome area: sphere/wall/self osservate nei golden; le altre sono gli
 // id standard delle sagome dnd5e (cono, cubo, linea, cilindro, raggio).
-export const TEMPLATE_TYPES = ['sphere', 'cone', 'cube', 'line', 'wall', 'cylinder', 'radius'];
+export const TEMPLATE_TYPES = ['sphere', 'cone', 'cube', 'line', 'wall', 'cylinder', 'radius', 'circle', 'square'];
 
 // Unità di durata: inst/minute/hour osservate; round e day id standard.
-export const DURATION_UNITS = ['inst', 'round', 'minute', 'hour', 'day'];
+export const DURATION_UNITS = ['inst', 'turn', 'round', 'minute', 'hour', 'day', 'disp', 'dstr', 'perm', 'spec'];
+// Durate senza un numero (istantanea, finché dissolto, permanente, speciale).
+export const DURATION_NO_VALUE = ['inst', 'disp', 'dstr', 'perm', 'spec'];
+// Gittate senza un numero.
+export const RANGE_NO_VALUE = ['self', 'touch', 'spec', 'any'];
+
+// Un incantesimo RICARICATO da Foundry può avere valori che i menu non
+// elencano (sagome o unità introdotte da versioni nuove del sistema o da
+// moduli): se sono id puliti li lasciamo passare invece di cambiarli.
+const isId = (v) => /^[a-zA-Z]+$/.test(String(v || ''));
 
 /**
  * `d` (descrittore dal form della Tab Spell):
@@ -61,7 +71,7 @@ export function buildSpell(d) {
   item.system.identifier = item.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   const img = cleanImagePath(d.img);
   if (img) item.img = img;
-  item.system.description.value = d.description ? `<p>${d.description}</p>` : '';
+  item.system.description.value = descriptionHtml(d.description);
   item.system.source.rules = d.rules === '2024' ? '2024' : '2014';
   // Source personalizzata (come "PHB'14 p.241" dei golden): book + page.
   item.system.source.book = String(d.sourceBook || '').trim();
@@ -94,6 +104,8 @@ export function buildSpell(d) {
   // (Invisibility), oppure miglia (Meteor Swarm: {value:'1', units:'mi'}).
   if (d.rangeMode === 'self' || d.rangeMode === 'touch') {
     item.system.range = { value: '0', units: d.rangeMode, special: '' };
+  } else if (RANGE_NO_VALUE.includes(d.rangeMode) || (isId(d.rangeMode) && !['ft', 'mi'].includes(d.rangeMode))) {
+    item.system.range = { value: '', units: d.rangeMode, special: '' };
   } else if (d.rangeMode === 'mi') {
     item.system.range = { value: String(Number(d.rangeValue) || 1), units: 'mi', special: '' };
   } else {
@@ -102,7 +114,7 @@ export function buildSpell(d) {
   // Bersaglio: creature contate (Ray of Sickness), sagoma (Fireball sphere
   // 20ft), se stesso (Detect Magic), o niente.
   const tgt = item.system.target;
-  if (d.targetMode === 'template' && TEMPLATE_TYPES.includes(d.templateType)) {
+  if (d.targetMode === 'template' && (TEMPLATE_TYPES.includes(d.templateType) || isId(d.templateType))) {
     tgt.template.type = d.templateType;
     tgt.template.size = String(Number(d.templateSize) || 10);
   } else if (d.targetMode === 'creature') {
@@ -112,8 +124,8 @@ export function buildSpell(d) {
     tgt.affects.type = 'self';
   }
   item.system.duration = {
-    value: d.durationUnits === 'inst' ? '' : String(Number(d.durationValue) || ''),
-    units: DURATION_UNITS.includes(d.durationUnits) ? d.durationUnits : 'inst',
+    value: DURATION_NO_VALUE.includes(d.durationUnits) ? '' : String(Number(d.durationValue) || ''),
+    units: DURATION_UNITS.includes(d.durationUnits) || isId(d.durationUnits) ? d.durationUnits : 'inst',
   };
 
   // 5) Trapianto del comportamento.

@@ -436,7 +436,9 @@ details.opt-block > div { margin-top: 0.5rem; }
 #statblock-details summary { cursor: pointer; margin-bottom: 0.4rem; }
 #statblock-details summary:hover { color: var(--accent-2); }
 #statblock-input { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; }
-#parse-report {
+/* Resoconti degli import (statblock, actor, item, incantesimo): testo a capo,
+   mai più largo della colonna (su telefono allargava la pagina). */
+#parse-report, #import-report, #item-import-report, #spell-import-report {
   margin: 0.5rem 0 0;
   padding: 0.5rem 0.7rem;
   background: var(--bg);
@@ -814,13 +816,16 @@ html[data-theme="contrast"] .tab.active { border-width: 2px; }
 html[data-theme="parchment"] #preview,
 html[data-theme="parchment"] #item-preview,
 html[data-theme="parchment"] #spell-preview,
-html[data-theme="parchment"] #parse-report {
+html[data-theme="parchment"] #parse-report,
+html[data-theme="parchment"] #import-report,
+html[data-theme="parchment"] #item-import-report,
+html[data-theme="parchment"] #spell-import-report {
   background: #2b2519;
   color: #cfe8bf;
   border-radius: 6px;
   padding: 0.5rem 0.6rem;
 }
-html[data-theme="parchment"] #parse-report { color: #d8ccb4; }
+html[data-theme="parchment"] :is(#parse-report, #import-report, #item-import-report, #spell-import-report) { color: #d8ccb4; }
 
 /* ============================================================
    Expected CR — cartellino di stima del Grado di Sfida (tab Mostro)
@@ -1194,3 +1199,20 @@ legend.fold-toggle:focus-visible { outline: 2px solid var(--accent); outline-off
   /* Scontro: il riepilogo sticky resta sotto la testata della pagina. */
   button.enc-mini { top: 0.25rem; }
 }
+
+/* ---------- Ricarica da JSON (tab Item / Incantesimo, blocco 13) ---------- */
+.json-reload { margin: 0 0 0.6rem; }
+.json-reload summary { cursor: pointer; margin-bottom: 0.4rem; }
+.json-reload summary:hover { color: var(--accent-2); }
+.json-reload textarea { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; }
+.json-reload textarea { width: 100%; }
+.reload-banner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem;
+  margin: 0 0 0.75rem; padding: 0.5rem 0.75rem;
+  border: 1px solid var(--accent, #c9a227); border-radius: 6px;
+  background: color-mix(in srgb, var(--accent, #c9a227) 10%, transparent);
+  font-size: 0.9rem;
+}
+.reload-banner .reload-text { flex: 1 1 16rem; min-width: 0; }
+.reload-banner .reload-rebuilt { flex-basis: 100%; color: var(--warn, #e0a030); }
+.reload-banner[hidden], .reload-banner [hidden] { display: none !important; }

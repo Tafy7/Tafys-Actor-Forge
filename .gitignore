@@ -8,3 +8,6 @@ dist/
 .DS_Store
 Thumbs.db
 .vite/
+
+# Cartelle di lavoro locali (consegne di Claude, materiale privato): mai nel repo pubblico.
+Claude outputs/

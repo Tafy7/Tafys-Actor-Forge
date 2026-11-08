@@ -4,14 +4,17 @@
 // campi strutturali, sezione effetti DAE condivisa (applyEffectsEvent),
 // builder in builders/spell.js (schema dai 12 golden spell).
 // ============================================================
-import { buildSpell, validateSpell, SPELL_SCHOOLS, CAST_METHODS, TEMPLATE_TYPES, DURATION_UNITS } from '../builders/spell.js';
-import { effectsSectionHtml, applyEffectsEvent } from './effects-editor.js';
+import { buildSpell, validateSpell, SPELL_SCHOOLS, CAST_METHODS, TEMPLATE_TYPES, DURATION_UNITS, DURATION_NO_VALUE } from '../builders/spell.js';
+import { effectsSectionHtml, applyEffectsEvent, normalizeEffect } from './effects-editor.js';
 import { aaSectionHtml, applyAAEvent, loadAAIndex, aaIndexReady } from './aa-editor.js';
 import { defaultAA } from '../builders/aa.js';
 import { applyOnUseEvent } from './onuse-editor.js';
 import { extrasSectionHtml } from './extras-editor.js';
 import { ABILITIES, CONDITIONS, CONDITION_LABELS, CONDITION_LABELS_EN, byLang } from '../data/constants.js';
 import { downloadJson } from '../utils/download.js';
+import { importSpell, ITEM_TYPES } from '../parsers/item-import.js';
+import { overlaySpell } from '../builders/overlay.js';
+import { initJsonReload, jsonReloadHtml } from './json-reload.js';
 import { t, getLang } from '../i18n.js';
 
 const LANG = getLang();
@@ -22,6 +25,20 @@ const abEn = LANG === 'en';
 
 let state = defaultSpell();
 let addToBatch = () => {};
+// Incantesimo RICARICATO da JSON (vedi item-tab): null = incantesimo nuovo.
+let loaded = null;
+
+function buildCurrent() {
+  const built = buildSpell(state);
+  if (!loaded) return { item: built, rebuilt: false };
+  return overlaySpell(loaded.source, loaded.orig, state, built);
+}
+
+/** Danni e upcast contano solo se il comportamento viene ricostruito dal form. */
+function currentWarnings() {
+  const { rebuilt } = buildCurrent();
+  return validateSpell(loaded && !rebuilt ? { ...state, kind: 'utility', upcastFormula: '' } : state);
+}
 
 function defaultSpell() {
   return {
@@ -45,7 +62,12 @@ function defaultSpell() {
   };
 }
 
-const opts = (pairs, sel) => pairs.map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
+// Un valore che il menu non elenca (arriva da un incantesimo ricaricato) resta
+// visibile come opzione in più: niente cambi silenziosi.
+const opts = (pairs, sel) => {
+  const list = sel && !pairs.some(([v]) => v === sel) ? [...pairs, [sel, `${sel} ✳`]] : pairs;
+  return list.map(([v, l]) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
+};
 const abilityOpts = (sel) => ABILITIES.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${abEn ? a.en : a.label}</option>`).join('');
 
 const LEVELS = () => [['0', t('sp_cantrip')], ...Array.from({ length: 9 }, (_, i) => [String(i + 1), `${i + 1}°`])];
@@ -89,7 +111,7 @@ function formHtml(it) {
   <div class="grid-3">
     <label>${t('sp_cast')} <select data-f="activation">${opts(ACTIVATIONS(), it.activation)}</select></label>
     ${it.activation === 'minute' ? `<label>${t('sp_cast_min')} <input type="number" data-f="castValue" value="${esc(it.castValue)}" /></label>` : ''}
-    <label>${t('sp_range')} <select data-f="rangeMode">${opts([['ft', t('rng_ft')], ['touch', t('rng_touch')], ['self', t('rng_self')], ['mi', t('rng_mi')]], it.rangeMode)}</select></label>
+    <label>${t('sp_range')} <select data-f="rangeMode">${opts([['ft', t('rng_ft')], ['touch', t('rng_touch')], ['self', t('rng_self')], ['mi', t('rng_mi')], ['spec', t('rng_spec')], ['any', t('rng_any')]], it.rangeMode)}</select></label>
     ${(it.rangeMode === 'ft' || it.rangeMode === 'mi') ? `<label>${it.rangeMode === 'mi' ? t('rng_mi') : t('sp_range_val')} <input type="number" data-f="rangeValue" value="${esc(it.rangeValue)}" /></label>` : ''}
   </div>
 
@@ -105,7 +127,7 @@ function formHtml(it) {
 
   <div class="grid-3">
     <label>${t('sp_duration')} <select data-f="durationUnits">${opts(DUR_OPTS(), it.durationUnits)}</select></label>
-    ${it.durationUnits !== 'inst' ? `<label>${t('sp_dur_val')} <input type="number" data-f="durationValue" value="${esc(it.durationValue)}" /></label>` : ''}
+    ${!DURATION_NO_VALUE.includes(it.durationUnits) ? `<label>${t('sp_dur_val')} <input type="number" data-f="durationValue" value="${esc(it.durationValue)}" /></label>` : ''}
   </div>
 
   <fieldset class="inner">
@@ -128,7 +150,7 @@ function formHtml(it) {
     <div class="grid-3">
       <label>${t('ed_save_req')} <select data-f="saveAbility">${abilityOpts(it.saveAbility)}</select></label>
       <label>${t('sp_dc')} <select data-f="dcMode">${opts([['spellcasting', t('dc_auto')], ['flat', t('dc_flat')]], it.dcMode)}</select></label>
-      ${it.dcMode === 'flat' ? `<label>${t('ed_dc')} <input type="number" data-f="dc" value="${esc(it.dc)}" /></label>` : ''}
+      ${it.dcMode === 'flat' ? `<label>${t('ed_dc')} <span class="hint">${t('ed_dc_formula_hint')}</span><input type="text" data-f="dc" value="${esc(it.dc)}" placeholder="13" /></label>` : ''}
       <label>${t('ed_onsave')} <select data-f="onSave">${opts([['none', t('opt_nodmg')], ['half', t('opt_halfdmg')]], it.onSave)}</select></label>
       <label>${t('ed_cond_fail')} <select data-f="condition">${opts([['', t('opt_none_f')], ...CONDITION_OPTIONS], it.condition)}</select></label>
       <label>${t('ed_duration')} <span class="hint">${t('ed_dur_hint')}</span><input type="number" data-f="condRounds" value="${esc(it.condRounds)}" /></label>
@@ -139,8 +161,8 @@ function formHtml(it) {
       <label>${t('sp_upcast')} <span class="hint">${t('sp_upcast_hint')}</span><input type="text" data-f="upcastFormula" value="${esc(it.upcastFormula)}" placeholder="1d6" /></label>
     </div>` : ''}
     <div class="grid-3">
-      <label>${t('ed_uses')} <select data-f="usesMode">${opts([['none', t('opt_unlimited')], ['day', t('opt_perday')]], it.usesMode)}</select></label>
-      ${it.usesMode !== 'none' ? `<label>${t('ed_uses_day')} <input type="number" data-f="usesValue" value="${esc(it.usesValue)}" /></label>` : ''}
+      <label>${t('ed_uses')} <select data-f="usesMode">${opts([['none', t('opt_unlimited')], ['day', t('opt_perday')], ['sr', t('opt_sr')], ['lr', t('opt_lr')]], it.usesMode)}</select></label>
+      ${it.usesMode !== 'none' ? `<label>${t('ed_uses_n')} <span class="hint">${t('ed_uses_formula_hint')}</span><input type="text" data-f="usesValue" value="${esc(it.usesValue)}" placeholder="1" /></label>` : ''}
     </div>
   </fieldset>
 
@@ -161,7 +183,14 @@ function render() {
 
 function renderPreview() {
   try {
-    document.getElementById('spell-preview').textContent = JSON.stringify(buildSpell(state), null, 2);
+    const { item, rebuilt } = buildCurrent();
+    document.getElementById('spell-preview').textContent = JSON.stringify(item, null, 2);
+    const banner = document.getElementById('spell-editing');
+    banner.hidden = !loaded;
+    if (loaded) {
+      banner.querySelector('.reload-text').textContent = t('ii_editing_spell', { name: loaded.source.name });
+      banner.querySelector('.reload-rebuilt').hidden = !rebuilt;
+    }
   } catch (err) {
     document.getElementById('spell-preview').textContent = 'Errore: ' + err.message;
   }
@@ -170,6 +199,30 @@ function renderPreview() {
 export function initSpellTab({ onAddToBatch }) {
   addToBatch = onAddToBatch || (() => {});
   const body = document.getElementById('spell-form-body');
+
+  // Ricarica da JSON (round-trip): pannello sopra il form.
+  body.insertAdjacentHTML('beforebegin', jsonReloadHtml('spell', 'ii_summary_spell'));
+  const { armed } = initJsonReload({
+    prefix: 'spell',
+    accept: (d) => d.type === 'spell',
+    other: (d) => ITEM_TYPES.includes(d.type),
+    noneKey: 'ii_none_spell', otherKey: 'ii_other_tab_item',
+    importFn: importSpell,
+    hasData: () => Boolean(String(state.name || '').trim() || loaded),
+    onLoad: (data, source) => {
+      // Effetti nella forma completa dell'editor PRIMA di fotografare lo
+      // stato: così il solo ridisegno non li fa risultare "modificati".
+      state = { ...defaultSpell(), ...data, effects: (data.effects || []).map(normalizeEffect) };
+      loaded = { source, orig: structuredClone(state) };
+      render();
+    },
+  });
+  document.getElementById('spell-reset').addEventListener('click', (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
+    loaded = null;
+    state = defaultSpell();
+    document.getElementById('spell-import-report').hidden = true;
+    render();
+  }));
 
   body.addEventListener('input', (ev) => {
     const res = applyEffectsEvent(state, ev);
@@ -199,14 +252,14 @@ export function initSpellTab({ onAddToBatch }) {
 
   document.getElementById('spell-export').addEventListener('click', exportSpell);
   document.getElementById('spell-batch').addEventListener('click', () => {
-    const w = validateSpell(state);
+    const w = currentWarnings();
     if (w.length) { document.getElementById('spell-warn').textContent = '⛔ ' + w.join('  •  '); return; }
     document.getElementById('spell-warn').textContent = '';
-    addToBatch(buildSpell(state));
+    addToBatch(buildCurrent().item);
   });
   document.getElementById('spell-copy').addEventListener('click', async () => {
     const btn = document.getElementById('spell-copy');
-    try { await navigator.clipboard.writeText(JSON.stringify(buildSpell(state), null, 2)); btn.textContent = t('copied'); }
+    try { await navigator.clipboard.writeText(JSON.stringify(buildCurrent().item, null, 2)); btn.textContent = t('copied'); }
     catch { btn.textContent = t('clip_denied'); }
     setTimeout(() => { btn.textContent = t('btn_copy'); }, 1600);
   });
@@ -215,11 +268,11 @@ export function initSpellTab({ onAddToBatch }) {
 }
 
 function exportSpell() {
-  const warns = validateSpell(state);
+  const warns = currentWarnings();
   const warnBox = document.getElementById('spell-warn');
   if (warns.length) { warnBox.textContent = '⛔ ' + warns.join('  •  '); return; }
   warnBox.textContent = '';
-  const spell = buildSpell(state);
+  const spell = buildCurrent().item;
   const slug = spell.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   downloadJson(spell, `fvttSpell-${slug}.json`);
 }

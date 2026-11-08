@@ -12,6 +12,9 @@ import { applyOnUseEvent } from './onuse-editor.js';
 import { extrasSectionHtml } from './extras-editor.js';
 import { ABILITIES, CONDITIONS, CONDITION_LABELS, CONDITION_LABELS_EN, byLang, WEAPON_TYPES, WEAPON_MASTERIES } from '../data/constants.js';
 import { downloadJson } from '../utils/download.js';
+import { importItem, ITEM_TYPES } from '../parsers/item-import.js';
+import { overlayItem } from '../builders/overlay.js';
+import { initJsonReload, jsonReloadHtml } from './json-reload.js';
 import { t, getLang } from '../i18n.js';
 
 const LANG = getLang();
@@ -22,6 +25,25 @@ const abEn = LANG === 'en';
 
 let state = defaultItem();
 let addToBatch = () => {};
+// Oggetto RICARICATO da JSON: originale ripulito + stato del form appena
+// caricato (per sapere quali campi l'utente ha toccato). null = nuovo oggetto.
+let loaded = null;
+
+/**
+ * JSON da esportare: nuovo oggetto → builder; oggetto ricaricato →
+ * originale + solo i campi modificati (builders/overlay.js).
+ */
+function buildCurrent() {
+  const built = buildStandaloneItem(state);
+  if (!loaded) return { item: built, rebuilt: false };
+  return overlayItem(loaded.source, loaded.orig, state, built);
+}
+
+/** Controlli prima dell'export: i danni contano solo se il comportamento viene ricostruito. */
+function currentWarnings() {
+  const { rebuilt } = buildCurrent();
+  return validateStandaloneItem(loaded && !rebuilt ? { ...state, kind: 'passive' } : state);
+}
 
 function defaultItem() {
   return {
@@ -42,7 +64,12 @@ function defaultItem() {
   };
 }
 
-const opts = (pairs, sel) => pairs.map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
+// Un valore che il menu non elenca (arriva da un oggetto ricaricato) resta
+// visibile come opzione in più: niente cambi silenziosi.
+const opts = (pairs, sel) => {
+  const list = sel && !pairs.some(([v]) => v === sel) ? [...pairs, [sel, `${sel} ✳`]] : pairs;
+  return list.map(([v, l]) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
+};
 const abilityOpts = (sel) => ABILITIES.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${abEn ? a.en : a.label}</option>`).join('');
 const weaponTypeOpts = (sel) => WEAPON_TYPES.map(w => `<option value="${w.id}" ${w.id === sel ? 'selected' : ''}>${abEn ? w.en : w.it}</option>`).join('');
 const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
@@ -130,7 +157,7 @@ function formHtml(it) {
     ${isSave ? `
     <div class="grid-3">
       <label>${t('ed_save_req')} <select data-f="saveAbility">${abilityOpts(it.saveAbility)}</select></label>
-      <label>${t('ed_dc')} <input type="number" data-f="dc" value="${esc(it.dc)}" /></label>
+      <label>${t('ed_dc')} <span class="hint">${t('ed_dc_formula_hint')}</span><input type="text" data-f="dc" value="${esc(it.dc)}" placeholder="13" /></label>
       <label>${t('ed_onsave')} <select data-f="onSave">${opts([['none', t('opt_nodmg')], ['half', t('opt_halfdmg')]], it.onSave)}</select></label>
       <label>${t('ed_cond_fail')} <select data-f="condition">${opts([['', t('opt_none_f')], ...CONDITION_OPTIONS], it.condition)}</select></label>
       <label>${t('ed_duration')} <span class="hint">${t('ed_dur_hint')}</span><input type="number" data-f="condRounds" value="${esc(it.condRounds)}" /></label>
@@ -169,7 +196,14 @@ function render() {
 
 function renderPreview() {
   try {
-    document.getElementById('item-preview').textContent = JSON.stringify(buildStandaloneItem(state), null, 2);
+    const { item, rebuilt } = buildCurrent();
+    document.getElementById('item-preview').textContent = JSON.stringify(item, null, 2);
+    const banner = document.getElementById('item-editing');
+    banner.hidden = !loaded;
+    if (loaded) {
+      banner.querySelector('.reload-text').textContent = t('ii_editing', { name: loaded.source.name });
+      banner.querySelector('.reload-rebuilt').hidden = !rebuilt;
+    }
   } catch (err) {
     document.getElementById('item-preview').textContent = 'Errore: ' + err.message;
   }
@@ -180,6 +214,30 @@ export function getItemState() { return state; }
 export function initItemTab({ onAddToBatch }) {
   addToBatch = onAddToBatch || (() => {});
   const body = document.getElementById('item-form-body');
+
+  // Ricarica da JSON (round-trip): pannello sopra il form.
+  body.insertAdjacentHTML('beforebegin', jsonReloadHtml('item', 'ii_summary_item'));
+  const { armed } = initJsonReload({
+    prefix: 'item',
+    accept: (d) => ITEM_TYPES.includes(d.type),
+    other: (d) => d.type === 'spell',
+    noneKey: 'ii_none_item', otherKey: 'ii_other_tab_spell',
+    importFn: importItem,
+    hasData: () => Boolean(String(state.name || '').trim() || loaded),
+    onLoad: (data, source) => {
+      // Effetti nella forma completa dell'editor PRIMA di fotografare lo
+      // stato: così il solo ridisegno non li fa risultare "modificati".
+      state = { ...defaultItem(), ...data, effects: (data.effects || []).map(normalizeEffect) };
+      loaded = { source, orig: structuredClone(state) };
+      render();
+    },
+  });
+  document.getElementById('item-reset').addEventListener('click', (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
+    loaded = null;
+    state = defaultItem();
+    document.getElementById('item-import-report').hidden = true;
+    render();
+  }));
 
   body.addEventListener('input', (ev) => {
     // Prima gli eventi della sezione effetti (add/remove/preset/changes).
@@ -211,14 +269,14 @@ export function initItemTab({ onAddToBatch }) {
 
   document.getElementById('item-export').addEventListener('click', exportItem);
   document.getElementById('item-batch').addEventListener('click', () => {
-    const w = validateStandaloneItem(state);
+    const w = currentWarnings();
     if (w.length) { document.getElementById('item-warn').textContent = '⛔ ' + w.join('  •  '); return; }
     document.getElementById('item-warn').textContent = '';
-    addToBatch(buildStandaloneItem(state));
+    addToBatch(buildCurrent().item);
   });
   document.getElementById('item-copy').addEventListener('click', async () => {
     const btn = document.getElementById('item-copy');
-    try { await navigator.clipboard.writeText(JSON.stringify(buildStandaloneItem(state), null, 2)); btn.textContent = t('copied'); }
+    try { await navigator.clipboard.writeText(JSON.stringify(buildCurrent().item, null, 2)); btn.textContent = t('copied'); }
     catch { btn.textContent = t('clip_denied'); }
     setTimeout(() => { btn.textContent = t('btn_copy'); }, 1600);
   });
@@ -227,11 +285,11 @@ export function initItemTab({ onAddToBatch }) {
 }
 
 function exportItem() {
-  const warns = validateStandaloneItem(state);
+  const warns = currentWarnings();
   const warnBox = document.getElementById('item-warn');
   if (warns.length) { warnBox.textContent = '⛔ ' + warns.join('  •  '); return; }
   warnBox.textContent = '';
-  const item = buildStandaloneItem(state);
+  const { item } = buildCurrent();
   const slug = item.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   downloadJson(item, `fvttItem-${slug}.json`);
 }
