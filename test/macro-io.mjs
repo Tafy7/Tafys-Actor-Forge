@@ -654,6 +654,53 @@ console.log('\n— Selezione multipla di compendi —');
   check('selezione multipla in inglese', /Compendiums — several \(1\)/.test(F.env.content) && /Select visible/.test(F.env.content) && /Browser downloads/.test(F.env.content) && /⏹ Stop/.test(F.env.content));
 }
 
+console.log('\n— Incantesimi dei mostri: collegamento per nome durante l\'import —');
+{
+  const F = makeEnv();
+  // Compendi inventati: un modulo (regole 2014 e 2024) e il "sistema".
+  const mod = F.makePack('mio-modulo.incantesimi', 'Item', 'Incantesimi del modulo', false, { packageType: 'module', packageName: 'mio-modulo' });
+  const sys = F.makePack('sistema.incantesimi', 'Item', 'Incantesimi di sistema', false, { packageType: 'system', packageName: 'sistema' });
+  mod.index.set('modBrace2024', { _id: 'modBrace2024', name: 'Raggio di Brace', type: 'spell', system: { level: 2, source: { rules: '2024' } } });
+  sys.index.set('sysBrace2024', { _id: 'sysBrace2024', name: 'Raggio di Brace', type: 'spell', system: { level: 2, source: { rules: '2024' } } });
+  mod.index.set('modNebbia2014', { _id: 'modNebbia2014', name: 'Nebbia Cinerea', type: 'spell', system: { level: 1, source: { rules: '2014' } } });
+  sys.index.set('sysNebbia2024', { _id: 'sysNebbia2024', name: 'Nebbia Cinerea', type: 'spell', system: { level: 1, source: { rules: '2024' } } });
+  mod.index.set('modArco', { _id: 'modArco', name: 'Arco Cinereo', type: 'spell', system: { level: 3, source: { rules: '2024' } } });
+  mod.index.set('modNonSpell', { _id: 'modNonSpell', name: 'Pugnale', type: 'weapon', system: {} });
+  const caster = buildNpc({
+    name: 'Strega di Brace', size: 'med', creatureType: 'humanoid', subtype: '', alignment: '', cr: '4', rules: '2024',
+    sourceBook: '', sourcePage: '', str: '10', dex: '12', con: '12', int: '10', wis: '16', cha: '12',
+    saves: [], skills: {}, hpMax: '40', hpFormula: '', acCalc: 'default', acFlat: '',
+    walk: '30', fly: '', swim: '', climb: '', burrow: '', hover: false,
+    darkvision: '', blindsight: '', tremorsense: '', truesight: '', telepathy: '',
+    dr: '', di: '', dv: '', ci: '', languages: '', legact: '', legres: '', img: '', tokenImg: '', bio: '',
+    items: [{ name: 'Spellcasting', kind: 'spellcasting', activation: 'action', description: '', img: '', scAbility: 'wis', scDc: '13', scAttack: '',
+      scLevel: '', scNoMaterial: true, spellList: 'A volontà: Light, Raggio di Brace\n1/giorno: Nebbia Cinerea, Melf\'s Arco Cinereo, Incantesimo Inesistente', effects: [], onUse: [] }],
+  });
+  // Un'attività già collegata con un nome scelto dall'utente: non va toccata.
+  const first = Object.values(caster.items[0].system.activities)[0];
+  first.name = 'Raggio di Brace'; // un nome che ESISTE nei compendi: la macro non deve ricollegarlo
+  const firstUuid = first.spell.uuid;
+  await runMacro(F, { tab: 'import', payload: JSON.stringify(caster) });
+  const acts = Object.values(docsIn(F, 'Actor')[0]._data.items[0].system.activities);
+  const by = (n) => acts.find(a => a.name === n || a.spell.uuid.endsWith(n));
+  check('già collegato (Light, con un nome dato dall\'utente): non toccato', acts[0].spell.uuid === firstUuid && firstUuid.startsWith('Compendium.dnd5e.spells24.Item.') && acts[0].name === 'Raggio di Brace');
+  check('stesse regole: il MODULO vince sul sistema', by('modBrace2024')?.spell.uuid === 'Compendium.mio-modulo.incantesimi.Item.modBrace2024' && by('modBrace2024').name === '');
+  check('le regole del mostro (2024) contano più di modulo/sistema', !!by('sysNebbia2024'));
+  check('nome con il mago davanti ("Melf\'s Arco Cinereo") trovato senza', !!by('modArco') && by('modArco').spell.level === 3);
+  check('usi 1/giorno restano sull\'attività', by('sysNebbia2024').uses.max === '1');
+  check('non trovato: resta col nome + avviso', acts.some(a => a.name === 'Incantesimo Inesistente' && !a.spell.uuid)
+    && notes(F, 'warn').some(n => /1 avvis|Incantesimo Inesistente/.test(n)));
+  check('notifica: 3 incantesimi collegati', notes(F, 'info').some(n => /3 incantesimi collegati/.test(n)));
+}
+{
+  // Niente da collegare → gli indici dei compendi non si leggono nemmeno.
+  const F = makeEnv();
+  const p = F.makePack('mio-modulo.incantesimi', 'Item', 'Incantesimi', false, { packageType: 'module', packageName: 'mio-modulo' });
+  let reads = 0; const orig = p.getIndex.bind(p); p.getIndex = async (...a) => { reads += 1; return orig(...a); };
+  await runMacro(F, { tab: 'import', payload: JSON.stringify(npc) });
+  check('mostro senza incantesimi da collegare: nessun indice letto', reads === 0);
+}
+
 console.log('\n— Lingua: italiano / inglese —');
 {
   // I due dizionari devono avere le stesse chiavi, e ogni T("…") usato deve esistere.

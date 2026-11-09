@@ -843,3 +843,128 @@ export const SPELL_BASE = {
     "default": 0
   }
 };
+
+// Attività "cast" (lancia un incantesimo di un compendio): copiata dal
+// Monster Manual 2024 ufficiale (Spellcasting del Death Slaad), svuotata.
+// dnd5e crea da sola la copia "in cache" dell'incantesimo sull'actor.
+export const CAST_ACTIVITY_BASE = {
+  "type": "cast",
+  "spell": {
+    "uuid": "",
+    "challenge": {
+      "attack": null,
+      "save": null,
+      "override": false
+    },
+    "level": null,
+    "properties": [],
+    "spellbook": true,
+    "ability": ""
+  },
+  "_id": "",
+  "sort": 0,
+  "activation": {
+    "type": "action",
+    "value": null,
+    "override": false
+  },
+  "consumption": {
+    "scaling": {
+      "allowed": false
+    },
+    "spellSlot": true,
+    "targets": []
+  },
+  "description": {
+    "chatFlavor": ""
+  },
+  "duration": {
+    "units": "inst",
+    "concentration": false,
+    "override": false
+  },
+  "range": {
+    "override": false,
+    "units": "self"
+  },
+  "target": {
+    "template": {
+      "contiguous": false,
+      "units": "ft",
+      "stationary": false
+    },
+    "affects": {
+      "choice": false
+    },
+    "override": false,
+    "prompt": true
+  },
+  "uses": {
+    "spent": 0,
+    "recovery": [],
+    "max": ""
+  },
+  "name": "",
+  "img": "",
+  "flags": {},
+  "visibility": {
+    "level": {},
+    "requireAttunement": false,
+    "requireIdentification": false,
+    "requireMagic": false
+  },
+  "useConditionText": "",
+  "useConditionReason": "",
+  "effectConditionText": "",
+  "otherActivityId": null,
+  "macroData": {
+    "name": "",
+    "command": ""
+  },
+  "ignoreTraits": {
+    "idi": false,
+    "idr": false,
+    "idv": false,
+    "ida": false,
+    "idm": false
+  },
+  "midiProperties": {
+    "ignoreTraits": [],
+    "triggeredActivityId": "none",
+    "triggeredActivityConditionText": "",
+    "triggeredActivityTargets": "targets",
+    "triggeredActivityRollAs": "self",
+    "triggeredActivityConsume": true,
+    "triggeredActivityConfigure": true,
+    "autoConsume": false,
+    "forceConsumeDialog": "default",
+    "forceRollDialog": "default",
+    "forceDamageDialog": "default",
+    "confirmTargets": "default",
+    "autoTargetType": "any",
+    "autoTargetAction": "default",
+    "automationOnly": false,
+    "otherActivityCompatible": true,
+    "otherActivityAsParentType": true,
+    "identifier": "",
+    "displayActivityName": false,
+    "rollMode": "default",
+    "chooseEffects": false,
+    "toggleEffect": false,
+    "ignoreFullCover": false,
+    "removeChatButtons": "default",
+    "magicEffect": false,
+    "magicDamage": false,
+    "noConcentrationCheck": false,
+    "skipConcentrationCheck": false,
+    "autoCEEffects": "default"
+  },
+  "isOverTimeFlag": false,
+  "overTimeProperties": {
+    "saveRemoves": true,
+    "rollAs": "target",
+    "preRemoveConditionText": "",
+    "postRemoveConditionText": ""
+  }
+};
+ACTIVITY_BASES.cast = CAST_ACTIVITY_BASE;

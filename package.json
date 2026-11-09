@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node test/smoke.mjs && node test/item-roundtrip.mjs && node test/actor-roundtrip.mjs && node test/statblock.mjs && node test/macro-io.mjs && node test/presets.mjs",
+    "test": "node test/smoke.mjs && node test/item-roundtrip.mjs && node test/actor-roundtrip.mjs && node test/spellcasting.mjs && node test/statblock.mjs && node test/macro-io.mjs && node test/presets.mjs",
     "test:ui": "node test/ui-mobile.cjs"
   },
   "devDependencies": {

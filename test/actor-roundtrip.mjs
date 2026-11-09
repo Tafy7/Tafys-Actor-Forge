@@ -131,6 +131,12 @@ console.log('\n— Voci (azioni, tratti, incantesimi) —');
   check('voci riordinate: restano identiche (l\'ordine sulla scheda lo dà sort)', r6.modes.every(m => m === 'kept') && J(r6.actor.items.map(i => i._id)) === J([...src.items].reverse().map(i => i._id)));
 }
 
+console.log('\n— Documenti troppo vecchi —');
+{
+  const old = importActor({ name: 'Imp vecchio', type: 'npc', data: { attributes: { hp: { value: 10 } } }, items: [] });
+  check('actor di Foundry 0.x → niente form, avviso chiaro', old.data === null && old.source === null && /0\.x/.test(old.report.warn[0]));
+}
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);

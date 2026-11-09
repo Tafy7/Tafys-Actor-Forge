@@ -15,6 +15,7 @@ import { downloadJson } from '../utils/download.js';
 import { importItem, ITEM_TYPES } from '../parsers/item-import.js';
 import { overlayItem } from '../builders/overlay.js';
 import { initJsonReload, jsonReloadHtml } from './json-reload.js';
+import { draftStore } from './tab-draft.js';
 import { t, getLang } from '../i18n.js';
 
 const LANG = getLang();
@@ -25,6 +26,8 @@ const abEn = LANG === 'en';
 
 let state = defaultItem();
 let addToBatch = () => {};
+// Bozza automatica (stato + eventuale originale ricaricato).
+const draft = draftStore('tafys-forge-item-draft');
 // Oggetto RICARICATO da JSON: originale ripulito + stato del form appena
 // caricato (per sapere quali campi l'utente ha toccato). null = nuovo oggetto.
 let loaded = null;
@@ -207,6 +210,7 @@ function renderPreview() {
   } catch (err) {
     document.getElementById('item-preview').textContent = 'Errore: ' + err.message;
   }
+  draft.save(() => ({ v: 1, state, loaded }));
 }
 
 export function getItemState() { return state; }
@@ -232,12 +236,24 @@ export function initItemTab({ onAddToBatch }) {
       render();
     },
   });
-  document.getElementById('item-reset').addEventListener('click', (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
+  // Ricomincia da zero: dal riquadro "Stai modificando…" o dal pulsante Nuovo.
+  const reset = (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
     loaded = null;
     state = defaultItem();
+    draft.clear();
     document.getElementById('item-import-report').hidden = true;
+    document.getElementById('item-warn').textContent = '';
     render();
-  }));
+  });
+  document.getElementById('item-reset').addEventListener('click', reset);
+  document.getElementById('item-new').addEventListener('click', reset);
+
+  // Bozza automatica: si riparte da dove si era rimasti.
+  const saved = draft.load();
+  if (saved?.state) {
+    state = { ...defaultItem(), ...saved.state };
+    loaded = saved.loaded?.source && saved.loaded?.orig ? saved.loaded : null;
+  }
 
   body.addEventListener('input', (ev) => {
     // Prima gli eventi della sezione effetti (add/remove/preset/changes).

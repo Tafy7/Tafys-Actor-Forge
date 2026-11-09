@@ -624,6 +624,8 @@ aside h2 { margin: 0; font-size: 1rem; color: var(--accent-2); }
 .info-text { font-size: 0.9rem; line-height: 1.5; color: var(--text); }
 .info-text p { margin: 0 0 0.6rem; }
 .info-text ul { margin: 0.2rem 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.info-credits { font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; } /* URL lunghi: vanno a capo su telefono */
+.info-credits a { color: var(--accent-2); }
 .info-text code { background: var(--panel-2); padding: 0.05rem 0.3rem; border-radius: 4px; font-size: 0.85em; }
 .info-bye { margin-top: 1rem; color: var(--accent-2); font-weight: 600; }
 .preset-card {
@@ -1216,3 +1218,10 @@ legend.fold-toggle:focus-visible { outline: 2px solid var(--accent); outline-off
 .reload-banner .reload-text { flex: 1 1 16rem; min-width: 0; }
 .reload-banner .reload-rebuilt { flex-basis: 100%; color: var(--warn, #e0a030); white-space: pre-line; }
 .reload-banner[hidden], .reload-banner [hidden] { display: none !important; }
+
+/* ---------- Card "Incantesimi" (attività cast) ---------- */
+.sc-resolve { margin: 0.3rem 0 0.5rem; }
+.sc-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.3rem; }
+.sc-chip { font-size: 0.78rem; padding: 0.1rem 0.45rem; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+.sc-chip.ok { color: var(--ok, #6fbf73); border-color: currentColor; }
+.sc-chip.miss { color: var(--accent-2); border-style: dashed; }

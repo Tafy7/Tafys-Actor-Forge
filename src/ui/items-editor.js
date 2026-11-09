@@ -18,6 +18,7 @@ import { aaSectionHtml, applyAAEvent, loadAAIndex, aaIndexReady } from './aa-edi
 import { defaultAA } from '../builders/aa.js';
 import { applyOnUseEvent } from './onuse-editor.js';
 import { extrasSectionHtml } from './extras-editor.js';
+import { spellcastingSummary } from '../builders/spellcasting.js';
 
 // Coppie [id, etichetta localizzata] per le select delle condizioni.
 const _condLabels = byLang(CONDITION_LABELS, CONDITION_LABELS_EN, getLang());
@@ -58,6 +59,8 @@ function newItem() {
     riderSaveAbility: 'con', riderDc: '',
     usesMode: 'none', usesValue: '',
     img: '', description: '',
+    // Card "Incantesimi" (kind 'spellcasting'): attività cast verso i compendi.
+    scAbility: 'int', scDc: '', scAttack: '', scLevel: '', scNoMaterial: false, spellList: '',
     effects: [], // effetti DAE (Fase 3.2), vedi effects-editor.js
     aa: defaultAA(), // animazione Automated Animations (Fase 7)
     onUse: [], // On-Use Macros di Midi-QOL
@@ -80,6 +83,22 @@ function options(pairs, selected) {
   return pairs
     .map(([v, l]) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${l}</option>`)
     .join('');
+}
+
+const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+// Regole del mostro (2014/2024): decidono in quale compendio cercare gli incantesimi.
+let getRules = () => '2024';
+
+/** Elenco degli incantesimi della card: ✓ collegato al compendio di sistema, ✗ da cercare. */
+function scResolveHtml(item) {
+  const list = spellcastingSummary(item.spellList, getRules());
+  if (!list.length) return `<span class="hint">${t('sc_none')}</span>`;
+  const missing = list.filter(x => !x.found).length;
+  const chips = list.map(x => x.found
+    ? `<span class="sc-chip ok" title="${esc(x.srdName)} · SRD ${x.rules}${x.level ? ' · ' + x.level : ''}">✓ ${esc(x.name)}</span>`
+    : `<span class="sc-chip miss" title="${esc(t('sc_missing_title'))}">✗ ${esc(x.name)}</span>`).join(' ');
+  return `<div class="hint">${t('sc_summary', { n: list.length, ok: list.length - missing })}${missing ? ' · ' + t('sc_missing_hint') : ''}</div><div class="sc-chips">${chips}</div>`;
 }
 
 /** HTML di una singola card. I data-attribute legano input ↔ stato. */
@@ -107,6 +126,7 @@ function cardHtml(item, idx) {
           ['save', t('opt_save')],
           ['utility', t('opt_utility')],
           ['passive', t('opt_passive')],
+          ['spellcasting', t('opt_spellcasting')],
         ], item.kind)}</select>
       </label>
       ${item.kind !== 'passive' ? `
@@ -174,12 +194,25 @@ function cardHtml(item, idx) {
       <label>${t('ed_dc_save')} <input type="number" data-f="riderDc" value="${item.riderDc}" placeholder="11" /></label>` : ''}
     </div>` : ''}
 
+    ${item.kind === 'spellcasting' ? `
+    <div class="grid-3">
+      <label>${t('sc_ability')} <select data-f="scAbility">${abilityOptions(item.scAbility)}</select></label>
+      <label>${t('sc_dc')} <span class="hint">${t('sc_auto_hint')}</span><input type="number" data-f="scDc" value="${esc(item.scDc)}" placeholder="auto" /></label>
+      <label>${t('sc_attack')} <span class="hint">${t('sc_auto_hint')}</span><input type="number" data-f="scAttack" value="${esc(item.scAttack)}" placeholder="auto" /></label>
+      <label>${t('sc_level')} <span class="hint">${t('sc_level_hint')}</span><input type="number" data-f="scLevel" value="${esc(item.scLevel)}" min="0" max="20" /></label>
+      <label class="check">${t('sc_nomat')} <input type="checkbox" data-f="scNoMaterial" ${item.scNoMaterial ? 'checked' : ''} /></label>
+    </div>
+    <label>${t('sc_list')} <span class="hint">${t('sc_list_hint')}</span>
+      <textarea data-f="spellList" rows="4" placeholder="${esc(t('sc_list_ph'))}">${esc(item.spellList)}</textarea>
+    </label>
+    <div class="sc-resolve">${scResolveHtml(item)}</div>` : ''}
+
     ${hasDamage ? `
     <label>${t('ed_damage')} <span class="hint">${t('ed_damage_hint')}</span>
       <input type="text" data-f="damage" value="${item.damage.replace(/"/g, '&quot;')}" placeholder="${t('ed_damage_ph')}" />
     </label>` : ''}
 
-    ${item.kind !== 'passive' ? `
+    ${item.kind !== 'passive' && item.kind !== 'spellcasting' ? `
     <div class="grid-3">
       <label>${t('ed_uses')}
         <select data-f="usesMode">${options([
@@ -206,6 +239,9 @@ function cardHtml(item, idx) {
 let container;
 let onStructureChange = () => {};
 
+/** Ridisegna le card dall'esterno (es. cambio di regole 2014/2024). */
+export function refreshItems() { if (container) render(); }
+
 /** Ridisegna tutte le card (solo per cambi strutturali). */
 function render() {
   container.innerHTML = itemsState.map(cardHtml).join('');
@@ -216,8 +252,9 @@ function render() {
 /** Campi che cambiano la struttura della card → serve un re-render. */
 const STRUCTURAL = ['kind', 'attackType', 'usesMode', 'onHit'];
 
-export function initItemsEditor({ listEl, addBtn, onChange }) {
+export function initItemsEditor({ listEl, addBtn, onChange, rules }) {
   container = listEl;
+  if (typeof rules === 'function') getRules = rules;
   onStructureChange = onChange;
   ensureChangeKeysDatalist(); // autocomplete globale delle chiavi DAE
 
@@ -294,6 +331,11 @@ export function initItemsEditor({ listEl, addBtn, onChange }) {
     const field = ds.f;
     if (!field) return;
     item[field] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;
+    // Lista incantesimi: aggiorna solo il riepilogo ✓/✗ (niente re-render: il cursore resta dov'è).
+    if (field === 'spellList') {
+      const box = card.querySelector('.sc-resolve');
+      if (box) box.innerHTML = scResolveHtml(item);
+    }
     if (STRUCTURAL.includes(field)) {
       render();
       onStructureChange();

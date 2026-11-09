@@ -182,6 +182,8 @@ console.log('\n— Scelta del documento nel file —');
   check('array e documento singolo', pickDocuments([flare], d => d.type === 'spell').docs.length === 1 && pickDocuments(flare, d => d.type === 'spell').docs.length === 1);
   check('tipo non gestito → niente dati + avviso', importItem({ type: 'loot', name: 'x' }).data === null && importItem({ type: 'spell' }).report.warn[0].includes('Incantesimo'));
   check('oggetto nella tab Incantesimo → avviso', importSpell(lantern).data === null);
+  const old = { name: 'Spada vecchia', type: 'weapon', data: { damage: { parts: [['1d8', 'slashing']] } } };
+  check('documento di Foundry 0.x (data invece di system) → rifiutato con spiegazione', importItem(old).data === null && /0\.x/.test(importItem(old).report.warn[0]) && importSpell({ ...old, type: 'spell' }).data === null);
   check('cleanSource senza flag non esplode', J(cleanSource({ type: 'feat', system: {} }, {}).flags) === '{}');
 }
 

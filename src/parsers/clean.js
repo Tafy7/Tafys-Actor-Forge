@@ -16,6 +16,13 @@
  * contiamo e lo diciamo nel resoconto: l'utente sceglie un'immagine sua
  * (icons/…, systems/…, worlds/… o una cartella dei suoi dati).
  */
+/**
+ * Documento di una versione MOLTO vecchia di Foundry (0.x: i dati stanno in
+ * `data` invece che in `system`). Foundry 13 non lo importa così com'è:
+ * va aperto in un Foundry recente e riesportato.
+ */
+export const isLegacy = (doc) => Boolean(doc && typeof doc === 'object' && !doc.system && doc.data && typeof doc.data === 'object');
+
 const FOREIGN_IMG = /^\s*(?:(?:https?:)?\/\/|\/?modules\/)/i;
 export function portableImg(src, report) {
   const s = String(src || '').trim();

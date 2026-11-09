@@ -26,6 +26,8 @@ export function initInfoTab() {
       <h2>${t('info_tips_title')}</h2>
       <div class="info-text">${t('info_tips_html')}</div>
       <p class="info-bye">${t('info_bye')}</p>
+      <h2 id="credits">${t('info_credits_title')}</h2>
+      <div class="info-text info-credits">${t('info_credits_html')}</div>
     </div>
     <div class="info-col">
       <h2>${t('info_macros_title')}</h2>

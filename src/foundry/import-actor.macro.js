@@ -110,6 +110,8 @@
       iFail: "Actor Forge: creazione fallita — {msg}", iInPack: " nel compendio «{title}»",
       iDone: "Actor Forge: creati {n} documenti{where} · {counts} — {names}",
       iReIds: "Actor Forge: {n} documenti avevano un ID già presente e ne hanno ricevuto uno nuovo.",
+      iSpells: "Actor Forge: {n} incantesimi collegati ai compendi del mondo.",
+      iSpellMissing: "{actor}: incantesimo «{name}» non trovato in nessun compendio (resta senza collegamento: trascinalo a mano nell'attività).",
       rpConsole: "Actor Forge — elementi saltati:", rpWarn: "Actor Forge: {head}{n} avvisi: {first}{more}",
       rpMore: " … (elenco completo in console, F12)",
     },
@@ -170,6 +172,8 @@
       iFail: "Actor Forge: creation failed — {msg}", iInPack: " in the compendium “{title}”",
       iDone: "Actor Forge: created {n} documents{where} · {counts} — {names}",
       iReIds: "Actor Forge: {n} documents had an ID already in use and received a new one.",
+      iSpells: "Actor Forge: {n} spells linked to the world's compendiums.",
+      iSpellMissing: "{actor}: spell “{name}” not found in any compendium (left unlinked: drag it onto the activity by hand).",
       rpConsole: "Actor Forge — skipped elements:", rpWarn: "Actor Forge: {head}{n} warnings: {first}{more}",
       rpMore: " … (full list in the console, F12)",
     },
@@ -1074,6 +1078,30 @@
       groups.get(e.docName).push(clone);
     }
 
+    // 6b) Incantesimi dei mostri del Forge: le attività "cast" senza
+    //     collegamento (incantesimo non nei compendi di sistema) portano il
+    //     nome; qui lo cerchiamo nei compendi del mondo (moduli, homebrew,
+    //     traduzioni) e mettiamo l'UUID. dnd5e poi crea da sola la copia.
+    let linkedSpells = 0;
+    const spellIndex = await buildSpellIndex(groups);
+    for (const list of groups.values()) {
+      for (const doc of list) {
+        const rules = doc.system?.source?.rules === "2014" ? "2014" : "2024";
+        const items = doc.type === "npc" || doc.type === "character" ? (doc.items ?? []) : [doc];
+        for (const it of items) {
+          for (const act of Object.values(it.system?.activities ?? {})) {
+            if (act?.type !== "cast" || act.spell?.uuid || !act.name) continue;
+            const hit = pickSpell(spellIndex, act.name, rules);
+            if (!hit) { problems.push(T("iSpellMissing", { actor: doc.name, name: act.name })); continue; }
+            act.spell.uuid = hit.uuid;
+            if (act.spell.level == null && hit.level > 0) act.spell.level = hit.level;
+            act.name = "";
+            linkedSpells += 1;
+          }
+        }
+      }
+    }
+
     // 7) Creazione in blocco, un gruppo per tipo di documento.
     const created = [];
     const counts = [];
@@ -1093,10 +1121,63 @@
     const names = created.slice(0, 8).map((d) => d.name).join(", ") + (created.length > 8 ? "…" : "");
     say("info", T("iDone", { n: created.length, where, counts: counts.join(" · "), names }));
     if (reIds) say("warn", T("iReIds", { n: reIds }));
+    if (linkedSpells) say("info", T("iSpells", { n: linkedSpells }));
     if (problems.length) reportProblems(problems);
     // Comodità: se ne hai importato uno solo nel mondo, apriamo la sua scheda.
     if (!pack && created.length === 1) created[0].sheet?.render(true);
     return true;
+  }
+
+  // ---------- Incantesimi per nome (attività "cast" del Forge) ----------
+  // (function, non const: la finestra parte prima che questa riga venga eseguita)
+  function spellKey(s) {
+    return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/[’'`]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  }
+
+  /**
+   * Indice nome → incantesimi di TUTTI i compendi di oggetti (e del mondo),
+   * costruito solo se serve (c'è almeno un'attività cast da collegare).
+   * Legge solo gli indici: niente documenti caricati.
+   */
+  async function buildSpellIndex(groups) {
+    const needed = [...groups.values()].some((list) => list.some((doc) =>
+      (doc.items ?? [doc]).some((it) => Object.values(it.system?.activities ?? {}).some((a) => a?.type === "cast" && !a.spell?.uuid && a.name))));
+    const index = new Map();
+    if (!needed) return index;
+    const add = (name, entry) => {
+      const k = spellKey(name);
+      if (!k) return;
+      if (!index.has(k)) index.set(k, []);
+      index.get(k).push(entry);
+    };
+    for (const p of game.packs.filter((x) => x.documentName === "Item")) {
+      try {
+        const idx = await p.getIndex({ fields: ["type", "system.level", "system.source.rules"] });
+        for (const e of idx) {
+          if (e.type !== "spell") continue;
+          add(e.name, { uuid: e.uuid ?? `Compendium.${p.collection}.Item.${e._id}`, level: e.system?.level ?? 0, rules: e.system?.source?.rules ?? "", system: p.metadata?.packageType === "system" });
+        }
+      } catch (err) { console.warn("Actor Forge: indice saltato", p.collection, err); }
+    }
+    for (const it of game.items ?? []) {
+      if (it.type === "spell") add(it.name, { uuid: it.uuid, level: it.system?.level ?? 0, rules: it.system?.source?.rules ?? "", world: true });
+    }
+    return index;
+  }
+
+  /** Il migliore per nome: stesse regole del mostro, poi i compendi (moduli prima del sistema), poi il mondo. */
+  function pickSpell(index, name, rules) {
+    const keys = [spellKey(name)];
+    const stripped = String(name || "").replace(/^\s*[A-ZÀ-Ö][\w-]*['’]s\s+/, "");
+    if (stripped !== name) keys.push(spellKey(stripped));
+    for (const k of keys) {
+      const list = index.get(k);
+      if (!list?.length) continue;
+      const score = (e) => (e.rules === rules ? 0 : 4) + (e.world ? 2 : e.system ? 1 : 0);
+      return [...list].sort((a, b) => score(a) - score(b))[0];
+    }
+    return null;
   }
 
   // Avvisi raccolti: i primi in notifica, l'elenco completo in console (F12).

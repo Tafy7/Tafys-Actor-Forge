@@ -13,6 +13,8 @@
 import { NPC_BASE } from '../data/npc-base.js';
 import { SIZES, DAMAGE_TYPES, CONDITIONS, LANGUAGES, DAMAGE_BYPASSES } from '../data/constants.js';
 import { buildItem, parseDamageParts } from './item.js';
+import { buildSpellcastingItem } from './spellcasting.js';
+import { parseSpellGroups } from '../parsers/spellcasting.js';
 import { cleanImagePath, hasValidImageExt } from '../utils/img.js';
 
 /**
@@ -168,7 +170,25 @@ export function buildNpc(data) {
   if (ranges.darkvision > 0) token.sight.visionMode = 'darkvision';
 
   // --- Item embedded: attacchi, azioni, tratti (Fase 2) ---
-  actor.items = (data.items || []).map(buildItem);
+  // Il blocco Incantesimi ha un builder suo (attività "cast", compendio
+  // scelto in base alle regole del mostro).
+  actor.items = (data.items || []).map((d) => (d.kind === 'spellcasting' ? buildSpellcastingItem(d, data.rules) : buildItem(d)));
+
+  // --- Incantatore: caratteristica, livello e slot (dal primo blocco) ---
+  const sc = (data.items || []).find((d) => d.kind === 'spellcasting');
+  if (sc) {
+    if (sc.scAbility) sys.attributes.spellcasting = sc.scAbility;
+    const slots = parseSpellGroups(sc.spellList).filter((g) => g.mode === 'slots');
+    if (slots.length) {
+      // Incantatore "a slot" (2014): livello da incantatore + slot dello
+      // statblock (override = esattamente quelli scritti).
+      sys.attributes.spell.level = Number(sc.scLevel) || 0;
+      for (const g of slots) {
+        const key = `spell${g.level}`;
+        if (sys.spells[key]) sys.spells[key] = { value: g.slots, override: g.slots };
+      }
+    }
+  }
 
   return actor;
 }

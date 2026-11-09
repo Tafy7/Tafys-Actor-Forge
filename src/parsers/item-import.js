@@ -15,7 +15,7 @@
 // Modulo PURO (niente DOM): si testa con node.
 // ============================================================
 import { itemToDescriptor, partsToString, aaFromFlags, onUseFromFlags } from './actor-import.js';
-import { cleanSource } from './clean.js';
+import { cleanSource, isLegacy } from './clean.js';
 
 export { cleanSource };
 import { defaultAA } from '../builders/aa.js';
@@ -95,6 +95,7 @@ function behaviorOf(doc, report) {
  * ripulito su cui l'export riapplica i campi modificati.
  */
 export function importItem(doc, report = { ok: [], warn: [], skipped: [] }) {
+  if (isLegacy(doc)) { report.warn.push(t('ii_legacy')); return { data: null, source: null, report }; }
   if (!doc || !ITEM_TYPES.includes(doc.type)) {
     report.warn.push(doc?.type === 'spell' ? t('ii_is_spell')
       : doc?.type ? t('ii_bad_type', { type: doc.type }) : t('ii_not_item'));
@@ -154,6 +155,7 @@ function upcastOf(act) {
 
 /** JSON incantesimo → { data, source, report } (forma dello stato della Tab Incantesimo). */
 export function importSpell(doc, report = { ok: [], warn: [], skipped: [] }) {
+  if (isLegacy(doc)) { report.warn.push(t('ii_legacy')); return { data: null, source: null, report }; }
   if (!doc || doc.type !== 'spell') {
     report.warn.push(doc?.type ? t('ii_not_spell', { type: doc.type }) : t('ii_not_spell_json'));
     return { data: null, source: null, report };

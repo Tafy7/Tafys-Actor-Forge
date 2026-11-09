@@ -26,3 +26,17 @@ Non inventiamo mai lo schema dei dati: lo copiamo da export reali fatti da Found
 ## Progetto in sviluppo
 
 Il tool è completamente funzionante, verrà aggiornato con nuove features ed eventuali fix.
+
+## Crediti e licenze
+
+Strumento non ufficiale, non affiliato né approvato da Foundry Gaming LLC o da Wizards of the Coast. Foundry Virtual Tabletop e Dungeons & Dragons sono marchi dei rispettivi proprietari.
+
+Per collegare gli incantesimi dei mostri il Forge contiene nomi, livelli e id degli incantesimi dei compendi del sistema dnd5e (`src/data/srd-spells.js`):
+
+> This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.
+
+> This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.
+
+L'elenco delle animazioni (`src/data/jb2a-free-index.js`) deriva da [JB2A — Jules&Ben's Animated Assets](https://github.com/Jules-Bens-Aa/JB2A_DnD5e) (libreria gratuita), licenza [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/); i video non sono inclusi, le anteprime si caricano dal repository di JB2A.
+
+Il Forge funziona interamente nel browser: nessun account, nessun server, nessun dato raccolto.

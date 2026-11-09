@@ -19,7 +19,7 @@ import { initEncounterTab } from './ui/encounter-tab.js';
 import importerMacro from './foundry/import-actor.macro.js?raw';
 import { downloadJson } from './utils/download.js';
 import { ABILITIES, SIZES, CREATURE_TYPES } from './data/constants.js';
-import { initItemsEditor, getItems, setItems } from './ui/items-editor.js';
+import { initItemsEditor, getItems, setItems, refreshItems } from './ui/items-editor.js';
 import { createChipGroup } from './ui/chips.js';
 import { initMobile } from './ui/mobile.js';
 import {
@@ -449,6 +449,11 @@ function applyActorImport(text) {
     actor = npcs[0];
   }
   const { data, source, report } = importActor(actor);
+  if (!data) {
+    reportBox.hidden = false;
+    reportBox.textContent = '⛔ ' + report.warn.join('\n');
+    return;
+  }
   if (manyNote) report.warn.unshift(manyNote);
   setLoadedActor(null);
   restoreForm({ ...DEFAULT_STATE, ...data });
@@ -664,7 +669,10 @@ initItemsEditor({
   listEl: document.getElementById('items-list'),
   addBtn: document.getElementById('btn-add-item'),
   onChange: () => { schedulePreview(); autosave(); },
+  rules: () => val('rules'),
 });
+// Cambiando regole (2014/2024) cambia il compendio in cui cercare gli incantesimi.
+document.getElementById('rules').addEventListener('change', () => refreshItems());
 // L'input nella casella statblock NON deve rigenerare anteprima/validazione:
 // non fa parte dell'actor. Lo escludiamo dal ciclo (perf + niente churn).
 document.getElementById('npc-form').addEventListener('input', (ev) => {

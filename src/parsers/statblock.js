@@ -14,6 +14,8 @@
 //   state  = campi del form riconosciuti (parziale)
 //   report = { ok: [...], warn: [...], skipped: [...] } per l'utente
 // ============================================================
+import { isSpellcastingName, parseSpellGroups, parseSpellcastingHeader, formatSpellGroups, resolveSpell } from './spellcasting.js';
+import { getLang } from '../i18n.js';
 import {
   CREATURE_TYPE_LABELS, CONDITION_LABELS, DAMAGE_TYPE_LABELS, LANGUAGE_LABELS,
 } from '../data/constants.js';
@@ -656,6 +658,26 @@ function entryToItem(parsed, activation, state, report) {
     onHit: 'none', condition: '', condRounds: '',
     riderSaveAbility: 'con', riderDc: '', effects: [],
   };
+
+  // --- Blocco Incantesimi: diventa la card "Incantesimi" (attività cast) ---
+  if (isSpellcastingName(name)) {
+    const groups = parseSpellGroups(body);
+    if (groups.length) {
+      const head = parseSpellcastingHeader(body);
+      const rules = state.rules === '2014' || /\bslots?\b|\bslot\b|spellcaster\b|incantatore di/i.test(body) ? '2014' : '2024';
+      const all = groups.flatMap(g => g.spells);
+      const found = all.filter(sp => resolveSpell(sp.name, rules)).length;
+      report.ok.push(`Incantesimi: ${name} — ${all.length} (${found} collegati ai compendi di sistema)`);
+      if (found < all.length) {
+        report.warn.push(`${name}: ${all.length - found} incantesimi non trovati nei compendi di sistema (${all.filter(sp => !resolveSpell(sp.name, rules)).map(sp => sp.name).join(', ')}): li cerca la macro del Forge all'import, oppure correggi il nome (in inglese).`);
+      }
+      return {
+        ...base, kind: 'spellcasting',
+        scAbility: head.ability || 'int', scDc: head.dc, scAttack: head.attack, scLevel: head.casterLevel,
+        scNoMaterial: head.noMaterial, spellList: formatSpellGroups(groups, getLang()),
+      };
+    }
+  }
 
   const atk = findAttack(body);
   const save = findSave(body);

@@ -15,6 +15,7 @@ import { downloadJson } from '../utils/download.js';
 import { importSpell, ITEM_TYPES } from '../parsers/item-import.js';
 import { overlaySpell } from '../builders/overlay.js';
 import { initJsonReload, jsonReloadHtml } from './json-reload.js';
+import { draftStore } from './tab-draft.js';
 import { t, getLang } from '../i18n.js';
 
 const LANG = getLang();
@@ -25,6 +26,8 @@ const abEn = LANG === 'en';
 
 let state = defaultSpell();
 let addToBatch = () => {};
+// Bozza automatica (stato + eventuale originale ricaricato).
+const draft = draftStore('tafys-forge-spell-draft');
 // Incantesimo RICARICATO da JSON (vedi item-tab): null = incantesimo nuovo.
 let loaded = null;
 
@@ -194,6 +197,7 @@ function renderPreview() {
   } catch (err) {
     document.getElementById('spell-preview').textContent = 'Errore: ' + err.message;
   }
+  draft.save(() => ({ v: 1, state, loaded }));
 }
 
 export function initSpellTab({ onAddToBatch }) {
@@ -217,12 +221,24 @@ export function initSpellTab({ onAddToBatch }) {
       render();
     },
   });
-  document.getElementById('spell-reset').addEventListener('click', (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
+  // Ricomincia da zero: dal riquadro "Stai modificando…" o dal pulsante Nuovo.
+  const reset = (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
     loaded = null;
     state = defaultSpell();
+    draft.clear();
     document.getElementById('spell-import-report').hidden = true;
+    document.getElementById('spell-warn').textContent = '';
     render();
-  }));
+  });
+  document.getElementById('spell-reset').addEventListener('click', reset);
+  document.getElementById('spell-new').addEventListener('click', reset);
+
+  // Bozza automatica: si riparte da dove si era rimasti.
+  const saved = draft.load();
+  if (saved?.state) {
+    state = { ...defaultSpell(), ...saved.state };
+    loaded = saved.loaded?.source && saved.loaded?.orig ? saved.loaded : null;
+  }
 
   body.addEventListener('input', (ev) => {
     const res = applyEffectsEvent(state, ev);

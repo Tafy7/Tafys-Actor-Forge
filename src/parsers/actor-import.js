@@ -11,7 +11,7 @@
 // silenzio. Modulo PURO (niente DOM): si testa col round-trip sui golden.
 // ============================================================
 import { DAMAGE_BYPASSES } from '../data/constants.js';
-import { portableImg, cleanActorSource } from './clean.js';
+import { portableImg, cleanActorSource, isLegacy } from './clean.js';
 import { t } from '../i18n.js';
 
 export { portableImg };
@@ -201,6 +201,7 @@ export const stripHtml = (s) => String(s || '').replace(/<[^>]+>/g, '').trim();
  * IMPORT principale: JSON actor Foundry → { data (descrittore form), report }.
  */
 export function importActor(actor, report = { ok: [], warn: [], skipped: [] }) {
+  if (isLegacy(actor)) { report.warn.push(t('ii_legacy')); return { data: null, source: null, report }; }
   if (!actor || actor.type !== 'npc') {
     report.warn.push(actor?.type ? `Tipo "${actor.type}" non supportato dall'import (serve un NPC/mostro).` : 'JSON non riconosciuto come actor.');
   }
