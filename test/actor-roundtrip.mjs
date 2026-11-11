@@ -5,6 +5,8 @@ import { importActor } from '../src/parsers/actor-import.js';
 import { buildNpc } from '../src/builders/npc.js';
 import { overlayActor } from '../src/builders/actor-overlay.js';
 import { validateActor } from '../src/builders/validate.js';
+import { resolveDc, attacksFromMonster } from '../src/tools/dpr.js';
+import { esc } from '../src/utils/html.js';
 
 let failures = 0;
 const check = (label, ok) => { console.log(`  ${ok ? '✔' : '✘'} ${label}`); if (!ok) failures++; };
@@ -114,6 +116,10 @@ console.log('\n— Voci (azioni, tratti, incantesimi) —');
   const a = Object.values(w.system.activities)[0];
   check('danno cambiato → attività ricostruita con il nuovo danno', r2.modes[0] === 'patched' && a.damage.parts.length === 2 && a.damage.parts[0].denomination === 10);
   check('…dado base dell\'arma svuotato (niente danno contato due volte)', !w.system.damage.base.number);
+  check('…caratteristica "automatica" dell\'attacco conservata (non forzata a FOR)', imp.data.items[0].ability === '' && a.attack.ability === '');
+  const rS = run(d => { d.items[1].damage = '8d6 fire'; });
+  const sv = Object.values(rS.actor.items[1].system.activities).find(x => x.type === 'save');
+  check('CD calcolata dalla caratteristica: nel form è una formula e ricostruendo NON diventa 10', imp.data.items[1].dc === '8 + @prof + @abilities.con.mod' && sv.save.dc.formula === '8 + @prof + @abilities.con.mod');
   check('…flag, id, ordine e descrizione della voce restano', w._id === 'martelloBrace001' && w.sort === 100 && w.flags['midi-qol'].onUseMacroName === '[postDamageRoll]ItemMacro' && w.system.description.value === '<p>Colpo rovente.</p>');
   check('…le altre voci sono identiche', J(r2.actor.items.slice(1)) === J(src.items.slice(1)));
   check('…validazione: solo riferimenti della voce rattoppata, niente errori', validateActor(r2.actor, { loaded: true, itemMode: modeOf(r2) }).filter(i => i.level === 'error').length === 0);
@@ -129,6 +135,19 @@ console.log('\n— Voci (azioni, tratti, incantesimi) —');
 
   const r6 = run(d => { d.items.reverse(); });
   check('voci riordinate: restano identiche (l\'ordine sulla scheda lo dà sort)', r6.modes.every(m => m === 'kept') && J(r6.actor.items.map(i => i._id)) === J([...src.items].reverse().map(i => i._id)));
+}
+
+console.log('\n— Strumenti e sicurezza —');
+{
+  const d = { cr: '5', str: '18', dex: '14', con: '16', int: '10', wis: '12', cha: '8', items: [] };
+  check('resolveDc: numero, formula con @prof e caratteristica, CD da incantatore', resolveDc('15', d, 3) === 15
+    && resolveDc('8 + @prof + @abilities.con.mod', d, 3) === 14 && resolveDc('@attributes.spell.dc', d, 3) === 12);
+  check('resolveDc: vuoto o non calcolabile → 10', resolveDc('', d, 3) === 10 && resolveDc('1d4 + 8', d, 3) === 10);
+  const rows = attacksFromMonster({ ...d, items: [
+    { kind: 'attack', name: 'Arco', attackType: 'ranged', ability: '', damage: '1d8 + @mod piercing' },
+    { kind: 'attack', name: 'Maglio', attackType: 'melee', ability: '', damage: '2d6 + @mod bludgeoning' }] });
+  check('DPR: caratteristica automatica = DES a distanza (+5), FOR in mischia (+7)', rows[0].atkBonus === 5 && rows[1].atkBonus === 7);
+  check('esc(): niente HTML eseguibile da dati importati', esc('</textarea><img src=x onerror="a()">') === '&lt;/textarea&gt;&lt;img src=x onerror=&quot;a()&quot;&gt;' && esc("Tom & 'Jerry'") === 'Tom &amp; &#39;Jerry&#39;' && esc(null) === '');
 }
 
 console.log('\n— Documenti troppo vecchi —');

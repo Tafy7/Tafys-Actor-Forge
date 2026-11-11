@@ -6,8 +6,8 @@
 // ============================================================
 import { ONUSE_TIMINGS, newOnUseRow } from '../builders/onuse.js';
 import { t } from '../i18n.js';
+import { esc } from '../utils/html.js';
 
-const esc = (s) => String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 function rowHtml(r, i) {
   return `

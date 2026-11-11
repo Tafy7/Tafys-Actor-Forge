@@ -15,6 +15,7 @@
 // ============================================================
 import { CHANGE_KEYS, CHANGE_MODES, EFFECT_PRESETS, presetById, keyDefaults } from '../data/effect-keys.js';
 import { t } from '../i18n.js';
+import { esc } from '../utils/html.js';
 
 /** Descrittore di un nuovo effetto vuoto (parte con una riga di modifica). */
 export function newEffect() {
@@ -55,7 +56,6 @@ export function ensureChangeKeysDatalist() {
   document.body.appendChild(dl);
 }
 
-const esc = (s) => String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 function options(pairs, selected) {
   return pairs

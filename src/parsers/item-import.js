@@ -14,7 +14,7 @@
 //
 // Modulo PURO (niente DOM): si testa con node.
 // ============================================================
-import { itemToDescriptor, partsToString, aaFromFlags, onUseFromFlags } from './actor-import.js';
+import { itemToDescriptor, partsToString, aaFromFlags, onUseFromFlags, dcFromSave } from './actor-import.js';
 import { cleanSource, isLegacy } from './clean.js';
 
 export { cleanSource };
@@ -45,22 +45,6 @@ function rebuildLosses(doc) {
 }
 
 const str = (v) => (v == null ? '' : String(v));
-
-/**
- * CD dell'attività principale. Gli oggetti ufficiali spesso non hanno un
- * numero ma la CALCOLANO (dalla caratteristica di chi li usa, o dalla CD
- * da incantatore): la traduciamo nella formula equivalente, così anche
- * ricostruendo il comportamento la CD resta quella giusta.
- */
-function dcOf(doc, fallback) {
-  const acts = Object.values(doc.system?.activities || {});
-  const main = acts.find(a => !a.midiProperties?.automationOnly && a.type === 'save');
-  const dc = main?.save?.dc;
-  if (!dc || String(dc.formula || '').trim()) return fallback;
-  if (dc.calculation === 'spellcasting') return '@attributes.spell.dc';
-  if (/^(str|dex|con|int|wis|cha)$/.test(dc.calculation || '')) return `8 + @prof + @abilities.${dc.calculation}.mod`;
-  return fallback;
-}
 
 /** Righe "ok" e avvisi comuni a item e incantesimi. */
 function finishReport(doc, data, report) {
@@ -134,7 +118,6 @@ export function importItem(doc, report = { ok: [], warn: [], skipped: [] }) {
     featType: /^[a-zA-Z]+$/.test(sys.type?.value || '') ? sys.type.value : 'monster',
     requirements: str(sys.requirements),
     damage,
-    dc: dcOf(doc, b.dc),
     magicalDamage: false,
     aa: aaFromFlags(doc.flags?.autoanimations) || defaultAA(),
     onUse: onUseFromFlags(doc),
@@ -170,7 +153,7 @@ export function importSpell(doc, report = { ok: [], warn: [], skipped: [] }) {
   const tgt = sys.target || {};
   const kind = main?.type === 'attack' ? 'attack' : main?.type === 'save' ? 'save' : 'utility';
   const dcCalc = main?.save?.dc?.calculation;
-  const flatDc = main?.type === 'save' && dcCalc !== 'spellcasting' && dcOf(doc, String(main.save?.dc?.formula || '').trim());
+  const flatDc = main?.type === 'save' && dcCalc !== 'spellcasting' && dcFromSave(main.save);
   const data = {
     ...b,
     name: doc.name || '',

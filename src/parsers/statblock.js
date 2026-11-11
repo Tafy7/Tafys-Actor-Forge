@@ -664,7 +664,7 @@ function entryToItem(parsed, activation, state, report) {
     const groups = parseSpellGroups(body);
     if (groups.length) {
       const head = parseSpellcastingHeader(body);
-      const rules = state.rules === '2014' || /\bslots?\b|\bslot\b|spellcaster\b|incantatore di/i.test(body) ? '2014' : '2024';
+      const rules = state.rules || (/\bslots?\b|spellcaster\b|incantatore di/i.test(body) ? '2014' : '2024');
       const all = groups.flatMap(g => g.spells);
       const found = all.filter(sp => resolveSpell(sp.name, rules)).length;
       report.ok.push(`Incantesimi: ${name} — ${all.length} (${found} collegati ai compendi di sistema)`);
@@ -771,11 +771,33 @@ const REGION_BY_SECTION = {
   'traits': 'traits', 'trait': 'traits', 'tratti': 'traits',
 };
 
+/**
+ * Regole dello statblock dal suo FORMATO: il 2024 scrive "Melee Attack Roll:",
+ * "Dexterity Saving Throw: DC 14", "CR 6 (XP 2,300; PB +3)", "Initiative +2";
+ * il 2014 "Melee Weapon Attack: +5 to hit", "DC 14 Dexterity saving throw",
+ * "Challenge 6 (2,300 XP)". Ritorna '2014', '2024' oppure '' (non si capisce).
+ * Serve a scegliere il compendio giusto per gli incantesimi e le regole dell'actor.
+ */
+export function detectRules(text) {
+  const count = (re) => (String(text).match(re) || []).length;
+  const s2024 = count(/\bAttack Roll:/gi) + count(/Saving Throw:\s*(?:DC|CD)/gi) + count(/^CR\s+[\d/]+\s*\(/gim)
+    + count(/\bXP\s+[\d.,]+;\s*PB\b/gi) + count(/^Initiative\s+[+-]/gim) + count(/\b(?:Failure|Success|Trigger|Response):/g)
+    + count(/Tiro per Colpire/gi) + count(/^(?:GS|CR)\s+[\d/]+\s*\((?:PE|XP)/gim);
+  const s2014 = count(/\b(?:Weapon|Spell) Attack:/gi) + count(/\bto hit\b/gi) + count(/^Challenge\s+[\d/]/gim)
+    + count(/(?:DC|CD)\s*\d+\s+\w+\s+saving throw/gi) + count(/Attacco con (?:arma|incantesim)/gi) + count(/^Sfida\s+[\d/]/gim)
+    + count(/\bspell slots?\b|\(\d+ slots?\)/gi);
+  if (s2024 > s2014) return '2024';
+  if (s2014 > s2024) return '2014';
+  return '';
+}
+
 export function parseStatblock(raw) {
   const report = { ok: [], warn: [], skipped: [] };
   const state = {};
   const text = normalizeText(raw);
   if (!text.trim()) return { state, report };
+  const rules = detectRules(text);
+  if (rules) { state.rules = rules; report.ok.push(`Regole: ${rules} (dal formato dello statblock)`); }
 
   const entries = toEntries(text);
   parseAbilities(text, state, report);

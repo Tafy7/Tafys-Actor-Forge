@@ -10,6 +10,7 @@
 // pubblico della libreria free (CORS aperto, verificato).
 // ============================================================
 import { t } from '../i18n.js';
+import { esc } from '../utils/html.js';
 
 let INDEX = null;          // { 'fireball.explosion.orange': 'Library/...webm', ... }
 let RAW_BASE = '';
@@ -28,7 +29,6 @@ export function loadAAIndex() {
 }
 export const aaIndexReady = () => INDEX !== null;
 
-const esc = (s) => String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 /** Filtra l'indice: ogni parola della query deve comparire nel path. */
 function search(query, limit = 80) {

@@ -109,12 +109,31 @@ const resolveRefs = (dmg, mod, prof) =>
  * Il conteggio parte da 1: il multiattacco (es. "fa tre attacchi") lo regoli
  * tu, perché sta nella descrizione dell'azione Multiattacco, non nell'item.
  */
+/**
+ * CD del form → numero: accetta un numero o una formula semplice di Foundry
+ * (somme di numeri, @prof, @abilities.X.mod, @attributes.spell.dc). Se non
+ * si riesce a calcolarla: 10, come prima.
+ */
+export function resolveDc(dc, data, prof) {
+  const mod = (ab) => abilityMod(data[ab]);
+  const caster = (data.items || []).find((i) => i.kind === 'spellcasting')?.scAbility;
+  const spellMod = caster ? mod(caster) : Math.max(mod('int'), mod('wis'), mod('cha'));
+  const s = String(dc ?? '').trim()
+    .replace(/@attributes\.spell\.dc\b/g, String(8 + prof + spellMod))
+    .replace(/@abilities\.(str|dex|con|int|wis|cha)\.mod\b/g, (_, ab) => String(mod(ab)))
+    .replace(/@prof\b/g, String(prof));
+  if (!/^[\d\s+-]+$/.test(s) || !/\d/.test(s)) return 10;
+  const n = (s.replace(/\s+/g, '').match(/[+-]?\d+/g) || []).reduce((a, x) => a + Number(x), 0);
+  return n > 0 ? n : 10;
+}
+
 export function attacksFromMonster(data) {
   const prof = profFromCR(crToNum(data.cr));
   const rows = [];
   for (const it of data.items || []) {
     if (it.kind === 'attack' && it.damage) {
-      const mod = abilityMod(data[it.ability || 'str']);
+      // Caratteristica "automatica" (vuota): FOR in mischia, DES a distanza.
+      const mod = abilityMod(data[it.ability || (it.attackType === 'ranged' ? 'dex' : 'str')]);
       rows.push({
         name: it.name || 'Attacco', type: 'attack',
         dice: resolveRefs(it.damage, mod, prof), flat: 0,
@@ -125,7 +144,7 @@ export function attacksFromMonster(data) {
       rows.push({
         name: it.name || 'TS', type: 'save',
         dice: resolveRefs(it.damage, mod, prof), flat: 0,
-        atkBonus: Number(it.dc) || 10, // per i save qui "atkBonus" è la CD
+        atkBonus: resolveDc(it.dc, data, prof), // per i save qui "atkBonus" è la CD
         half: it.onSave === 'half', targetSave: 0, count: 1,
       });
     }

@@ -17,11 +17,11 @@ import { overlaySpell } from '../builders/overlay.js';
 import { initJsonReload, jsonReloadHtml } from './json-reload.js';
 import { draftStore } from './tab-draft.js';
 import { t, getLang } from '../i18n.js';
+import { esc } from '../utils/html.js';
 
 const LANG = getLang();
 const condLabels = byLang(CONDITION_LABELS, CONDITION_LABELS_EN, LANG);
 const CONDITION_OPTIONS = CONDITIONS.map(c => [c, condLabels[c] ?? c]);
-const esc = (s) => String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const abEn = LANG === 'en';
 
 let state = defaultSpell();
@@ -68,7 +68,7 @@ function defaultSpell() {
 // Un valore che il menu non elenca (arriva da un incantesimo ricaricato) resta
 // visibile come opzione in più: niente cambi silenziosi.
 const opts = (pairs, sel) => {
-  const list = sel && !pairs.some(([v]) => v === sel) ? [...pairs, [sel, `${sel} ✳`]] : pairs;
+  const list = sel && !pairs.some(([v]) => v === sel) ? [...pairs, [sel, `${esc(sel)} ✳`]] : pairs; // valore dai dati importati: va scappato
   return list.map(([v, l]) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
 };
 const abilityOpts = (sel) => ABILITIES.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${abEn ? a.en : a.label}</option>`).join('');
@@ -147,7 +147,7 @@ function formHtml(it) {
       ${it.onHit !== 'none' ? `<label>${t('ed_condition')} <select data-f="condition">${opts(CONDITION_OPTIONS, it.condition)}</select></label>` : ''}
       ${it.onHit === 'save' ? `
       <label>${t('ed_save_avoid')} <select data-f="riderSaveAbility">${abilityOpts(it.riderSaveAbility)}</select></label>
-      <label>${t('ed_dc_save')} <input type="number" data-f="riderDc" value="${esc(it.riderDc)}" /></label>` : ''}
+      <label>${t('ed_dc_save')} <input type="text" data-f="riderDc" value="${esc(it.riderDc)}" /></label>` : ''}
     </div>` : ''}
     ${isSave ? `
     <div class="grid-3">

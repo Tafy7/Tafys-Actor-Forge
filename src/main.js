@@ -12,12 +12,15 @@ import { initItemTab } from './ui/item-tab.js';
 import { initSpellTab } from './ui/spell-tab.js';
 import { initInfoTab } from './ui/info-tab.js';
 import { initThemePicker } from './ui/theme.js';
+import { initSectionNav } from './ui/section-nav.js';
 import { initCRReadout, renderCR } from './ui/cr-readout.js';
 import { initEncounterTab } from './ui/encounter-tab.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
 // La macro vive come vero file .js (lintabile), qui la copiamo solo negli appunti.
 import importerMacro from './foundry/import-actor.macro.js?raw';
 import { downloadJson } from './utils/download.js';
+import { esc } from './utils/html.js';
+import { armedConfirm } from './utils/confirm.js';
 import { ABILITIES, SIZES, CREATURE_TYPES } from './data/constants.js';
 import { initItemsEditor, getItems, setItems, refreshItems } from './ui/items-editor.js';
 import { createChipGroup } from './ui/chips.js';
@@ -170,7 +173,6 @@ function readForm() {
 
 // ---------- Anteprima live ed export ----------
 
-const escHtml = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 /** Disegna il pannello di validazione strutturale (verde se tutto ok). */
 function renderValidation(issues) {
@@ -189,7 +191,7 @@ function renderValidation(issues) {
   if (errors.length) parts.push(t('val_errors', { n: errors.length, s: plur(errors.length) }));
   if (warns.length) parts.push(t('val_warns', { n: warns.length, s: LANG === 'en' ? (warns.length > 1 ? 's' : '') : (warns.length > 1 ? 'i' : 'o') }));
   const head = parts.join(' · ');
-  const li = (i) => `<li class="${i.level}">${escHtml(i.msg)}</li>`;
+  const li = (i) => `<li class="${i.level}">${esc(i.msg)}</li>`;
   box.innerHTML = `<div class="val-head">${head}</div><ul>${errors.map(li).join('')}${warns.map(li).join('')}</ul>`;
 }
 
@@ -231,12 +233,19 @@ function renderPreview() {
 const RELOAD_KEY = 'tafys-forge-actor-reload';
 let loadedActor = null;
 
+let reloadStored = true; // false = l'originale non è entrato nel salvataggio del browser
+
 function setLoadedActor(v) {
   loadedActor = v || null;
+  reloadStored = true;
   try {
     if (loadedActor) localStorage.setItem(RELOAD_KEY, JSON.stringify(loadedActor));
     else localStorage.removeItem(RELOAD_KEY);
-  } catch { /* storage pieno: vale finché la pagina resta aperta */ }
+  } catch {
+    // Storage pieno o disattivato: l'originale vale finché la pagina resta
+    // aperta. Lo diciamo nel riquadro, perché ricaricando si perderebbe.
+    reloadStored = false;
+  }
 }
 
 /**
@@ -272,6 +281,7 @@ function renderReloadBanner(ov) {
     r.rebuilt.length && t('ai_rebuilt', { list: r.rebuilt.join(', ') }),
     r.added.length && t('ai_added', { list: r.added.join(', ') }),
     r.removed.length && t('ai_removed', { list: r.removed.join(', ') }),
+    !reloadStored && t('ai_not_stored'),
   ].filter(Boolean) : [];
   const box = banner.querySelector('.reload-rebuilt');
   box.hidden = !lines.length;
@@ -371,31 +381,6 @@ function exportJson() {
   downloadJson(actor, `fvttActor-${slug}.json`);
 }
 
-// ---------- Conferma NON bloccante ----------
-// I dialog nativi confirm()/alert() BLOCCANO tutti gli eventi della pagina
-// e negli webview embedded (es. il browser di VS Code) possono far sembrare
-// l'app piantata. Li sostituiamo con un doppio-click: il primo "arma" il
-// pulsante (cambia testo), il secondo entro 4s esegue l'azione.
-const _armed = new WeakMap();
-function armedConfirm(btn, confirmLabel, action) {
-  if (_armed.has(btn)) {
-    clearTimeout(_armed.get(btn).timer);
-    btn.textContent = _armed.get(btn).original;
-    btn.classList.remove('armed');
-    _armed.delete(btn);
-    action();
-    return;
-  }
-  const original = btn.textContent;
-  btn.textContent = confirmLabel;
-  btn.classList.add('armed');
-  const timer = setTimeout(() => {
-    btn.textContent = original;
-    btn.classList.remove('armed');
-    _armed.delete(btn);
-  }, 4000);
-  _armed.set(btn, { original, timer });
-}
 
 // ---------- Import da statblock (Fase 4) ----------
 // Il parser produce uno stato PARZIALE del form: lo appoggiamo sopra i
@@ -548,8 +533,8 @@ function updateBatchUI() {
   const list = document.getElementById('batch-list');
   list.innerHTML = batch.map((doc, i) => `
     <div class="batch-row">
-      <span class="batch-name">${BATCH_ICONS[doc.type] || '📦'} ${escHtml(doc.name || '?')}</span>
-      <span class="hint">${escHtml(doc.type)}</span>
+      <span class="batch-name">${BATCH_ICONS[doc.type] || '📦'} ${esc(doc.name || '?')}</span>
+      <span class="hint">${esc(doc.type)}</span>
       <button type="button" class="remove" data-bdel="${i}" title="${t('batch_remove_one')}">✖</button>
     </div>`).join('') || `<span class="hint">${t('batch_empty')}</span>`;
 }
@@ -796,3 +781,6 @@ renderPreview(); // prima anteprima
 
 // Telefono: barra azioni + foglio anteprima, sezioni richiudibili.
 initMobile();
+// Indice delle sezioni (visibile nel design Studio): dopo initMobile, che
+// rende richiudibili le sezioni.
+initSectionNav();

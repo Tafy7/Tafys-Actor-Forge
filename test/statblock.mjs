@@ -526,6 +526,16 @@ check('sdoppiamento: azioni leggendarie riconosciute', (sd.items || []).some(i =
 check('sdoppiamento: nessun residuo raddoppiato negli item', !(sd.items || []).some(i => /AAcc|LLee|jjii/.test(i.name + ' ' + (i.description || ''))));
 check('sdoppiamento: numeri NON toccati (HP 451, 225 intatti)', sd.hpMax === '451' && (sd.items || []).some(i => /\(225\)/.test(i.description || '')));
 
+// ------------------------------------------------------------
+// Regole rilevate dal formato (scelgono il compendio degli incantesimi).
+// ------------------------------------------------------------
+console.log('\n— Regole dal formato dello statblock —');
+check('formato 2014 inglese ("Weapon Attack … to hit", "Challenge") → 2014', s1.rules === '2014' && s8.rules === '2014');
+check('formato 2014 italiano ("Attacco con arma … per colpire") → 2014', s3.rules === '2014');
+check('formato 2024 ("Attack Roll:", "Saving Throw: DC") → 2024', s9.rules === '2024');
+check('resoconto: le regole rilevate sono dichiarate', r9.ok.some(x => /^Regole: 2024/.test(x)) && r1.ok.some(x => /^Regole: 2014/.test(x)));
+check('testo senza indizi → regole non toccate', parseStatblock('Coso\nMedium beast, unaligned\nArmor Class 10\nHit Points 5 (1d8)').state.rules === undefined);
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);

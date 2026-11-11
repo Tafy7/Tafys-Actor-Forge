@@ -60,7 +60,7 @@ function serve() {
   const shown = (p, sel) => p.evaluate((s) => { const el = document.querySelector(s); return !!el && getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0; }, sel);
 
   console.log('— Telefono 390×844: nessuno scroll orizzontale, in nessuna tab e in nessun tema —');
-  for (const theme of ['taf', 'avernus', 'parchment', 'contrast', 'spelljammer', 'barovia']) {
+  for (const theme of ['taf', 'avernus', 'parchment', 'contrast', 'spelljammer', 'barovia', 'studio', 'studio-light']) {
     const p = await page(390, 844, theme);
     const bad = [];
     for (const tab of ['npc', 'item', 'spell', 'dpr', 'enc', 'info']) {
@@ -173,6 +173,64 @@ function serve() {
     check('tab con etichetta completa', await shown(p, '.tab-full') && !(await shown(p, '.tab-m .tab-ico')));
     check('sottotitolo completo con versione', /Foundry VTT 13.*v0\.\d+/.test(await p.textContent('.subtitle')));
     check('nessuno scroll orizzontale', await noHScroll(p));
+    check('nessun errore JS', p.errors.length === 0, p.errors);
+    await p.context().close();
+  }
+
+  console.log('\n— Nuovo design "Studio" (selezionabile tra i temi) —');
+  for (const theme of ['studio', 'studio-light']) {
+    const p = await page(1366, 900, theme);
+    check(`${theme}: design applicato prima del primo disegno`, await p.evaluate(() => document.documentElement.dataset.design === 'studio'));
+    check(`${theme}: indice delle sezioni a sinistra del form`, await shown(p, '.section-nav') && await p.evaluate(() => document.querySelector('.section-nav').getBoundingClientRect().right <= document.querySelector('#npc-form').getBoundingClientRect().left));
+    check(`${theme}: form al centro, comandi a destra`, await p.evaluate(() => document.querySelector('#tab-npc > aside').getBoundingClientRect().left > document.querySelector('#npc-form').getBoundingClientRect().right));
+    check(`${theme}: Esporta è il primo comando della colonna`, await p.evaluate(() => { const a = document.querySelector('#tab-npc .aside-fixed'); const top = (s) => a.querySelector(s).getBoundingClientRect().top; return top('#btn-export') < top('.cr-panel') && top('.cr-panel') < top('.panel-box') && top('.panel-box') < top('.preview-head'); }));
+    // l'indice porta alla sezione e la segna come corrente
+    await p.evaluate(() => [...document.querySelectorAll('.section-nav a')].find((a) => a.getAttribute('href') === '#' + document.getElementById('items-list').closest('fieldset').id).click());
+    await p.waitForTimeout(900);
+    check(`${theme}: clic sull'indice → la sezione arriva sotto la barra delle tab`, await p.evaluate(() => { const r = document.getElementById('items-list').closest('fieldset').getBoundingClientRect(); const tabs = document.getElementById('tabs').getBoundingClientRect(); return r.top >= tabs.bottom - 1 && r.top < 200; }));
+    check(`${theme}: voce corrente evidenziata`, await p.evaluate(() => document.querySelector('.section-nav a.active')?.getAttribute('href') === '#' + document.getElementById('items-list').closest('fieldset').id));
+    check(`${theme}: la barra delle tab resta in alto scorrendo`, await p.evaluate(() => Math.round(document.getElementById('tabs').getBoundingClientRect().top) === 0 && window.scrollY > 300));
+    await p.evaluate(() => document.getElementById('btn-add-item').click());
+    check(`${theme}: l'indice conta le azioni`, await p.evaluate(() => document.querySelector('.section-nav a[data-count]')?.dataset.count === '1'));
+    check(`${theme}: nessuno scroll orizzontale`, await noHScroll(p));
+    check(`${theme}: nessun errore JS`, p.errors.length === 0, p.errors);
+    await p.context().close();
+  }
+  {
+    // Il cambio dal menu dei temi non ricarica la pagina e torna indietro pulito.
+    const p = await page(1366, 900, 'taf');
+    check('tema classico: niente indice delle sezioni, design "classic"', !(await shown(p, '.section-nav')) && await p.evaluate(() => document.documentElement.dataset.design === 'classic'));
+    check('menu dei temi a gruppi (nuovo design / classici)', await p.evaluate(() => document.querySelectorAll('#theme-picker optgroup').length === 2 && document.querySelectorAll('#theme-picker option').length === 8));
+    await p.selectOption('#theme-picker', 'studio-light');
+    check('scelta dal menu → Studio attivo senza ricaricare', await shown(p, '.section-nav') && await p.evaluate(() => document.documentElement.dataset.theme === 'studio-light' && localStorage.getItem('tafys-forge-theme') === 'studio-light'));
+    await p.selectOption('#theme-picker', 'taf');
+    check('ritorno al classico → tutto come prima', !(await shown(p, '.section-nav')) && await p.evaluate(() => document.documentElement.dataset.design === 'classic'));
+    const narrow = await page(1100, 800, 'studio');
+    check('schermo medio (1100px): due colonne, indice nascosto', !(await shown(narrow, '.section-nav')) && await narrow.evaluate(() => document.querySelector('#tab-npc > aside').getBoundingClientRect().left > document.querySelector('#npc-form').getBoundingClientRect().right));
+    await narrow.context().close();
+    await p.context().close();
+  }
+
+  console.log('\n— Sicurezza: un JSON importato non esegue codice —');
+  {
+    // Chi condivide un JSON può scriverci dentro dell'HTML: caricandolo nel
+    // form non deve MAI diventare codice (né elementi) della pagina.
+    const hit = 'onerror="window.__xss=(window.__xss||0)+1"';
+    const P = `</textarea><img src=x ${hit}>`;
+    const A = `"><img src=x ${hit}>`;
+    const actor = { name: 'Prova', type: 'npc', system: { abilities: {}, attributes: { hp: { max: 5 } }, details: { cr: 1 }, traits: {} },
+      items: [{ _id: 'aaaaaaaaaaaaaaaa', name: 'Morso' + A, type: 'weapon', img: 'icons/x.webp' + A,
+        system: { description: { value: 'Tom &amp; Jerry' + P }, range: { value: '5' + A }, activities: { a: { _id: 'a', type: 'attack', attack: { type: { value: 'melee' } }, damage: { parts: [] } } } } }] };
+    const spell = { name: 'Dardo', type: 'spell', system: { level: 1, school: 'evo', description: { value: 'x' + P },
+      target: { template: { type: `cono<img src=x ${hit}>` } }, range: { units: 'ft' + A }, activities: {} } };
+    const p = await page(1366, 900);
+    await p.evaluate((json) => { document.getElementById('actor-import-input').value = json; document.getElementById('btn-import-actor').click(); }, JSON.stringify(actor));
+    await p.waitForTimeout(400);
+    const desc = await p.evaluate(() => document.querySelector('#items-list [data-f="description"]')?.value);
+    await p.evaluate((json) => { document.getElementById('spell-import-input').value = json; document.getElementById('spell-import-btn').click(); }, JSON.stringify(spell));
+    await p.waitForTimeout(400);
+    check('nessun codice eseguito, nessun elemento iniettato', await p.evaluate(() => !window.__xss && !document.querySelector('img[src="x"]')));
+    check('il campo mostra ESATTAMENTE il testo dei dati (anche "&amp;")', desc === 'Tom &amp; Jerry' + P, desc);
     check('nessun errore JS', p.errors.length === 0, p.errors);
     await p.context().close();
   }

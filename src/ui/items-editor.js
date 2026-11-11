@@ -19,6 +19,7 @@ import { defaultAA } from '../builders/aa.js';
 import { applyOnUseEvent } from './onuse-editor.js';
 import { extrasSectionHtml } from './extras-editor.js';
 import { spellcastingSummary } from '../builders/spellcasting.js';
+import { esc } from '../utils/html.js';
 
 // Coppie [id, etichetta localizzata] per le select delle condizioni.
 const _condLabels = byLang(CONDITION_LABELS, CONDITION_LABELS_EN, getLang());
@@ -73,8 +74,10 @@ const ACTIVATIONS = [
 ];
 
 const _abEn = getLang() === 'en';
-function abilityOptions(selected) {
-  return ABILITIES
+function abilityOptions(selected, withAuto = false) {
+  // Attacchi: "Automatica" = sceglie Foundry (FOR in mischia, DES a distanza/accurata).
+  const auto = withAuto ? `<option value="" ${selected === '' ? 'selected' : ''}>${t('ab_auto')}</option>` : '';
+  return auto + ABILITIES
     .map(a => `<option value="${a.id}" ${a.id === selected ? 'selected' : ''}>${_abEn ? a.en : a.label}</option>`)
     .join('');
 }
@@ -85,7 +88,6 @@ function options(pairs, selected) {
     .join('');
 }
 
-const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 // Regole del mostro (2014/2024): decidono in quale compendio cercare gli incantesimi.
 let getRules = () => '2024';
@@ -110,7 +112,7 @@ function cardHtml(item, idx) {
   return `
   <div class="item-card" data-idx="${idx}">
     <div class="item-card-head">
-      <strong>#${idx + 1}${item.name ? ' · ' + item.name.replace(/</g, '&lt;') : ''}</strong>
+      <strong>#${idx + 1}${item.name ? ' · ' + esc(item.name) : ''}</strong>
       <span>
         <button type="button" class="remove" data-dup="${idx}" title="${t('ed_dup')}">⧉</button>
         <button type="button" class="remove" data-remove="${idx}" title="${t('ed_remove')}">✖</button>
@@ -118,7 +120,7 @@ function cardHtml(item, idx) {
     </div>
     <div class="grid-3">
       <label>${t('ed_name')}
-        <input type="text" data-f="name" value="${item.name.replace(/"/g, '&quot;')}" placeholder="${t('ed_name_ph')}" />
+        <input type="text" data-f="name" value="${esc(item.name)}" placeholder="${t('ed_name_ph')}" />
       </label>
       <label>${t('ed_type')}
         <select data-f="kind">${options([
@@ -141,14 +143,14 @@ function cardHtml(item, idx) {
         <select data-f="attackType">${options([['melee', t('opt_melee')], ['ranged', t('opt_ranged')]], item.attackType)}</select>
       </label>
       <label>${t('ed_ability')}
-        <select data-f="ability">${abilityOptions(item.ability)}</select>
+        <select data-f="ability">${abilityOptions(item.ability, true)}</select>
       </label>
       ${item.attackType === 'melee'
-        ? `<label>${t('ed_reach')} <input type="number" data-f="reach" value="${item.reach}" /></label>`
+        ? `<label>${t('ed_reach')} <input type="number" data-f="reach" value="${esc(item.reach)}" /></label>`
         : `<label>${t('ed_range')}
              <span class="row">
-               <input type="number" data-f="range" value="${item.range}" placeholder="30" />
-               <input type="number" data-f="longRange" value="${item.longRange}" placeholder="120" />
+               <input type="number" data-f="range" value="${esc(item.range)}" placeholder="30" />
+               <input type="number" data-f="longRange" value="${esc(item.longRange)}" placeholder="120" />
              </span>
            </label>`}
       <label class="check">${t('ed_magical')} <input type="checkbox" data-f="magical" ${item.magical ? 'checked' : ''} /></label>
@@ -159,7 +161,7 @@ function cardHtml(item, idx) {
       <label>${t('ed_save_req')}
         <select data-f="saveAbility">${abilityOptions(item.saveAbility)}</select>
       </label>
-      <label>${t('ed_dc')} <input type="number" data-f="dc" value="${item.dc}" placeholder="13" /></label>
+      <label>${t('ed_dc')} <span class="hint">${t('ed_dc_formula_hint')}</span><input type="text" data-f="dc" value="${esc(item.dc)}" placeholder="13" /></label>
       <label>${t('ed_onsave')}
         <select data-f="onSave">${options([['none', t('opt_nodmg')], ['half', t('opt_halfdmg')]], item.onSave)}</select>
       </label>
@@ -167,7 +169,7 @@ function cardHtml(item, idx) {
         <select data-f="condition">${options([['', t('opt_none_f')], ...CONDITION_OPTIONS], item.condition)}</select>
       </label>
       <label>${t('ed_duration')} <span class="hint">${t('ed_dur_hint')}</span>
-        <input type="number" data-f="condRounds" value="${item.condRounds}" />
+        <input type="number" data-f="condRounds" value="${esc(item.condRounds)}" />
       </label>
     </div>` : ''}
 
@@ -185,13 +187,13 @@ function cardHtml(item, idx) {
         <select data-f="condition">${options(CONDITION_OPTIONS, item.condition)}</select>
       </label>
       <label>${t('ed_duration')} <span class="hint">${t('ed_dur_hint')}</span>
-        <input type="number" data-f="condRounds" value="${item.condRounds}" />
+        <input type="number" data-f="condRounds" value="${esc(item.condRounds)}" />
       </label>` : ''}
       ${item.onHit === 'save' ? `
       <label>${t('ed_save_avoid')}
         <select data-f="riderSaveAbility">${abilityOptions(item.riderSaveAbility)}</select>
       </label>
-      <label>${t('ed_dc_save')} <input type="number" data-f="riderDc" value="${item.riderDc}" placeholder="11" /></label>` : ''}
+      <label>${t('ed_dc_save')} <input type="text" data-f="riderDc" value="${esc(item.riderDc)}" placeholder="11" /></label>` : ''}
     </div>` : ''}
 
     ${item.kind === 'spellcasting' ? `
@@ -209,7 +211,7 @@ function cardHtml(item, idx) {
 
     ${hasDamage ? `
     <label>${t('ed_damage')} <span class="hint">${t('ed_damage_hint')}</span>
-      <input type="text" data-f="damage" value="${item.damage.replace(/"/g, '&quot;')}" placeholder="${t('ed_damage_ph')}" />
+      <input type="text" data-f="damage" value="${esc(item.damage)}" placeholder="${t('ed_damage_ph')}" />
     </label>` : ''}
 
     ${item.kind !== 'passive' && item.kind !== 'spellcasting' ? `
@@ -223,15 +225,15 @@ function cardHtml(item, idx) {
       </label>
       ${item.usesMode !== 'none'
         ? `<label>${item.usesMode === 'recharge' ? t('ed_recharge_x') : t('ed_uses_day')}
-             <input type="number" data-f="usesValue" value="${item.usesValue}" placeholder="${item.usesMode === 'recharge' ? '5' : '3'}" />
+             <input type="number" data-f="usesValue" value="${esc(item.usesValue)}" placeholder="${item.usesMode === 'recharge' ? '5' : '3'}" />
            </label>` : ''}
-      <label>${t('ed_icon')} <input type="text" data-f="img" value="${item.img.replace(/"/g, '&quot;')}" /></label>
+      <label>${t('ed_icon')} <input type="text" data-f="img" value="${esc(item.img)}" /></label>
     </div>` : ''}
 
     ${extrasSectionHtml(item, item.kind === 'passive')}
 
     <label>${t('ed_description')}
-      <textarea data-f="description" rows="2">${item.description}</textarea>
+      <textarea data-f="description" rows="2">${esc(item.description)}</textarea>
     </label>
   </div>`;
 }

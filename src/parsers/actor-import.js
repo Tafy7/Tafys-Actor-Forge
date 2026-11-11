@@ -115,6 +115,22 @@ function daeEffectToDescriptor(eff, report) {
   };
 }
 
+/**
+ * CD di un tiro salvezza come la vuole il form: il numero/formula scritto,
+ * oppure — se Foundry la CALCOLA (dalla caratteristica o dalla CD da
+ * incantatore) — la formula equivalente. Così ricostruendo il comportamento
+ * la CD resta giusta invece di diventare 10.
+ */
+export function dcFromSave(save, fallback = '') {
+  const dc = save?.dc;
+  if (!dc) return fallback;
+  const formula = String(dc.formula || '').trim();
+  if (formula) return formula;
+  if (dc.calculation === 'spellcasting') return '@attributes.spell.dc';
+  if (/^(str|dex|con|int|wis|cha)$/.test(dc.calculation || '')) return `8 + @prof + @abilities.${dc.calculation}.mod`;
+  return fallback;
+}
+
 /** Un item embedded → descrittore del form. `report` raccoglie i non-mappati. */
 export function itemToDescriptor(item, report) {
   const sys = item.system || {};
@@ -155,7 +171,8 @@ export function itemToDescriptor(item, report) {
 
   if (d.kind === 'attack' && main) {
     d.attackType = main.attack?.type?.value === 'ranged' ? 'ranged' : 'melee';
-    d.ability = main.attack?.ability || 'str';
+    // '' = "automatica" (la sceglie Foundry: FOR in mischia, DES a distanza o accurata).
+    d.ability = main.attack ? String(main.attack.ability || '') : 'str';
     if (d.attackType === 'melee') d.reach = String(sys.range?.value ?? 5);
     else { d.range = String(sys.range?.value ?? 30); d.longRange = sys.range?.long ? String(sys.range.long) : ''; }
     d.damage = partsToString(main.damage?.parts);
@@ -163,7 +180,7 @@ export function itemToDescriptor(item, report) {
     if (rider && rider.type === 'save') {
       d.onHit = 'save';
       d.riderSaveAbility = (rider.save?.ability || ['con'])[0];
-      d.riderDc = String(rider.save?.dc?.formula || '');
+      d.riderDc = dcFromSave(rider.save);
       const st = statusEffects[0];
       if (st) { d.condition = st.statuses[0]; d.condRounds = st.duration?.rounds ? String(st.duration.rounds) : ''; }
     } else if (statusEffects.length) {
@@ -173,7 +190,7 @@ export function itemToDescriptor(item, report) {
     }
   } else if (d.kind === 'save' && main) {
     d.saveAbility = (main.save?.ability || ['con'])[0];
-    d.dc = String(main.save?.dc?.formula || '');
+    d.dc = dcFromSave(main.save);
     d.onSave = main.damage?.onSave === 'half' ? 'half' : 'none';
     d.damage = partsToString(main.damage?.parts);
     const st = statusEffects[0];
@@ -195,7 +212,6 @@ export function itemToDescriptor(item, report) {
   return d;
 }
 
-export const stripHtml = (s) => String(s || '').replace(/<[^>]+>/g, '').trim();
 
 /**
  * IMPORT principale: JSON actor Foundry → { data (descrittore form), report }.

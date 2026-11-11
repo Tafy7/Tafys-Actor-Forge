@@ -17,11 +17,11 @@ import { overlayItem } from '../builders/overlay.js';
 import { initJsonReload, jsonReloadHtml } from './json-reload.js';
 import { draftStore } from './tab-draft.js';
 import { t, getLang } from '../i18n.js';
+import { esc } from '../utils/html.js';
 
 const LANG = getLang();
 const condLabels = byLang(CONDITION_LABELS, CONDITION_LABELS_EN, LANG);
 const CONDITION_OPTIONS = CONDITIONS.map(c => [c, condLabels[c] ?? c]);
-const esc = (s) => String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const abEn = LANG === 'en';
 
 let state = defaultItem();
@@ -70,10 +70,10 @@ function defaultItem() {
 // Un valore che il menu non elenca (arriva da un oggetto ricaricato) resta
 // visibile come opzione in più: niente cambi silenziosi.
 const opts = (pairs, sel) => {
-  const list = sel && !pairs.some(([v]) => v === sel) ? [...pairs, [sel, `${sel} ✳`]] : pairs;
+  const list = sel && !pairs.some(([v]) => v === sel) ? [...pairs, [sel, `${esc(sel)} ✳`]] : pairs; // valore dai dati importati: va scappato
   return list.map(([v, l]) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
 };
-const abilityOpts = (sel) => ABILITIES.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${abEn ? a.en : a.label}</option>`).join('');
+const abilityOpts = (sel, withAuto = false) => (withAuto ? `<option value="" ${sel === '' ? 'selected' : ''}>${t('ab_auto')}</option>` : '') + ABILITIES.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${abEn ? a.en : a.label}</option>`).join('');
 const weaponTypeOpts = (sel) => WEAPON_TYPES.map(w => `<option value="${w.id}" ${w.id === sel ? 'selected' : ''}>${abEn ? w.en : w.it}</option>`).join('');
 const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 const masteryOpts = (sel) => WEAPON_MASTERIES.map(m => `<option value="${m}" ${m === sel ? 'selected' : ''}>${m ? cap(m) : t('mst_none')}</option>`).join('');
@@ -143,7 +143,7 @@ function formHtml(it) {
     ${isAttack ? `
     <div class="grid-3">
       <label>${t('ed_meleeranged')} <select data-f="attackType">${opts([['melee', t('opt_melee')], ['ranged', t('opt_ranged')]], it.attackType)}</select></label>
-      <label>${t('ed_ability')} <select data-f="ability">${abilityOpts(it.ability)}</select></label>
+      <label>${t('ed_ability')} <select data-f="ability">${abilityOpts(it.ability, true)}</select></label>
       ${it.attackType === 'melee'
         ? `<label>${t('ed_reach')} <input type="number" data-f="reach" value="${esc(it.reach)}" /></label>`
         : `<label>${t('ed_range')} <span class="row"><input type="number" data-f="range" value="${esc(it.range)}" /><input type="number" data-f="longRange" value="${esc(it.longRange)}" /></span></label>`}
@@ -155,7 +155,7 @@ function formHtml(it) {
       <label>${t('ed_duration')} <span class="hint">${t('ed_dur_hint')}</span><input type="number" data-f="condRounds" value="${esc(it.condRounds)}" /></label>` : ''}
       ${it.onHit === 'save' ? `
       <label>${t('ed_save_avoid')} <select data-f="riderSaveAbility">${abilityOpts(it.riderSaveAbility)}</select></label>
-      <label>${t('ed_dc_save')} <input type="number" data-f="riderDc" value="${esc(it.riderDc)}" /></label>` : ''}
+      <label>${t('ed_dc_save')} <input type="text" data-f="riderDc" value="${esc(it.riderDc)}" /></label>` : ''}
     </div>` : ''}
     ${isSave ? `
     <div class="grid-3">
@@ -213,7 +213,6 @@ function renderPreview() {
   draft.save(() => ({ v: 1, state, loaded }));
 }
 
-export function getItemState() { return state; }
 
 export function initItemTab({ onAddToBatch }) {
   addToBatch = onAddToBatch || (() => {});

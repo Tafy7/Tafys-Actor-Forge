@@ -16,10 +16,10 @@ import { DMG_TABLE, crToNum, computeMonsterCR, monsterACValue, rawDprFromMonster
 import { importActor } from '../parsers/actor-import.js';
 import { importPCs } from '../parsers/pc-import.js';
 import { t } from '../i18n.js';
+import { esc } from '../utils/html.js';
 
 const KEY = 'tafys-forge-encounter';
 const STATS = ['hp', 'ac', 'atk', 'dpr'];
-const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const crLabelOf = (n) => (DMG_TABLE.find(r => r.cr === crToNum(n)) || DMG_TABLE[0]).label;
 const given = (v) => String(v ?? '').trim() !== '' && Number.isFinite(Number(v));
 

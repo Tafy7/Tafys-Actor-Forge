@@ -6,12 +6,12 @@
 // ============================================================
 import { totalDPR, dprCurve, attacksFromMonster } from '../tools/dpr.js';
 import { t } from '../i18n.js';
+import { esc } from '../utils/html.js';
 
 let rows = [];
 let getMonsterData = () => ({});
 
 const newRow = () => ({ name: '', dice: '', atkBonus: 0, count: 1, type: 'attack' });
-const esc = (s) => String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 function rowHtml(r, i) {
   const isSave = r.type === 'save';

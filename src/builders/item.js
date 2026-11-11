@@ -294,7 +294,7 @@ export function buildItem(d) {
       rider._id = randomID();
       rider.name = `TS ${d.riderSaveAbility.toUpperCase()} o ${d.condition}`;
       rider.activation = { type: 'special', value: null, override: true, condition: '' };
-      rider.save = { ability: [d.riderSaveAbility], dc: { calculation: '', formula: String(Number(d.riderDc) || 10) } };
+      rider.save = { ability: [d.riderSaveAbility], dc: { calculation: '', formula: dcFormula(d.riderDc) } };
       rider.damage = { onSave: 'none', parts: [], critical: { allow: false } };
       rider.effects = [{ _id: eff._id, onSave: false, level: {} }]; // onSave:false = TS superato → niente condizione
       // automationOnly: la rider non appare come pulsante sulla scheda,

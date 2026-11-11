@@ -1,0 +1,353 @@
+/* ============================================================
+   Tafy's Actor Forge — design "STUDIO" (nuovo, selezionabile tra i temi).
+
+   A differenza dei temi classici (solo variabili di colore) questo cambia
+   anche forme, spazi e disposizione. Tutte le regole sono agganciate a
+   html[data-design="studio"]: i temi classici non vengono toccati.
+
+   Idee guida:
+   - un solo colore d'accento, usato per ciò che conta (azione principale,
+     posizione corrente, focus); titoli e testi in toni neutri;
+   - schede piatte con il titolo DENTRO, più aria tra i campi, campi e
+     pulsanti della stessa altezza, focus sempre visibile;
+   - barra delle tab sempre a portata (resta in alto mentre si scorre);
+   - indice delle sezioni a sinistra nel form del mostro (schermi larghi);
+   - colonna di destra in ordine d'importanza: esporta → CR → collezione →
+     anteprima JSON.
+   Varianti: "studio" (scuro) e "studio-light" (chiaro).
+   ============================================================ */
+
+/* L'indice delle sezioni esiste in tutti i temi, ma si vede solo qui. */
+.section-nav { display: none; }
+
+/* ---------- Colori ---------- */
+html[data-theme="studio"] {
+  color-scheme: dark;
+  --bg: #0e1013;
+  --panel: #15181d;
+  --panel-2: #1b1f26;
+  --border: #2a2f38;
+  --text: #e8eaef;
+  --muted: #98a1b1;
+  --accent: #ff8a57;       /* brace: azione principale, posizione, focus */
+  --accent-2: #ffb692;     /* accento per il TESTO (leggibile sul fondo) */
+  --code: #c3cddd;
+  --ok: #5fd38d;
+  --err: #ff8c8c;
+  --on-accent: #1d0f08;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --radius: 10px;
+  --field: #0f1216;        /* fondo dei campi: incassato rispetto alla scheda */
+  --hover: #232831;
+  --ring: rgba(255, 138, 87, 0.28);
+}
+html[data-theme="studio-light"] {
+  color-scheme: light;
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --panel-2: #f5f6f8;
+  --border: #dde1e7;
+  --text: #1b1f27;
+  --muted: #5b6574;
+  --accent: #c2410c;
+  --accent-2: #9a3412;
+  --code: #334155;
+  --ok: #166534;
+  --err: #b91c1c;
+  --on-accent: #ffffff;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --radius: 10px;
+  --field: #ffffff;
+  --hover: #eceef2;
+  --ring: rgba(194, 65, 12, 0.22);
+}
+
+/* ---------- Base ---------- */
+html[data-design="studio"] body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+html[data-design="studio"] * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+html[data-design="studio"] .hint { color: var(--muted); }
+html[data-design="studio"] a { color: var(--accent-2); }
+
+/* ---------- Testata e controlli ---------- */
+html[data-design="studio"] header { border-bottom: 1px solid var(--border); background: var(--panel); }
+html[data-design="studio"] header h1 { font-weight: 650; letter-spacing: -0.01em; }
+html[data-design="studio"] .theme-picker,
+html[data-design="studio"] .lang-btn {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-weight: 550;
+}
+html[data-design="studio"] .lang-btn:hover { background: var(--hover); color: var(--text); }
+
+/* ---------- Schede (le sezioni del form) ---------- */
+html[data-design="studio"] fieldset {
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel);
+  box-shadow: var(--shadow); padding: 1rem 1.1rem 1.1rem; margin: 0 0 1rem; min-width: 0;
+}
+/* Titolo DENTRO la scheda: la legend "galleggia" a tutta larghezza e ciò che
+   segue riparte sotto (il modo standard per impaginare una legend). */
+html[data-design="studio"] fieldset > legend {
+  float: left; width: 100%; padding: 0; margin: 0 0 0.85rem;
+  color: var(--text); font-size: 1rem; font-weight: 650; letter-spacing: -0.005em; line-height: 1.3;
+}
+html[data-design="studio"] fieldset > legend + * { clear: both; }
+html[data-design="studio"] fieldset::after { content: ""; display: block; clear: both; }
+html[data-design="studio"] fieldset > legend .hint { font-size: 0.78rem; font-weight: 400; letter-spacing: 0; }
+html[data-design="studio"] legend.fold-toggle::before { color: var(--muted); margin-right: 0.15rem; }
+html[data-design="studio"] legend.fold-toggle:hover::before { color: var(--text); }
+html[data-design="studio"] fieldset.folded { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+html[data-design="studio"] fieldset.folded > legend.fold-toggle { margin: 0; padding: 0; }
+html[data-design="studio"] fieldset.inner {
+  background: var(--panel-2); border: 1px solid var(--border); box-shadow: none; margin: 0.9rem 0;
+}
+html[data-design="studio"] fieldset.inner > legend { font-size: 0.9rem; }
+
+/* ---------- Campi ---------- */
+html[data-design="studio"] label { font-weight: 500; color: var(--muted); gap: 0.3rem; }
+html[data-design="studio"] :is(input, select, textarea) {
+  background: var(--field); border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.28s ease;
+}
+html[data-design="studio"] :is(input, select, textarea):hover { border-color: color-mix(in srgb, var(--muted) 55%, var(--border)); }
+html[data-design="studio"] :is(input, select, textarea):focus-visible {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring);
+}
+html[data-design="studio"] ::placeholder { color: color-mix(in srgb, var(--muted) 82%, transparent); }
+html[data-design="studio"] textarea { line-height: 1.45; }
+html[data-design="studio"] .grid-2,
+html[data-design="studio"] .grid-3,
+html[data-design="studio"] .grid-6 { gap: 0.75rem 0.9rem; }
+
+/* Campi con e senza suggerimento sulla stessa riga: l'etichetta si allunga
+   verso l'alto, i campi restano allineati in basso. */
+html[data-design="studio"] :is(.grid-2, .grid-3, .grid-6) > label:not(.check) { justify-content: flex-end; }
+html[data-design="studio"] :is(.grid-2, .grid-3, .grid-6) > label.check { align-self: end; min-height: 36px; }
+/* Tab Oggetto e Incantesimo: respiro tra un gruppo di campi e il successivo. */
+html[data-design="studio"] #npc-form > fieldset > :not(legend) + :not(legend):not(.trait-group):not(.reload-banner),
+html[data-design="studio"] :is(#item-form-body, #spell-form-body) > * + *,
+html[data-design="studio"] fieldset.inner > :not(legend) + :not(legend) { margin-top: 0.8rem; }
+html[data-design="studio"] .json-reload { margin: 0 0 0.9rem; }
+/* V / S / M / Concentrazione / Rituale: in fila, senza celle troppo strette. */
+html[data-design="studio"] .sp-comps { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+html[data-design="studio"] .sp-comps > label.check { min-height: 0; }
+
+/* ---------- Pulsanti ---------- */
+html[data-design="studio"] button { border-radius: 8px; font-weight: 600; }
+html[data-design="studio"] button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+html[data-design="studio"] button:disabled { opacity: 0.45; cursor: not-allowed; }
+html[data-design="studio"] button.secondary {
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font-weight: 550;
+}
+html[data-design="studio"] button.secondary:hover:not(:disabled) {
+  background: var(--hover); border-color: color-mix(in srgb, var(--muted) 45%, var(--border)); filter: none;
+}
+/* In attesa di conferma: rosso, fermo (niente lampeggio). */
+html[data-design="studio"] button.armed {
+  background: color-mix(in srgb, var(--err) 16%, var(--panel)); border: 1px solid var(--err); color: var(--err); animation: none;
+}
+html[data-design="studio"] .remove { border-radius: 6px; }
+html[data-design="studio"] .remove:hover { background: color-mix(in srgb, var(--err) 14%, transparent); }
+
+/* ---------- Azioni del mostro e blocchi interni ---------- */
+html[data-design="studio"] .item-card {
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2);
+  padding: 0.85rem 0.9rem 0.9rem; gap: 0.7rem; margin-bottom: 0.75rem;
+}
+html[data-design="studio"] .item-card-head {
+  color: var(--text); font-size: 0.95rem; padding-bottom: 0.55rem; border-bottom: 1px solid var(--border);
+}
+html[data-design="studio"] .effect-card,
+html[data-design="studio"] .preset-card { border: 1px solid var(--border); border-radius: 10px; }
+html[data-design="studio"] details.extra-block,
+html[data-design="studio"] details.opt-block {
+  border: 1px solid var(--border); border-radius: 10px; background: var(--panel); padding: 0.5rem 0.75rem;
+}
+html[data-design="studio"] details.opt-block { background: var(--panel-2); }
+html[data-design="studio"] details > summary { color: var(--muted); }
+html[data-design="studio"] details > summary:hover,
+html[data-design="studio"] details[open] > summary { color: var(--text); }
+html[data-design="studio"] .effects-head,
+html[data-design="studio"] .aa-tgt-toggle,
+html[data-design="studio"] .aa-block legend .check,
+html[data-design="studio"] .sp-comps .check { color: var(--text); }
+html[data-design="studio"] .effects-block select[data-eff-add-preset] { color: var(--text); border-style: solid; }
+
+/* ---------- Chip (tratti, incantesimi) ---------- */
+html[data-design="studio"] .chip { background: transparent; border-color: var(--border); color: var(--muted); border-radius: 999px; font-weight: 500; }
+html[data-design="studio"] .chip:hover { border-color: var(--muted); color: var(--text); }
+html[data-design="studio"] .chip.on {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  color: var(--accent-2); font-weight: 600;
+}
+html[data-design="studio"] .trait-title { color: var(--text); font-weight: 550; }
+
+/* ---------- Colonna di destra ---------- */
+html[data-design="studio"] aside { border-radius: 12px; box-shadow: var(--shadow); padding: 1rem; }
+html[data-design="studio"] aside h2,
+html[data-design="studio"] .panel-title { color: var(--text); font-size: 0.9rem; font-weight: 650; }
+/* Ordine d'importanza: esporta → avvisi → CR → collezione → anteprima. */
+html[data-design="studio"] .aside-fixed { display: flex; flex-direction: column; gap: 0.75rem; }
+html[data-design="studio"] .aside-fixed > * { margin: 0; }
+html[data-design="studio"] .aside-fixed > .main-actions { order: 1; }
+html[data-design="studio"] .aside-fixed > :is(#warnings, #item-warn, #spell-warn) { order: 2; }
+html[data-design="studio"] .aside-fixed > :is(#warnings, #item-warn, #spell-warn):empty { display: none; }
+html[data-design="studio"] .aside-fixed > .cr-panel { order: 3; }
+html[data-design="studio"] .aside-fixed > .panel-box { order: 4; }
+html[data-design="studio"] .aside-fixed > .preview-head { order: 5; }
+html[data-design="studio"] .aside-fixed > .val { order: 6; }
+/* Esporta a tutta larghezza, le azioni secondarie su due colonne sotto. */
+html[data-design="studio"] .main-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+html[data-design="studio"] .main-actions > button:first-child { grid-column: 1 / -1; min-height: 44px; font-size: 0.98rem; }
+html[data-design="studio"] .main-actions > button.small { align-self: stretch; }
+html[data-design="studio"] .main-actions > button.secondary:last-of-type:nth-of-type(even) { grid-column: 1 / -1; }
+html[data-design="studio"] .panel-box { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem 0.75rem; }
+html[data-design="studio"] .preview-head { margin: 0; }
+html[data-design="studio"] :is(#preview, #item-preview, #spell-preview) {
+  background: var(--field); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem;
+  margin-top: 0.75rem; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.74rem; line-height: 1.5;
+}
+html[data-design="studio"] :is(#parse-report, #import-report, #item-import-report, #spell-import-report, .enc-report) {
+  background: var(--field); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); line-height: 1.5;
+}
+html[data-design="studio"] .val { border-radius: 8px; background: var(--panel-2); }
+html[data-design="studio"] .val.ok {
+  background: color-mix(in srgb, var(--ok) 9%, var(--panel)); border-color: color-mix(in srgb, var(--ok) 35%, transparent);
+}
+html[data-design="studio"] .val.has-error { border-color: color-mix(in srgb, var(--err) 55%, transparent); }
+html[data-design="studio"] .val-head { color: var(--text); }
+
+/* Cartellino del CR: il bordo colorato resta (dice lo stato), il resto si calma. */
+html[data-design="studio"] .cr-card { border-radius: 10px; box-shadow: none; border-left-width: 3px; }
+html[data-design="studio"] .cr-sub,
+html[data-design="studio"] .cr-legendary { color: var(--accent-2); }
+
+html[data-design="studio"] .cr-ma { flex-direction: row; align-items: center; }
+
+/* Riquadro "stai modificando un originale" */
+html[data-design="studio"] .reload-banner {
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel)); padding: 0.65rem 0.8rem; margin-bottom: 1rem;
+}
+
+/* ---------- Altre tab ---------- */
+html[data-design="studio"] :is(.dpr-controls, .dpr-chart-box, .info-col) {
+  border-radius: 12px; box-shadow: var(--shadow); padding: 1rem 1.1rem;
+}
+html[data-design="studio"] :is(.dpr-controls h2, .dpr-chart-box h3, .info-col h2, .enc-setup h2, .enc-block h3) { color: var(--text); font-weight: 650; letter-spacing: -0.005em; }
+html[data-design="studio"] .info-bye { color: var(--text); }
+html[data-design="studio"] .preset-card { background: var(--panel-2); }
+html[data-design="studio"] .enc-stats-label { color: var(--text); }
+html[data-design="studio"] .m-sheet-head strong { color: var(--text); }
+
+/* ============================================================
+   Da tablet in su: misure, tab in alto, griglie
+   ============================================================ */
+@media (min-width: 761px) {
+  /* Testata su una riga sola, bassa. */
+  html[data-design="studio"] header { padding: 0.65rem 1.5rem; }
+  html[data-design="studio"] .header-row > div:first-child { display: flex; align-items: baseline; gap: 0.75rem; min-width: 0; }
+  html[data-design="studio"] header h1 { font-size: 1.08rem; white-space: nowrap; }
+  html[data-design="studio"] .subtitle { margin: 0; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-design="studio"] .theme-picker,
+  html[data-design="studio"] .lang-btn { min-height: 34px; padding: 0.3rem 0.7rem; }
+
+  /* Tab: una barra che resta in alto mentre si scorre; quella attiva è
+     sottolineata con l'accento. */
+  html[data-design="studio"] .tabs {
+    position: sticky; top: 0; z-index: 40; gap: 0.15rem; padding: 0 1.25rem;
+    background: color-mix(in srgb, var(--panel) 90%, transparent);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  html[data-design="studio"] .tab {
+    background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+    margin: 0; padding: 0.75rem 0.8rem 0.65rem; color: var(--muted); font-weight: 550;
+  }
+  html[data-design="studio"] .tab:hover { color: var(--text); }
+  html[data-design="studio"] .tab.active {
+    background: none; color: var(--text); border-color: transparent;
+    border-bottom: 2px solid var(--accent); margin-bottom: 0;
+  }
+  html[data-design="studio"] .tab:focus-visible { outline-offset: -3px; }
+
+  html[data-design="studio"] main { padding: 1.25rem 1.5rem 3rem; max-width: 1720px; margin: 0 auto; }
+
+  /* Campi e pulsanti della stessa altezza. */
+  html[data-design="studio"] :is(input, select):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+    min-height: 36px; padding: 0.4rem 0.6rem;
+  }
+  html[data-design="studio"] textarea { padding: 0.5rem 0.6rem; }
+  html[data-design="studio"] button:not(.remove):not(.chip):not(.tab):not(.small) { min-height: 36px; }
+  html[data-design="studio"] button.small { min-height: 30px; padding: 0.3rem 0.65rem; font-size: 0.8rem; }
+  html[data-design="studio"] .item-card .remove { min-width: 30px; min-height: 30px; }
+}
+
+/* Due colonne (form | comandi) finché c'è spazio. */
+@media (min-width: 981px) {
+  html[data-design="studio"] .npc-grid { grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.85fr); gap: 1.25rem; }
+  /* La barra delle tab resta in alto: le colonne fisse partono sotto di lei. */
+  html[data-design="studio"] .npc-grid > aside { top: 4rem; max-height: calc(100vh - 5rem); }
+  /* Schermo basso: l'anteprima non si riduce a una fessura; se non c'è
+     spazio scorre tutta la colonna. */
+  html[data-design="studio"] .npc-grid > aside { overflow-y: auto; }
+  html[data-design="studio"] :is(#preview, #item-preview, #spell-preview) { min-height: 14rem; }
+  html[data-design="studio"] .enc-result { top: 4rem; }
+  html[data-design="studio"] #tab-item,
+  html[data-design="studio"] #tab-spell { max-width: 1320px; margin: 0 auto; }
+  /* I titoli delle sezioni non finiscono sotto la barra quando ci si salta. */
+  html[data-design="studio"] #npc-form > fieldset { scroll-margin-top: 4rem; }
+}
+
+/* Schermi larghi: indice delle sezioni a sinistra del form del mostro. */
+@media (min-width: 1280px) {
+  html[data-design="studio"] #tab-npc.npc-grid { grid-template-columns: 168px minmax(0, 1.2fr) minmax(350px, 0.85fr); }
+  html[data-design="studio"] .section-nav {
+    display: flex; flex-direction: column; gap: 0.1rem;
+    position: sticky; top: 4rem; align-self: start; max-height: calc(100vh - 5rem); overflow-y: auto;
+  }
+  html[data-design="studio"] .section-nav-title {
+    font-size: 0.7rem; font-weight: 650; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); padding: 0.2rem 0.65rem 0.5rem;
+  }
+  html[data-design="studio"] .section-nav a {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    padding: 0.42rem 0.65rem; border-radius: 8px; color: var(--muted);
+    font-size: 0.85rem; font-weight: 500; line-height: 1.25; text-decoration: none;
+  }
+  html[data-design="studio"] .section-nav a:hover { color: var(--text); background: var(--panel-2); }
+  html[data-design="studio"] .section-nav a.active {
+    color: var(--text); font-weight: 650; background: color-mix(in srgb, var(--accent) 13%, transparent);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  html[data-design="studio"] .section-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  /* Quante azioni ha il mostro. */
+  html[data-design="studio"] .section-nav a[data-count]:not([data-count=""])::after {
+    content: attr(data-count); flex: none; min-width: 1.35rem; padding: 0 0.35rem; border-radius: 999px; text-align: center;
+    font-size: 0.72rem; font-weight: 650; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border);
+  }
+}
+
+/* ============================================================
+   Telefono: stesse forme, misure del dito (le regole di base del
+   telefono — tab in basso, foglio anteprima — restano quelle)
+   ============================================================ */
+@media (max-width: 760px) {
+  html[data-design="studio"] fieldset { padding: 0.8rem 0.8rem 0.9rem; margin-bottom: 0.7rem; border-radius: 12px; }
+  html[data-design="studio"] fieldset > legend { margin-bottom: 0.65rem; }
+  html[data-design="studio"] fieldset > legend.fold-toggle { padding: 0.25rem 0; }
+  html[data-design="studio"] fieldset.folded > legend.fold-toggle { padding: 0.15rem 0; }
+  html[data-design="studio"] .grid-2,
+  html[data-design="studio"] .grid-3,
+  html[data-design="studio"] .grid-6 { gap: 0.6rem 0.65rem; }
+  html[data-design="studio"] .item-card { padding: 0.75rem; }
+  html[data-design="studio"] .theme-picker,
+  html[data-design="studio"] .lang-btn { border-radius: 8px; }
+}
+@media (max-width: 980px) {
+  html[data-design="studio"] .npc-grid.sheet-open > aside .m-sheet-head { border-bottom: 1px solid var(--border); }
+  html[data-design="studio"] .m-bar { border-top: 1px solid var(--border); }
+}

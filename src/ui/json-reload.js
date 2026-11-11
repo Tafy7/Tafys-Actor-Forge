@@ -9,26 +9,8 @@
 // ============================================================
 import { pickDocuments } from '../parsers/item-import.js';
 import { t } from '../i18n.js';
+import { armedConfirm as armed } from '../utils/confirm.js';
 
-/** Conferma "a secondo clic" (come nel resto del Forge), senza finestre. */
-function armed(btn, label, action) {
-  if (btn.dataset.armed) {
-    clearTimeout(Number(btn.dataset.armed));
-    delete btn.dataset.armed;
-    btn.textContent = btn.dataset.label;
-    btn.classList.remove('armed');
-    action();
-    return;
-  }
-  btn.dataset.label = btn.textContent;
-  btn.textContent = label;
-  btn.classList.add('armed');
-  btn.dataset.armed = String(setTimeout(() => {
-    delete btn.dataset.armed;
-    btn.textContent = btn.dataset.label;
-    btn.classList.remove('armed');
-  }, 4000));
-}
 
 /**
  * @param {object} o
