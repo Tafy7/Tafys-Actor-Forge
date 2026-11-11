@@ -111,6 +111,7 @@
       iDone: "Actor Forge: creati {n} documenti{where} · {counts} — {names}",
       iReIds: "Actor Forge: {n} documenti avevano un ID già presente e ne hanno ricevuto uno nuovo.",
       iSpells: "Actor Forge: {n} incantesimi collegati ai compendi del mondo.",
+      iBook: "Actor Forge: {n} incantesimi a slot messi nel libro degli incantesimi (preparati, consumano gli slot).",
       iSpellMissing: "{actor}: incantesimo «{name}» non trovato in nessun compendio (resta senza collegamento: trascinalo a mano nell'attività).",
       rpConsole: "Actor Forge — elementi saltati:", rpWarn: "Actor Forge: {head}{n} avvisi: {first}{more}",
       rpMore: " … (elenco completo in console, F12)",
@@ -173,6 +174,7 @@
       iDone: "Actor Forge: created {n} documents{where} · {counts} — {names}",
       iReIds: "Actor Forge: {n} documents had an ID already in use and received a new one.",
       iSpells: "Actor Forge: {n} spells linked to the world's compendiums.",
+      iBook: "Actor Forge: {n} slot spells added to the spellbook (prepared, they use spell slots).",
       iSpellMissing: "{actor}: spell “{name}” not found in any compendium (left unlinked: drag it onto the activity by hand).",
       rpConsole: "Actor Forge — skipped elements:", rpWarn: "Actor Forge: {head}{n} warnings: {first}{more}",
       rpMore: " … (full list in the console, F12)",
@@ -193,6 +195,8 @@
   const DOC_LABELS = I18N[LANG].docs; // { Actor: "Attori" | "Actors", … }
   const SUPPORTED = Object.keys(DOC_LABELS);
   const FORMAT = 1; // versione del formato del file di esportazione
+  // Flag che il Forge mette sulle attività cast "a slot" (vedi punto 6c dell'import).
+  const FORGE_FLAG = "tafys-actor-forge";
 
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   // Nome sicuro per file e cartelle (Windows non accetta \ / : * ? " < > |).
@@ -1094,10 +1098,61 @@
             const hit = pickSpell(spellIndex, act.name, rules);
             if (!hit) { problems.push(T("iSpellMissing", { actor: doc.name, name: act.name })); continue; }
             act.spell.uuid = hit.uuid;
-            if (act.spell.level == null && hit.level > 0) act.spell.level = hit.level;
+            // Il livello vero è quello del compendio: non si lancia più in basso
+            // (e lo slot da consumare lo segue).
+            if (hit.level > 0 && hit.level > (act.spell.level ?? 0)) {
+              act.spell.level = hit.level;
+              for (const tg of act.consumption?.targets ?? []) if (tg?.type === "spellSlots") tg.target = String(hit.level);
+            }
             act.name = "";
             linkedSpells += 1;
           }
+        }
+      }
+    }
+
+    // 6c) Incantatori "a slot" creati col Forge (stile 2014): le attività cast
+    //     marcate dal Forge diventano incantesimi VERI e preparati nel libro,
+    //     come nei mostri ufficiali 2014: compaiono sotto il loro livello e
+    //     consumano gli slot. I trucchetti dello stesso blocco li seguono.
+    //     Quelli che non si riescono a leggere restano attività (funzionano
+    //     lo stesso: consumano lo slot dall'attività).
+    let bookSpells = 0;
+    for (const doc of groups.get("Actor") ?? []) {
+      if (!Array.isArray(doc.items)) continue;
+      const inBook = new Set();
+      for (const it of [...doc.items]) {
+        const acts = it.system?.activities;
+        if (!acts || typeof acts !== "object") continue;
+        const isCast = (a) => a?.type === "cast" && a.spell?.uuid;
+        const slotIds = Object.keys(acts).filter((id) => isCast(acts[id]) && acts[id].flags?.[FORGE_FLAG]?.slot);
+        if (!slotIds.length) continue;
+        for (const id of Object.keys(acts)) {
+          const act = acts[id];
+          const slot = slotIds.includes(id);
+          const freeCast = isCast(act) && !act.uses?.max && !(act.consumption?.targets ?? []).length;
+          if (!slot && !freeCast) continue;
+          let src = null;
+          try { src = typeof fromUuid === "function" ? await fromUuid(act.spell.uuid) : null; } catch (err) { console.warn("Actor Forge:", act.spell.uuid, err); }
+          if (!src || src.type !== "spell") continue;
+          if (!slot && Number(src.system?.level) !== 0) continue; // a volontà ma non trucchetto: resta attività
+          if (!inBook.has(act.spell.uuid)) {
+            const data = src.toObject();
+            data._id = foundry.utils.randomID();
+            delete data.folder; delete data.ownership; delete data.sort;
+            data.system ??= {};
+            data.system.method = "spell";
+            data.system.prepared = 1;
+            // Caratteristica diversa da quella del mostro e componenti tolte: come sull'attività.
+            if (act.spell.ability && act.spell.ability !== doc.system?.attributes?.spellcasting) data.system.ability = act.spell.ability;
+            const drop = new Set(act.spell.properties ?? []);
+            if (drop.size && Array.isArray(data.system.properties)) data.system.properties = data.system.properties.filter((p) => !drop.has(p));
+            data._stats = { ...(data._stats ?? {}), compendiumSource: act.spell.uuid };
+            doc.items.push(data);
+            inBook.add(act.spell.uuid);
+            bookSpells += 1;
+          }
+          delete acts[id];
         }
       }
     }
@@ -1122,10 +1177,39 @@
     say("info", T("iDone", { n: created.length, where, counts: counts.join(" · "), names }));
     if (reIds) say("warn", T("iReIds", { n: reIds }));
     if (linkedSpells) say("info", T("iSpells", { n: linkedSpells }));
+    if (bookSpells) say("info", T("iBook", { n: bookSpells }));
+    // 7b) Copie degli incantesimi lanciati da una feature (attività cast):
+    //     dnd5e le crea al primo lancio; preparandole subito compaiono nella
+    //     scheda (Additional Spells) con i loro usi, come nei mostri ufficiali.
+    await prepareCastCopies(created);
     if (problems.length) reportProblems(problems);
     // Comodità: se ne hai importato uno solo nel mondo, apriamo la sua scheda.
     if (!pack && created.length === 1) created[0].sheet?.render(true);
     return true;
+  }
+
+  // ---------- Copie degli incantesimi delle attività "cast" ----------
+  // Usa il metodo del sistema (getCachedSpellData): così la copia è identica a
+  // quella che dnd5e farebbe da sé. Qualunque intoppo viene solo annotato in
+  // console: al primo lancio dnd5e la crea comunque.
+  async function prepareCastCopies(created) {
+    for (const doc of created) {
+      if (doc.documentName !== "Actor" || typeof doc.createEmbeddedDocuments !== "function") continue;
+      const batch = [];
+      for (const it of doc.items ?? []) {
+        const coll = it.system?.activities;
+        const acts = !coll ? [] : coll instanceof Map ? [...coll.values()] : typeof coll[Symbol.iterator] === "function" ? [...coll] : Object.values(coll);
+        for (const act of acts) {
+          if (act?.type !== "cast" || !act.spell?.uuid || act.cachedSpell || typeof act.getCachedSpellData !== "function") continue;
+          try {
+            const data = await act.getCachedSpellData();
+            if (data) batch.push(data);
+          } catch (err) { console.warn("Actor Forge: copia non preparata", act.spell.uuid, err); }
+        }
+      }
+      if (!batch.length) continue;
+      try { await doc.createEmbeddedDocuments("Item", batch); } catch (err) { console.warn("Actor Forge: copie degli incantesimi non create", doc.name, err); }
+    }
   }
 
   // ---------- Incantesimi per nome (attività "cast" del Forge) ----------

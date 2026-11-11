@@ -32,6 +32,26 @@ export function getItems() {
   return itemsState;
 }
 
+/** Aggiunge una card (campi mancanti = quelli di una card nuova) e ridisegna. Ritorna la card. */
+export function addItem(partial = {}) {
+  const item = { ...newItem(), ...partial };
+  itemsState.push(item);
+  if (container) render();
+  return item;
+}
+
+/** Toglie una card (per riferimento) e ridisegna. */
+export function removeItem(item) {
+  const i = itemsState.indexOf(item);
+  if (i < 0) return false;
+  itemsState.splice(i, 1);
+  if (container) render();
+  return true;
+}
+
+/** Design "Studio" attivo? Lì il primo blocco Incantesimi si modifica nella sua sezione. */
+const isStudio = () => typeof document !== 'undefined' && document.documentElement.dataset.design === 'studio';
+
 /** Sostituisce lo stato (usato dal caricamento delle bozze) e ridisegna. */
 export function setItems(items) {
   itemsState.length = 0;
@@ -61,7 +81,9 @@ function newItem() {
     usesMode: 'none', usesValue: '',
     img: '', description: '',
     // Card "Incantesimi" (kind 'spellcasting'): attività cast verso i compendi.
-    scAbility: 'int', scDc: '', scAttack: '', scLevel: '', scNoMaterial: false, spellList: '',
+    // scAbility '' = automatica (la più alta tra INT/SAG/CAR); scSlots = slot
+    // scelti a mano ("4,3,,2": vuoto = quelli del livello da incantatore).
+    scAbility: '', scDc: '', scAttack: '', scLevel: '', scSlots: '', scNoMaterial: false, spellList: '',
     effects: [], // effetti DAE (Fase 3.2), vedi effects-editor.js
     aa: defaultAA(), // animazione Automated Animations (Fase 7)
     onUse: [], // On-Use Macros di Midi-QOL
@@ -76,7 +98,8 @@ const ACTIVATIONS = [
 const _abEn = getLang() === 'en';
 function abilityOptions(selected, withAuto = false) {
   // Attacchi: "Automatica" = sceglie Foundry (FOR in mischia, DES a distanza/accurata).
-  const auto = withAuto ? `<option value="" ${selected === '' ? 'selected' : ''}>${t('ab_auto')}</option>` : '';
+  // Incantesimi ('sc'): "Automatica" = la più alta tra INT, SAG e CAR.
+  const auto = withAuto ? `<option value="" ${selected === '' ? 'selected' : ''}>${t(withAuto === 'sc' ? 'scs_auto' : 'ab_auto')}</option>` : '';
   return auto + ABILITIES
     .map(a => `<option value="${a.id}" ${a.id === selected ? 'selected' : ''}>${_abEn ? a.en : a.label}</option>`)
     .join('');
@@ -196,9 +219,13 @@ function cardHtml(item, idx) {
       <label>${t('ed_dc_save')} <input type="text" data-f="riderDc" value="${esc(item.riderDc)}" placeholder="11" /></label>` : ''}
     </div>` : ''}
 
-    ${item.kind === 'spellcasting' ? `
+    ${item.kind === 'spellcasting' && isStudio() && itemsState.find(x => x.kind === 'spellcasting') === item ? `
+    <div class="sc-stub">
+      <span class="hint">${t('scs_stub')}</span>
+      <button type="button" class="secondary small" data-goto-spells>${t('scs_goto')}</button>
+    </div>` : item.kind === 'spellcasting' ? `
     <div class="grid-3">
-      <label>${t('sc_ability')} <select data-f="scAbility">${abilityOptions(item.scAbility)}</select></label>
+      <label>${t('sc_ability')} <span class="hint">${t('scs_auto_hint')}</span><select data-f="scAbility">${abilityOptions(item.scAbility, 'sc')}</select></label>
       <label>${t('sc_dc')} <span class="hint">${t('sc_auto_hint')}</span><input type="number" data-f="scDc" value="${esc(item.scDc)}" placeholder="auto" /></label>
       <label>${t('sc_attack')} <span class="hint">${t('sc_auto_hint')}</span><input type="number" data-f="scAttack" value="${esc(item.scAttack)}" placeholder="auto" /></label>
       <label>${t('sc_level')} <span class="hint">${t('sc_level_hint')}</span><input type="number" data-f="scLevel" value="${esc(item.scLevel)}" min="0" max="20" /></label>
@@ -335,6 +362,8 @@ export function initItemsEditor({ listEl, addBtn, onChange, rules }) {
     item[field] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;
     // Lista incantesimi: aggiorna solo il riepilogo ✓/✗ (niente re-render: il cursore resta dov'è).
     if (field === 'spellList') {
+      // La lista scritta a mano torna a comandare anche sugli slot.
+      item.scSlots = '';
       const box = card.querySelector('.sc-resolve');
       if (box) box.innerHTML = scResolveHtml(item);
     }
@@ -353,6 +382,11 @@ export function initItemsEditor({ listEl, addBtn, onChange, rules }) {
   }, true);
 
   container.addEventListener('click', (ev) => {
+    // --- Blocco Incantesimi nel design Studio: si modifica nella sua sezione ---
+    if (ev.target.closest('[data-goto-spells]')) {
+      document.dispatchEvent(new CustomEvent('forge:goto-spells'));
+      return;
+    }
     // --- Bottoni On-Use Macros (aggiungi/rimuovi riga) ---
     const cardOu = ev.target.closest('[data-idx]');
     if (cardOu && ('ouAdd' in ev.target.dataset || 'ouRemove' in ev.target.dataset)) {

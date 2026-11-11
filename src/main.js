@@ -13,6 +13,8 @@ import { initSpellTab } from './ui/spell-tab.js';
 import { initInfoTab } from './ui/info-tab.js';
 import { initThemePicker } from './ui/theme.js';
 import { initSectionNav } from './ui/section-nav.js';
+import { initSkillPills, initDamageMatrix, syncStudioWidgets } from './ui/studio-widgets.js';
+import { initSpellcastingSection, syncSpellcastingSection } from './ui/spellcasting-section.js';
 import { initCRReadout, renderCR } from './ui/cr-readout.js';
 import { initEncounterTab } from './ui/encounter-tab.js';
 // ?raw: Vite ci passa il CODICE della macro come stringa, senza eseguirlo.
@@ -127,6 +129,7 @@ function buildSkillsGrid() {
       ${label}
       <select data-skill="${id}">
         <option value="0">${t('sk_none')}</option>
+        <option value="0.5">${t('sk_half')}</option>
         <option value="1">${t('sk_prof')}</option>
         <option value="2">${t('sk_exp')}</option>
       </select>
@@ -315,6 +318,9 @@ function restoreForm(state) {
     traitGroups[key]?.setValue(state[key] || '');
   }
   setItems(state.items);
+  // I controlli del design Studio mostrano gli stessi dati: si riallineano.
+  syncStudioWidgets();
+  syncSpellcastingSection();
   renderPreview();
 }
 
@@ -653,11 +659,28 @@ buildTraitChips();
 initItemsEditor({
   listEl: document.getElementById('items-list'),
   addBtn: document.getElementById('btn-add-item'),
-  onChange: () => { schedulePreview(); autosave(); },
+  // Una card aggiunta, tolta o cambiata di tipo può essere il blocco Incantesimi.
+  onChange: () => { syncSpellcastingSection(); schedulePreview(); autosave(); },
   rules: () => val('rules'),
 });
+// Design Studio: competenze e danni "a clic", incantesimi in una sezione loro.
+initSkillPills({ host: document.getElementById('skills-pills'), legend: document.getElementById('skills-legend'), skills: SKILLS });
+initDamageMatrix({
+  host: document.getElementById('dmg-matrix'), groups: traitGroups,
+  labels: byLang(DAMAGE_TYPE_LABELS, DAMAGE_TYPE_LABELS_EN, LANG),
+});
+initSpellcastingSection({
+  rules: () => val('rules'),
+  abilities: () => ({ int: val('int'), wis: val('wis'), cha: val('cha') }),
+  onChange: () => { schedulePreview(); autosave(); },
+});
 // Cambiando regole (2014/2024) cambia il compendio in cui cercare gli incantesimi.
-document.getElementById('rules').addEventListener('change', () => refreshItems());
+document.getElementById('rules').addEventListener('change', () => { refreshItems(); syncSpellcastingSection(); });
+// Il blocco Incantesimi si disegna in modo diverso nei due design; i controlli
+// a clic rileggono i dati (potrebbero essere cambiati con quelli classici).
+document.addEventListener('forge:theme', () => { refreshItems(); syncStudioWidgets(); syncSpellcastingSection(); });
+// "Automatica" e il riepilogo seguono le caratteristiche mentre le si cambia.
+for (const ab of ['int', 'wis', 'cha']) document.getElementById(ab).addEventListener('input', () => syncSpellcastingSection());
 // L'input nella casella statblock NON deve rigenerare anteprima/validazione:
 // non fa parte dell'actor. Lo escludiamo dal ciclo (perf + niente churn).
 document.getElementById('npc-form').addEventListener('input', (ev) => {

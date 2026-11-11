@@ -43,7 +43,8 @@ function initFolding() {
     legend.tabIndex = 0;
     legend.setAttribute('role', 'button');
     legend.title = t('m_fold');
-    const closed = key in state ? state[key] : (!stored && isMobile() && FOLD_MOBILE_DEFAULT.includes(key));
+    // data-fold-default="closed": sezione facoltativa, chiusa finché non la si apre.
+    const closed = key in state ? state[key] : (fs.dataset.foldDefault === 'closed' || (!stored && isMobile() && FOLD_MOBILE_DEFAULT.includes(key)));
     const apply = (c) => { fs.classList.toggle('folded', c); legend.setAttribute('aria-expanded', String(!c)); };
     apply(closed);
     const toggle = (ev) => {

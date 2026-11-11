@@ -14,7 +14,7 @@ import { NPC_BASE } from '../data/npc-base.js';
 import { SIZES, DAMAGE_TYPES, CONDITIONS, LANGUAGES, DAMAGE_BYPASSES } from '../data/constants.js';
 import { buildItem, parseDamageParts } from './item.js';
 import { buildSpellcastingItem } from './spellcasting.js';
-import { parseSpellGroups } from '../parsers/spellcasting.js';
+import { effectiveSlots } from '../parsers/spellcasting.js';
 import { cleanImagePath, hasValidImageExt } from '../utils/img.js';
 
 /**
@@ -58,6 +58,13 @@ function splitDamageTrait(input) {
     else custom.push(token);
   }
   return { value, bypasses, custom: custom.join('; ') };
+}
+
+/** Caratteristica da incantatore "automatica": la più alta tra INT, SAG e CAR. */
+export function bestMentalAbility(data) {
+  let best = 'int';
+  for (const ab of ['wis', 'cha']) if ((Number(data?.[ab]) || 10) > (Number(data?.[best]) || 10)) best = ab;
+  return best;
 }
 
 /** Converte il CR: accetta "5", "1/2", "1/4", "0.25"... → numero. */
@@ -177,16 +184,19 @@ export function buildNpc(data) {
   // --- Incantatore: caratteristica, livello e slot (dal primo blocco) ---
   const sc = (data.items || []).find((d) => d.kind === 'spellcasting');
   if (sc) {
-    if (sc.scAbility) sys.attributes.spellcasting = sc.scAbility;
-    const slots = parseSpellGroups(sc.spellList).filter((g) => g.mode === 'slots');
-    if (slots.length) {
-      // Incantatore "a slot" (2014): livello da incantatore + slot dello
-      // statblock (override = esattamente quelli scritti).
-      sys.attributes.spell.level = Number(sc.scLevel) || 0;
-      for (const g of slots) {
-        const key = `spell${g.level}`;
-        if (sys.spells[key]) sys.spells[key] = { value: g.slots, override: g.slots };
-      }
+    // Vuota = "automatica": la più alta tra INT, SAG e CAR (Foundry non la
+    // sceglie da sé: senza indicazione resterebbe Intelligenza).
+    sys.attributes.spellcasting = sc.scAbility || bestMentalAbility(data);
+    const level = Math.max(0, Math.min(20, Number(sc.scLevel) || 0));
+    const slots = effectiveSlots(sc);
+    if (level || slots.some((x) => x.explicit)) {
+      // Incantatore "a slot": dal livello Foundry calcola gli slot; quelli
+      // scritti a mano (form o statblock) diventano override.
+      sys.attributes.spell.level = level;
+      slots.forEach((x, i) => {
+        const key = `spell${i + 1}`;
+        if (sys.spells[key] && (x.n || x.explicit)) sys.spells[key] = { value: x.n, override: x.explicit ? x.n : null };
+      });
     }
   }
 

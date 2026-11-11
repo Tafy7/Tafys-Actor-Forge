@@ -4,15 +4,22 @@
 // Stessa forma dei mostri ufficiali 2024 (Monster Manual): una feature
 // "Spellcasting" con un'attività CAST per ogni incantesimo. L'attività punta
 // all'incantesimo del compendio di sistema (dnd5e.spells / dnd5e.spells24) e
-// dnd5e, quando il mostro viene creato, ne fa da solo la copia sull'actor.
-// Gli usi "N al giorno" stanno sull'attività. Nessun modulo richiesto.
+// dnd5e ne fa la copia sull'actor al primo lancio (la macro del Forge la
+// prepara già all'import, come nei mostri ufficiali).
+//   a volontà  → nessun consumo
+//   N/giorno   → usi sull'attività + consumo "activityUses"
+//   a slot     → consumo "spellSlots" del livello dell'incantesimo
+// Nessun modulo richiesto.
 // ============================================================
 import { FEAT_BASE, CAST_ACTIVITY_BASE } from '../data/item-bases.js';
 import { applyExtraFlags } from './item.js';
 import { parseSpellGroups, resolveSpell } from '../parsers/spellcasting.js';
 import { randomID } from '../utils/id.js';
 import { cleanImagePath } from '../utils/img.js';
-import { descriptionHtml } from '../utils/html.js';
+import { descriptionHtml, esc } from '../utils/html.js';
+
+/** Scope dei flag del Forge (solo sulle attività "a slot", li legge la macro). */
+export const FORGE_FLAG = 'tafys-actor-forge';
 
 /**
  * `d`: card del form con kind 'spellcasting' — name, description, img,
@@ -25,7 +32,14 @@ export function buildSpellcastingItem(d, rules = '2024') {
   item._id = randomID();
   item.name = String(d.name || '').trim() || 'Spellcasting';
   item.system.identifier = item.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-  item.system.description.value = descriptionHtml(d.description);
+  // Senza una descrizione scritta a mano, il tratto riporta la lista così
+  // com'è (un gruppo per riga), come il testo di uno statblock: sulla scheda
+  // si legge cosa sa lanciare anche quando gli incantesimi a slot sono
+  // passati nel libro.
+  const listed = String(d.spellList || '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  item.system.description.value = String(d.description || '').trim() || !listed.length
+    ? descriptionHtml(d.description)
+    : `<p>${listed.map(esc).join('<br>')}</p>`;
   const img = cleanImagePath(d.img);
   if (img) item.img = img;
 
@@ -44,14 +58,33 @@ export function buildSpellcastingItem(d, rules = '2024') {
       // Non trovato nei compendi di sistema: il nome resta sull'attività e
       // la macro del Forge lo cerca negli altri compendi al momento dell'import.
       act.name = hit ? '' : sp.name;
-      act.spell.level = sp.castLevel || (hit && hit.level > 0 ? hit.level : null);
+      const base = hit && hit.level > 0 ? hit.level : null;
       act.spell.properties = d.scNoMaterial ? ['material'] : [];
+      // Vuota = quella dell'actor (attributes.spellcasting), come nei mostri ufficiali.
       act.spell.ability = d.scAbility || '';
       // CD / attacco scritti nello statblock: valgono anche se la matematica
       // dell'homebrew non torna con caratteristica + competenza.
       act.spell.challenge = { attack: atk, save: dc, override: Boolean(dc || atk !== null) };
-      if (group.mode === 'day') {
-        act.uses = { spent: 0, max: String(group.uses), recovery: [{ period: 'day', type: 'recoverAll' }] };
+      const cantrip = Boolean(hit && hit.level === 0);
+      if (group.mode === 'slots' && !cantrip) {
+        // Incantatore "a slot" (2014): lanciarlo consuma uno slot del suo
+        // livello (o di uno più alto, a scelta nella finestra di Foundry).
+        // La macro del Forge, all'import, lo trasforma in un incantesimo
+        // "vero" nel libro, come nei mostri ufficiali 2014: il flag dice
+        // quali attività sono nate così.
+        const lv = Math.max(group.level || 1, base || 0, sp.castLevel || 0);
+        act.spell.level = lv;
+        act.consumption.scaling = { allowed: true, max: '' };
+        act.consumption.targets = [{ type: 'spellSlots', value: '1', target: String(lv), scaling: { mode: 'level', formula: '' } }];
+        act.flags = { [FORGE_FLAG]: { slot: true } };
+      } else {
+        act.spell.level = sp.castLevel || base;
+        if (group.mode === 'day') {
+          // Gli usi stanno sull'attività E vanno dichiarati come consumo:
+          // senza il bersaglio "activityUses" Foundry non li mostra né li scala.
+          act.uses = { spent: 0, max: String(group.uses), recovery: [{ period: 'day', type: 'recoverAll' }] };
+          act.consumption.targets = [{ type: 'activityUses', value: '1', target: '', scaling: { mode: '', formula: '' } }];
+        }
       }
       activities[act._id] = act;
     }

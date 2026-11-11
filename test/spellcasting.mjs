@@ -1,9 +1,12 @@
 // Incantesimi dei mostri (v0.45): lettura dei gruppi dallo statblock,
 // collegamento ai compendi di sistema, attività "cast" come i mostri
 // ufficiali 2024, livello e slot da incantatore. Si lancia con: npm test
-import { parseSpellGroups, parseSpellcastingHeader, formatSpellGroups, resolveSpell, isSpellcastingName } from '../src/parsers/spellcasting.js';
+import {
+  parseSpellGroups, parseSpellcastingHeader, formatSpellGroups, resolveSpell, isSpellcastingName,
+  defaultSlots, parseSlotOverrides, effectiveSlots, groupsToChips, chipsToGroups, nextSpellMode, suggestSpells, spellKey,
+} from '../src/parsers/spellcasting.js';
 import { buildSpellcastingItem } from '../src/builders/spellcasting.js';
-import { buildNpc } from '../src/builders/npc.js';
+import { buildNpc, bestMentalAbility } from '../src/builders/npc.js';
 import { validateActor } from '../src/builders/validate.js';
 import { parseStatblock } from '../src/parsers/statblock.js';
 import { importActor } from '../src/parsers/actor-import.js';
@@ -59,11 +62,80 @@ console.log('\n— Attività "cast" (forma dei mostri ufficiali 2024) —');
   check('collegati: UUID del compendio, nome vuoto (lo prende dall\'incantesimo)', acts[0].spell.uuid.startsWith('Compendium.dnd5e.spells24.Item.') && acts[0].name === '');
   check('non collegato: niente UUID, il nome resta per la macro', acts[1].spell.uuid === '' && acts[1].name === 'Incantesimo Inventato');
   check('1/giorno: usi sull\'attività, ricarica giornaliera', acts[2].uses.max === '1' && acts[2].uses.recovery[0].period === 'day' && acts[0].uses.max === '');
+  check('1/giorno: gli usi sono dichiarati come consumo (senza, Foundry non li mostra né li scala)', J(acts[2].consumption.targets.map(x => [x.type, x.value])) === J([['activityUses', '1']]) && acts[0].consumption.targets.length === 0);
   check('livello: base dal compendio, oppure quello del testo', acts[0].spell.level === 1 && acts[2].spell.level === 4);
   check('senza materiali → ["material"]; CD dello statblock come override', J(acts[0].spell.properties) === J(['material']) && acts[0].spell.challenge.override === true && acts[0].spell.challenge.save === 15 && acts[0].spell.challenge.attack === null);
   check('caratteristica sull\'incantesimo', acts[0].spell.ability === 'cha');
+  check('senza descrizione: il tratto riporta la lista, un gruppo per riga', it.system.description.value === '<p>A volontà: Detect Magic, Incantesimo Inventato<br>1/giorno: Fireball (livello 4)</p>', it.system.description.value);
+  const own = buildSpellcastingItem({ ...base, description: 'Testo mio', spellList: 'A volontà: <b>Light</b>' }, '2024').system.description.value;
+  const tag = buildSpellcastingItem({ ...base, spellList: 'A volontà: <img src=x>' }, '2024').system.description.value;
+  check('la descrizione scritta a mano vince; la lista non diventa mai HTML', /Testo mio/.test(own) && !/A volontà/.test(own) && tag === '<p>A volontà: &lt;img src=x&gt;</p>', tag);
   const noOverride = Object.values(buildSpellcastingItem({ ...base, scDc: '', spellList: 'A volontà: Light' }, '2024').system.activities)[0];
   check('CD e attacco vuoti → calcolati da Foundry (nessun override)', noOverride.spell.challenge.override === false);
+}
+
+console.log('\n— Incantatore a slot: consumo, livelli, slot —');
+{
+  const it = buildSpellcastingItem({ ...base, scAbility: '', scDc: '', scLevel: '5', scNoMaterial: false,
+    spellList: 'Trucchetti (a volontà): Light\nLivello 1 (4 slot): Misty Step, Fire Bolt\nLivello 2 (3 slot): Incantesimo Inventato\nLivello 3 (3 slot): Fireball (livello 5)' }, '2014');
+  const acts = Object.values(it.system.activities);
+  const [light, misty, bolt, inv, fb] = acts;
+  const slot = (a) => a.consumption.targets.find(x => x.type === 'spellSlots');
+  check('a slot: lanciarlo consuma uno slot (bersaglio "spellSlots", scalabile)', slot(misty)?.value === '1' && slot(misty).scaling.mode === 'level' && misty.consumption.scaling.allowed === true);
+  check('scritto nel gruppo sbagliato (Misty Step al 1°): vale il livello vero (2°)', misty.spell.level === 2 && slot(misty).target === '2');
+  check('trucchetto in un gruppo a slot: resta a volontà, nessun consumo', bolt.consumption.targets.length === 0 && !bolt.flags?.['tafys-actor-forge'] && bolt.spell.level === null);
+  check('non nei compendi di sistema: livello del gruppo (lo corregge la macro all\'import)', inv.spell.level === 2 && slot(inv).target === '2' && inv.name === 'Incantesimo Inventato');
+  check('"(livello 5)" in un gruppo a slot: slot e lancio al 5°', fb.spell.level === 5 && slot(fb).target === '5');
+  check('le attività a slot sono marcate per la macro, le altre no', [misty, inv, fb].every(a => a.flags['tafys-actor-forge'].slot === true) && !light.flags?.['tafys-actor-forge']);
+  check('caratteristica vuota sull\'attività = quella dell\'actor', acts.every(a => a.spell.ability === ''));
+
+  check('tabella degli slot: livello 5 → 4/3/2, livello 20 → 4/3/3/3/3/2/2/1/1, nessun livello → zero',
+    J(defaultSlots(5)) === J([4, 3, 2, 0, 0, 0, 0, 0, 0]) && J(defaultSlots('20')) === J([4, 3, 3, 3, 3, 2, 2, 1, 1]) && J(defaultSlots('')) === J(Array(9).fill(0)) && J(defaultSlots(1)) === J([2, 0, 0, 0, 0, 0, 0, 0, 0]));
+  check('slot scelti a mano: "4,3,,2" → vuoto = quello del livello', J(parseSlotOverrides('4,3,,2')) === J([4, 3, null, 2, null, null, null, null, null]) && J(parseSlotOverrides('x,-1')) === J(Array(9).fill(null)));
+  const eff = effectiveSlots({ scLevel: '5', scSlots: ',,3', spellList: 'Livello 1 (5 slot): Shield\nLivello 2 (3 slot): Misty Step\nLivello 3 (1 slot): Fly' });
+  check('precedenza: a mano → scritti nella lista → livello', J(eff.slice(0, 4).map(x => x.n)) === J([5, 3, 3, 0]));
+  check('override solo dove serve: a mano o diverso dal livello', J(eff.slice(0, 4).map(x => x.explicit)) === J([true, false, true, false]));
+  const mk = (extra, spells) => buildNpc({ name: 'X', size: 'med', creatureType: 'humanoid', subtype: '', alignment: '', cr: '1', rules: '2014', sourceBook: '', sourcePage: '',
+    str: '10', dex: '10', con: '10', int: '12', wis: '16', cha: '16', saves: [], skills: { prf: '0.5', ste: '2' }, hpMax: '10', hpFormula: '', acCalc: 'default', acFlat: '',
+    walk: '30', fly: '', swim: '', climb: '', burrow: '', hover: false, darkvision: '', blindsight: '', tremorsense: '', truesight: '', telepathy: '',
+    dr: '', di: '', dv: '', ci: '', languages: '', legact: '', legres: '', img: '', tokenImg: '', bio: '', items: [{ ...base, scAbility: '', scDc: '', scNoMaterial: false, spellList: spells, ...extra }] });
+  const lv5 = mk({ scLevel: '5' }, 'A volontà: Light').system;
+  check('livello 5 senza slot scritti: 4/3/2 pronti, nessun override, 4° vuoto', lv5.attributes.spell.level === 5 && J([1, 2, 3, 4].map(n => lv5.spells['spell' + n])) === J([{ value: 4, override: null }, { value: 3, override: null }, { value: 2, override: null }, { value: 0, override: null }]));
+  const hand = mk({ scLevel: '5', scSlots: ',,3,1' }, 'A volontà: Light').system;
+  check('slot a mano: 3° = 3 e 4° = 1 diventano override', J([3, 4].map(n => hand.spells['spell' + n])) === J([{ value: 3, override: 3 }, { value: 1, override: 1 }]) && hand.spells.spell1.override === null);
+  check('caratteristica automatica: la più alta tra INT/SAG/CAR (a parità la prima)', lv5.attributes.spellcasting === 'wis' && bestMentalAbility({ int: '8', wis: '8', cha: '9' }) === 'cha' && bestMentalAbility({}) === 'int');
+  check('mezza competenza (0.5) ed expertise (2) nelle abilità', lv5.skills.prf.value === 0.5 && lv5.skills.ste.value === 2);
+}
+
+console.log('\n— Lista a pillole (sezione Incantesimi del design Studio) —');
+{
+  const round = (text, rules, slots) => formatSpellGroups(chipsToGroups(groupsToChips(parseSpellGroups(text)), { rules, slots }), 'it');
+  const mage = formatSpellGroups(parseSpellGroups(MAGE_2014), 'it');
+  check('2014: testo → pillole → testo identico', round(mage, '2014', [4, 0, 3, 0, 1]) === mage, round(mage, '2014', [4, 0, 3, 0, 1]));
+  const innate = formatSpellGroups(parseSpellGroups(INNATE_2024), 'it');
+  check('2024: note e "(livello 4)" sopravvivono al giro', round(innate, '2024', []) === innate && /Fireball \(livello 4\)/.test(innate) && /\(self only\)/.test(innate));
+  const chips = groupsToChips(parseSpellGroups('A volontà: Light\n2/giorno: Fly\nLivello 3 (3 slot): Fireball'));
+  check('pillole: modo e usi dal gruppo', J(chips.map(c => [c.name, c.mode, c.uses, c.level])) === J([['Light', 'atwill', null, null], ['Fly', 'day', 2, null], ['Fireball', 'slot', null, 3]]));
+  const g = chipsToGroups([
+    { name: 'Fireball', mode: 'slot' }, { name: 'Shield', mode: 'slot' }, { name: 'Fly', mode: 'day', uses: 1 }, { name: 'Light', mode: 'slot' },
+    { name: 'Detect Magic', mode: 'atwill' }, { name: 'Misty Step', mode: 'day', uses: 3 }, { name: 'Lama Inventata', mode: 'slot', level: 4 }, { name: 'Altra Inventata', mode: 'slot' },
+  ], { rules: '2014', slots: [4, 3, 2, 1] });
+  check('ordine degli statblock: trucchetti, a volontà, N/giorno dal più frequente, slot dal 1°', J(g.map(x => x.mode + (x.cantrips ? 'C' : '') + (x.uses ?? '') + (x.level ?? ''))) === J(['atwillC', 'atwill', 'day3', 'day1', 'slots1', 'slots3', 'slots4']));
+  check('un trucchetto messo "a slot" finisce tra i trucchetti', g[0].spells[0].name === 'Light');
+  const ct = (caster) => chipsToGroups([{ name: 'Mending', mode: 'atwill' }, { name: 'Fly', mode: 'atwill' }], { rules: '2014', caster }).map(x => (x.cantrips ? 'C:' : 'A:') + x.spells.map(y => y.name).join('+')).join(' ');
+  check('trucchetto a volontà: sotto "Trucchetti" solo se il mostro ha un livello da incantatore', ct(true) === 'C:Mending A:Fly' && ct(false) === 'A:Mending+Fly');
+  check('slot: livello dell\'incantesimo; sconosciuto → quello scelto (o 1°)', g[4].spells.map(x => x.name).join() === 'Shield,Altra Inventata' && g[6].spells[0].name === 'Lama Inventata' && g[5].slots === 2 && g[6].slots === 1);
+  const cyc = (c, has) => { const out = []; let cur = c; for (let i = 0; i < 6; i++) { cur = { ...cur, ...nextSpellMode(cur, has) }; out.push(cur.mode + (cur.uses ?? '')); } return out.join(' '); };
+  check('giro con gli slot: a volontà → 1/g → 2/g → 3/g → slot → …', cyc({ mode: 'slot' }, true) === 'atwill day1 day2 day3 slot atwill');
+  check('giro senza livello da incantatore: lo slot non compare', cyc({ mode: 'atwill' }, false) === 'day1 day2 day3 atwill day1 day2');
+
+  const names = (q, rules, o) => suggestSpells(q, rules, o).map(x => x.name);
+  check('"Mend" suggerisce Mending', names('Mend', '2014')[0] === 'Mending' && names('mend', '2024')[0] === 'Mending');
+  check('meno di 3 caratteri: nessun suggerimento', names('me', '2024').length === 0 && names('  ', '2024').length === 0);
+  check('prima chi INIZIA col testo, poi chi lo contiene (parole intere davanti)', names('fire', '2024').indexOf('Fireball') < names('fire', '2024', { limit: 30 }).indexOf('Wall of Fire') && names('hand', '2024', { limit: 30 }).includes('Mage Hand'));
+  check('stesso nome nelle due regole: una volta sola, col livello', suggestSpells('fireball', '2014').filter(x => x.name === 'Fireball').length === 1 && suggestSpells('fireball', '2014')[0].level === 3 && suggestSpells('fireball', '2014')[0].rules === '2014');
+  check('già in lista → non riproposto; al massimo 8', !names('fire', '2024', { exclude: ['FIREBALL'] }).includes('Fireball') && names('a', '2024', { min: 1 }).length === 8);
+  check('chiave dei nomi: maiuscole, accenti e apostrofi non contano', spellKey("Hunter’s  MARK") === spellKey('hunters mark') && spellKey('Élan') === 'elan');
 }
 
 console.log('\n— Mostro completo —');
@@ -78,7 +150,8 @@ console.log('\n— Mostro completo —');
   };
   const a = buildNpc(data);
   check('caratteristica da incantatore dell\'actor', a.system.attributes.spellcasting === 'int');
-  check('incantatore a slot: livello 9 e slot dello statblock', a.system.attributes.spell.level === 9 && a.system.spells.spell1.override === 4 && a.system.spells.spell3.value === 3 && a.system.spells.spell5.override === 1 && a.system.spells.spell2.override == null);
+  check('incantatore a slot: livello 9 e slot dello statblock', a.system.attributes.spell.level === 9 && a.system.spells.spell1.value === 4 && a.system.spells.spell3.value === 3 && a.system.spells.spell5.value === 1 && a.system.spells.spell2.value === 3);
+  check('slot uguali a quelli del livello: nessun override (come i mostri ufficiali)', [1, 2, 3, 4, 5].every(n => a.system.spells['spell' + n].override === null));
   check('incantatore a slot con componenti: nessuna componente tolta', Object.values(a.items[0].system.activities).every(x => J(x.spell.properties) === '[]'));
   check('regole 2014 → compendio dnd5e.spells', Object.values(a.items[0].system.activities).every(x => x.spell.uuid.startsWith('Compendium.dnd5e.spells.Item.')));
   check('nessun errore strutturale', validateActor(a).filter(i => i.level === 'error').length === 0);

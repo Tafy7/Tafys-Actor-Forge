@@ -73,6 +73,30 @@ function makeEnv(lang = 'it') {
       return d;
     }
     get sheet() { return { render: () => env.rendered.push(this.name) }; }
+    // Voci incorporate come le vede la macro dopo la creazione: le attività
+    // sono una Map e le cast sanno preparare la copia del loro incantesimo.
+    get items() {
+      return (this._data.items ?? []).map((it) => ({
+        ...it,
+        system: { ...it.system, activities: new Map(Object.entries(it.system?.activities ?? {}).map(([id, a]) => {
+          const ref = `.Item.${it._id}.Activity.${id}`;
+          return [id, {
+            ...a,
+            cachedSpell: (this._data.items ?? []).find((x) => x.flags?.dnd5e?.cachedFor === ref),
+            getCachedSpellData: async () => {
+              const src = env.uuids?.get(a.spell?.uuid);
+              if (env.copyFails) throw new Error('copia rotta');
+              return src ? { ...structuredClone(src), flags: { dnd5e: { cachedFor: ref } } } : undefined;
+            },
+          }];
+        })) },
+      }));
+    }
+    async createEmbeddedDocuments(type, list) {
+      (this._data.items ??= []).push(...list.map((d) => ({ ...structuredClone(d), _id: rid() })));
+      env.log.push(['embed', this.name, type, list.length]);
+      return list;
+    }
   }
   const docClass = (documentName) => ({
     async createDocuments(list, opts = {}) {
@@ -188,7 +212,9 @@ async function runMacro(F, fields) {
       }
     } } },
     utils: {
-      deepClone: (x) => structuredClone(x), randomID: () => 'u1',
+      deepClone: (x) => structuredClone(x),
+      // La prima chiamata è l'id della finestra (i test lo cercano come "u1"); le altre sono id veri.
+      randomID: (() => { let n = 0; return () => (n++ ? rid() : 'u1'); })(),
       saveDataToFile: (data, type, filename) => F.env.saved.push({ data, type, filename }),
     },
   };
@@ -691,6 +717,81 @@ console.log('\n— Incantesimi dei mostri: collegamento per nome durante l\'impo
   check('non trovato: resta col nome + avviso', acts.some(a => a.name === 'Incantesimo Inesistente' && !a.spell.uuid)
     && notes(F, 'warn').some(n => /1 avvis|Incantesimo Inesistente/.test(n)));
   check('notifica: 3 incantesimi collegati', notes(F, 'info').some(n => /3 incantesimi collegati/.test(n)));
+}
+console.log('\n— Incantesimi dei mostri: usi, slot e copie all\'import —');
+{
+  const F = makeEnv();
+  // "Compendi" finti raggiungibili per UUID (come fromUuid di Foundry).
+  const spellDoc = (name, level, extra = {}) => ({ name, type: 'spell', _id: 'orig' + name.replace(/\W/g, ''), folder: 'cartellaCompendio', ownership: { default: 0 }, sort: 500,
+    system: { level, method: '', prepared: 0, properties: ['vocal', 'somatic', 'material'], activities: {}, ...extra }, _stats: { coreVersion: '13.351' } });
+  F.env.uuids = new Map();
+  const reg = (uuid, data) => F.env.uuids.set(uuid, data);
+  globalThis.fromUuid = async (uuid) => { const d = F.env.uuids.get(uuid); return d ? { type: d.type, system: d.system, toObject: () => structuredClone(d) } : null; };
+  const mk = (rules, list, level, extra = {}) => buildNpc({
+    name: 'Maga di Brace', size: 'med', creatureType: 'humanoid', subtype: '', alignment: '', cr: '6', rules,
+    sourceBook: '', sourcePage: '', str: '10', dex: '12', con: '12', int: '17', wis: '12', cha: '10',
+    saves: [], skills: {}, hpMax: '40', hpFormula: '', acCalc: 'default', acFlat: '',
+    walk: '30', fly: '', swim: '', climb: '', burrow: '', hover: false,
+    darkvision: '', blindsight: '', tremorsense: '', truesight: '', telepathy: '',
+    dr: '', di: '', dv: '', ci: '', languages: '', legact: '', legres: '', img: '', tokenImg: '', bio: '',
+    items: [{ name: 'Spellcasting', kind: 'spellcasting', activation: 'action', description: '', img: '', scAbility: '', scDc: '', scAttack: '',
+      scLevel: level, scNoMaterial: false, spellList: list, effects: [], onUse: [], ...extra }],
+  });
+  const slotCaster = mk('2014', 'Trucchetti (a volontà): Light\nA volontà: Detect Magic\n1/giorno: Fly\nLivello 2 (3 slot): Misty Step, Lama di Brace\nLivello 3 (3 slot): Fireball', '5', { scNoMaterial: true });
+  const feat = slotCaster.items[0];
+  for (const a of Object.values(feat.system.activities)) if (a.spell.uuid) reg(a.spell.uuid, spellDoc(a.spell.uuid.slice(-6), a.spell.level ?? 0));
+  // Light è un trucchetto, Detect Magic no (1° livello a volontà).
+  const byLevel = Object.values(feat.system.activities);
+  reg(byLevel[0].spell.uuid, spellDoc('Light', 0));
+  reg(byLevel[1].spell.uuid, spellDoc('Detect Magic', 1));
+  // "Lama di Brace" non è nei compendi di sistema: la trova la macro in un modulo, al 4° livello.
+  const mod = F.makePack('mio-modulo.incantesimi', 'Item', 'Incantesimi del modulo', false, { packageType: 'module', packageName: 'mio-modulo' });
+  mod.index.set('modLama', { _id: 'modLama', name: 'Lama di Brace', type: 'spell', system: { level: 4, source: { rules: '2014' } } });
+  reg('Compendium.mio-modulo.incantesimi.Item.modLama', spellDoc('Lama di Brace', 4));
+  await runMacro(F, { tab: 'import', payload: JSON.stringify(slotCaster) });
+  const made = docsIn(F, 'Actor')[0]._data;
+  const book = made.items.filter(i => i.type === 'spell' && !i.flags?.dnd5e?.cachedFor);
+  const copies = made.items.filter(i => i.flags?.dnd5e?.cachedFor);
+  const left = Object.values(made.items[0].system.activities);
+  check('a slot + trucchetto → 4 incantesimi veri nel libro, preparati', book.length === 4 && book.every(b => b.system.method === 'spell' && b.system.prepared === 1)
+    && ['Light', 'Lama di Brace'].every(n => book.some(b => b.name === n)) && !book.some(b => b.name === 'Detect Magic'));
+  check('id nuovi e diversi, niente cartella/permessi del compendio, origine annotata', new Set(book.map(b => b._id)).size === 4 && book.every(b => !/^orig/.test(b._id) && !('folder' in b) && !('ownership' in b) && /^Compendium\./.test(b._stats.compendiumSource)));
+  check('"senza componenti materiali" vale anche nel libro', book.every(b => !b.system.properties.includes('material') && b.system.properties.includes('vocal')));
+  check('non SRD collegato dalla macro: entra nel libro col suo livello vero (4°)', book.find(b => b.name === 'Lama di Brace')?.system.level === 4);
+  check('sulla feature restano solo gli innati (a volontà non trucchetto, 1/giorno)', left.length === 2 && left.every(a => !a.flags?.['tafys-actor-forge']));
+  check('e per loro la copia è già pronta (2), con gli usi dichiarati sul 1/giorno', copies.length === 2
+    && left.find(a => a.uses.max === '1')?.consumption.targets[0]?.type === 'activityUses');
+  check('notifica: incantesimi messi nel libro', notes(F, 'info').some(n => /4 incantesimi a slot/.test(n)));
+
+  // Stesso mostro SENZA macro (import nativo di Foundry): deve funzionare lo stesso.
+  const acts = Object.values(feat.system.activities);
+  const fb = acts.at(-1);
+  check('senza macro: l\'attività consuma uno slot del livello dell\'incantesimo', fb.consumption.targets[0].type === 'spellSlots' && fb.consumption.targets[0].target === '3' && fb.spell.level === 3 && fb.consumption.scaling.allowed === true);
+  check('senza macro: slot del livello 5 (4/3/2), quelli scritti sono override', slotCaster.system.attributes.spell.level === 5 && slotCaster.system.spells.spell1.value === 4 && slotCaster.system.spells.spell1.override === null
+    && slotCaster.system.spells.spell3.value === 3 && slotCaster.system.spells.spell3.override === 3);
+  check('caratteristica automatica: la più alta tra INT/SAG/CAR', slotCaster.system.attributes.spellcasting === 'int' && fb.spell.ability === '');
+
+  // Una copia che non si riesce a preparare non blocca l'import.
+  const F2 = makeEnv();
+  F2.env.uuids = F.env.uuids; F2.env.copyFails = true;
+  const innate = mk('2024', 'A volontà: Light\n2/giorno: Fireball', '');
+  for (const a of Object.values(innate.items[0].system.activities)) reg(a.spell.uuid, spellDoc('x', a.spell.level ?? 0));
+  await runMacro(F2, { tab: 'import', payload: JSON.stringify(innate) });
+  const made2 = docsIn(F2, 'Actor')[0]?._data;
+  check('copia fallita: il mostro è creato lo stesso, attività intatte', !!made2 && Object.keys(made2.items[0].system.activities).length === 2 && !notes(F2, 'error').length);
+  check('innato 2024: nessun incantesimo spostato nel libro', made2.items.length === 1 && !notes(F2, 'info').some(n => /a slot/.test(n)));
+  const day = Object.values(innate.items[0].system.activities)[1];
+  check('2/giorno: usi + consumo dichiarato (come i mostri ufficiali)', day.uses.max === '2' && JSON.stringify(day.consumption.targets.map(t => [t.type, t.value])) === '[["activityUses","1"]]');
+  // Un mostro che la copia ce l'ha già (come quelli ufficiali): non se ne crea un'altra.
+  const F3 = makeEnv();
+  F3.env.uuids = F.env.uuids;
+  const ready = structuredClone(innate);
+  const [aid, act0] = Object.entries(ready.items[0].system.activities)[0];
+  ready.items.push({ _id: 'copiaGiaPresente1', name: 'Light', type: 'spell', system: { level: 0 }, flags: { dnd5e: { cachedFor: `.Item.${ready.items[0]._id}.Activity.${aid}` } }, _stats: { compendiumSource: act0.spell.uuid } });
+  await runMacro(F3, { tab: 'import', payload: JSON.stringify(ready) });
+  const made3 = docsIn(F3, 'Actor')[0]._data.items.filter(i => i.flags?.dnd5e?.cachedFor);
+  check('copia già presente: resta una sola per quell\'attività, si prepara solo quella che manca', made3.length === 2 && new Set(made3.map(i => i.flags.dnd5e.cachedFor)).size === 2);
+  delete globalThis.fromUuid;
 }
 {
   // Niente da collegare → gli indici dei compendi non si leggono nemmeno.

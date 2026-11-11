@@ -19,7 +19,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span><span class="ver">v0.46</span></p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span><span class="ver">v0.47</span></p>
       </div>
       <div class="header-controls">
         <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
@@ -115,6 +115,13 @@
         <div class="grid-6" id="abilities-grid"><!-- generato da main.js --></div>
       </fieldset>
 
+      <!-- Design Studio: gli incantesimi del mostro in una sezione sua (nei temi
+           classici restano la card "Incantesimi" tra le azioni: stessi dati). -->
+      <fieldset id="sec-spells" class="studio-only" data-fold-default="closed">
+        <legend><span data-i18n="scs_legend">Incantesimi</span> <span class="hint" id="scs-summary"></span></legend>
+        <div id="scs-body"><!-- generato da ui/spellcasting-section.js --></div>
+      </fieldset>
+
       <fieldset>
         <legend data-i18n="def_legend">Difese e velocità</legend>
         <div class="grid-3">
@@ -153,15 +160,17 @@
       </fieldset>
 
       <fieldset>
-        <legend><span data-i18n="sk_legend">Skill</span> <span class="hint" data-i18n="sk_hint">(— / Competenza / Expertise)</span></legend>
-        <div class="grid-3" id="skills-grid"><!-- generato da main.js --></div>
+        <legend><span data-i18n="sk_legend">Skill</span> <span class="hint classic-only" data-i18n="sk_hint">(— / Competenza / Expertise)</span><span class="hint studio-only sk-legend" id="skills-legend"></span></legend>
+        <div class="grid-3 classic-only" id="skills-grid"><!-- generato da main.js --></div>
+        <div class="sk-pills studio-only" id="skills-pills"><!-- generato da ui/studio-widgets.js --></div>
       </fieldset>
 
       <fieldset>
-        <legend><span data-i18n="tr_legend">Tratti</span> <span class="hint" data-i18n="tr_hint">(clicca per selezionare; il campo libero è per le voci homebrew)</span></legend>
-        <div class="trait-group"><span class="trait-title" data-i18n="tr_dr">Resistenze ai danni</span><div id="chips-dr"></div></div>
-        <div class="trait-group"><span class="trait-title" data-i18n="tr_di">Immunità ai danni</span><div id="chips-di"></div></div>
-        <div class="trait-group"><span class="trait-title" data-i18n="tr_dv">Vulnerabilità ai danni</span><div id="chips-dv"></div></div>
+        <legend><span data-i18n="tr_legend">Tratti</span> <span class="hint classic-only" data-i18n="tr_hint">(clicca per selezionare; il campo libero è per le voci homebrew)</span></legend>
+        <div class="trait-group studio-only" id="dmg-matrix"><!-- generato da ui/studio-widgets.js --></div>
+        <div class="trait-group classic-only"><span class="trait-title" data-i18n="tr_dr">Resistenze ai danni</span><div id="chips-dr"></div></div>
+        <div class="trait-group classic-only"><span class="trait-title" data-i18n="tr_di">Immunità ai danni</span><div id="chips-di"></div></div>
+        <div class="trait-group classic-only"><span class="trait-title" data-i18n="tr_dv">Vulnerabilità ai danni</span><div id="chips-dv"></div></div>
         <div class="trait-group"><span class="trait-title" data-i18n="tr_ci">Immunità alle condizioni</span><div id="chips-ci"></div></div>
         <div class="trait-group"><span class="trait-title" data-i18n="tr_langs">Lingue</span><div id="chips-languages"></div></div>
       </fieldset>

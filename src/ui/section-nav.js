@@ -5,8 +5,11 @@
 // porta alla sezione con un clic e mostra dove ci si trova mentre si
 // scorre. Vive in tutti i temi ma si VEDE solo nel design Studio su
 // schermi larghi (lo decide il CSS): nei temi classici non cambia nulla.
+// Si può nascondere con il pulsante accanto al titolo.
 // ============================================================
 import { t } from '../i18n.js';
+
+const NAV_KEY = 'tafys-forge-nav';
 
 /** Testo del titolo di una sezione, senza il suggerimento tra parentesi. */
 function titleOf(legend) {
@@ -35,7 +38,31 @@ export function initSectionNav() {
   });
   const title = document.createElement('div');
   title.className = 'section-nav-title';
-  title.textContent = t('nav_sections');
+  const titleText = document.createElement('span');
+  titleText.textContent = t('nav_sections');
+  // L'indice si può nascondere: il form prende il suo spazio e resta solo
+  // il pulsante per riaprirlo. La scelta è ricordata.
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'section-nav-toggle';
+  toggle.setAttribute('aria-controls', 'section-nav');
+  nav.id = 'section-nav';
+  const applyNav = (off) => {
+    document.documentElement.dataset.nav = off ? 'off' : 'on';
+    toggle.textContent = off ? '☰' : '«';
+    toggle.title = t(off ? 'nav_show' : 'nav_hide');
+    toggle.setAttribute('aria-label', toggle.title);
+    toggle.setAttribute('aria-expanded', String(!off));
+  };
+  let navOff = false;
+  try { navOff = localStorage.getItem(NAV_KEY) === 'off'; } catch { /* storage off */ }
+  applyNav(navOff);
+  toggle.addEventListener('click', () => {
+    navOff = !navOff;
+    applyNav(navOff);
+    try { localStorage.setItem(NAV_KEY, navOff ? 'off' : 'on'); } catch { /* storage off */ }
+  });
+  title.append(titleText, toggle);
   nav.append(title, ...links);
   panel.insertBefore(nav, form);
 

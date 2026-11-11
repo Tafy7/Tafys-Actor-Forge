@@ -85,7 +85,7 @@ function serve() {
     check('testata compatta (≤ 70px)', (await p.$eval('header', (h) => h.getBoundingClientRect().height)) <= 70);
     check('form Mostro: anteprima fuori dal flusso, barra azioni visibile', !(await shown(p, '#tab-npc > aside')) && await shown(p, '#tab-npc .m-bar'));
     check('campi a 16px (iOS non zooma) e alti ≥ 40px', await p.$eval('#name', (i) => parseFloat(getComputedStyle(i).fontSize) >= 16 && i.getBoundingClientRect().height >= 40));
-    check('sezioni meno usate chiuse alla prima visita', (await p.$$('#npc-form > fieldset.folded')).length === 5);
+    check('sezioni meno usate chiuse alla prima visita', (await p.$$('#npc-form > fieldset.folded:not(.studio-only)')).length === 5);
 
     await p.fill('#name', 'Barbazu di prova');
     await p.fill('#hpMax', '110');
@@ -161,7 +161,7 @@ function serve() {
     await p.waitForTimeout(150);
     check('barra azioni in fondo allo schermo', await shown(p, '#tab-npc .m-bar') && await p.$eval('#tab-npc .m-bar', (b) => Math.round(b.getBoundingClientRect().bottom) === 1180));
     check('nessuno scroll orizzontale', await noHScroll(p));
-    check('sezioni tutte aperte (le chiusure di default sono solo per telefono)', (await p.$$('#npc-form > fieldset.folded')).length === 0);
+    check('sezioni tutte aperte (le chiusure di default sono solo per telefono)', (await p.$$('#npc-form > fieldset.folded:not(.studio-only)')).length === 0);
     await p.context().close();
   }
 
@@ -208,6 +208,127 @@ function serve() {
     const narrow = await page(1100, 800, 'studio');
     check('schermo medio (1100px): due colonne, indice nascosto', !(await shown(narrow, '.section-nav')) && await narrow.evaluate(() => document.querySelector('#tab-npc > aside').getBoundingClientRect().left > document.querySelector('#npc-form').getBoundingClientRect().right));
     await narrow.context().close();
+    await p.context().close();
+  }
+
+  console.log('\n— Studio: competenze e danni "a clic", sezione Incantesimi —');
+  {
+    const p = await page(1366, 900, 'studio');
+    const json = () => p.evaluate(() => new Promise((r) => setTimeout(() => r(JSON.parse(document.getElementById('preview').textContent)), 220)));
+    const click = (sel, n = 1) => p.evaluate(([s, k]) => { for (let i = 0; i < k; i++) document.querySelector(s).click(); }, [sel, n]);
+    const hit = 'onerror="window.__xss=(window.__xss||0)+1"';
+
+    // --- Competenze ---
+    check('abilità: pallini al posto dei menu, 3 colonne × 6 righe', !(await shown(p, '#skills-grid')) && await p.evaluate(() => { const b = [...document.querySelectorAll('#skills-pills .sk-pill')]; const xs = new Set(b.map((x) => Math.round(x.getBoundingClientRect().left))); const ys = new Set(b.map((x) => Math.round(x.getBoundingClientRect().top))); return b.length === 18 && xs.size === 3 && ys.size === 6; }));
+    check('legenda accanto al titolo: nessuna, mezza, competenza, expertise', await p.evaluate(() => document.querySelectorAll('#skills-legend .sk-dot').length === 4));
+    const lv = () => p.evaluate(() => [document.querySelector('[data-sk="ste"]').dataset.lv, document.querySelector('select[data-skill="ste"]').value]);
+    const seen = [];
+    for (let i = 0; i < 4; i++) { await click('[data-sk="ste"]'); seen.push((await lv()).join('='));}
+    check('clic sul nome: competenza → expertise → mezza → niente (menu classico allineato)', seen.join(' ') === '1=1 2=2 0.5=0.5 0=0', seen);
+    await click('[data-sk="prf"]', 3); await click('[data-sk="acr"]', 1);
+    let a = await json();
+    check('il JSON segue i pallini (0.5 e 1)', a.system.skills.prf.value === 0.5 && a.system.skills.acr.value === 1 && a.system.skills.ste.value === 0);
+
+    // --- Danni ---
+    check('danni: una pillola per tipo, i tre gruppi classici nascosti', !(await shown(p, '#chips-dr')) && await p.evaluate(() => document.querySelectorAll('#dmg-matrix [data-dm]').length === 13));
+    const st = (id) => p.evaluate((d) => document.querySelector(`[data-dm="${d}"]`).dataset.st, id);
+    const cyc = [];
+    for (let i = 0; i < 4; i++) { await click('[data-dm="fire"]'); cyc.push(await st('fire')); }
+    check('clic: "/" resistente → "X" immune → "!" vulnerabile → niente', cyc.join(',') === 'r,i,v,', cyc);
+    check('senza danni fisici resistenti non si chiede "non valgono contro…"', await p.evaluate(() => !document.querySelector('#dmg-matrix .dm-bypass')));
+    await click('[data-dm="fire"]', 2); await click('[data-dm="cold"]'); await click('[data-dm="slashing"]');
+    await p.evaluate(() => { const c = document.querySelector('[data-bp="r:nonmagical"]'); c.click(); });
+    await p.evaluate(() => document.querySelector('[data-bp="r:silvered"]').click());
+    a = await json();
+    check('un tipo sta in UN solo elenco; i "non valgono contro" finiscono nei bypass', JSON.stringify([a.system.traits.dr.value, a.system.traits.dr.bypasses, a.system.traits.di.value, a.system.traits.dv.value]) === JSON.stringify([['cold', 'slashing'], ['mgc', 'sil'], ['fire'], []]), a.system.traits.dr);
+    await click('[data-dm="slashing"]');
+    a = await json();
+    check('tagliente passa a immune: i bypass delle resistenze spariscono, compare la riga delle immunità', a.system.traits.dr.bypasses.length === 0 && a.system.traits.di.value.includes('slashing') && await p.evaluate(() => !!document.querySelector('[data-bp="i:nonmagical"]') && !document.querySelector('[data-bp="r:nonmagical"]')));
+    await p.evaluate((x) => { document.getElementById('dm-custom').value = `legno<img src=x ${x}>`; document.getElementById('dm-custom-st').value = 'v'; document.getElementById('dm-add').click(); }, hit);
+    a = await json();
+    check('voce libera con lo stato scelto (vulnerabile), mostrata come testo', /legno/.test(a.system.traits.dv.custom) && await p.evaluate(() => !window.__xss && !document.querySelector('#dmg-matrix img') && /legno<img/.test(document.querySelector('#dmg-matrix .dm-custom').textContent)));
+    await click('#dmg-matrix [data-dmx="0"]');
+    a = await json();
+    check('× toglie la voce libera', a.system.traits.dv.custom === '');
+
+    // --- Incantesimi ---
+    check('sezione Incantesimi: chiusa finché non serve, col riepilogo nel titolo', await p.evaluate(() => document.getElementById('sec-spells').classList.contains('folded') && /nessuno/.test(document.getElementById('scs-summary').textContent)));
+    await click('#sec-spells > legend');
+    await p.fill('#cha', '18');
+    check('"Automatica" dice quale caratteristica vale (la più alta: Carisma)', await p.evaluate(() => /Carisma/.test(document.getElementById('scs-ability').options[0].textContent)));
+    await p.fill('#scs-input', 'me');
+    check('due caratteri: nessun suggerimento', await p.evaluate(() => document.getElementById('scs-sugg').hidden));
+    await p.fill('#scs-input', 'Mend');
+    check('"Mend" → suggerisce Mending', await p.evaluate(() => !document.getElementById('scs-sugg').hidden && document.querySelector('#scs-sugg li span').textContent === 'Mending'));
+    check('scrivere nella casella non crea ancora nulla', (await json()).items.length === 0);
+    await p.press('#scs-input', 'ArrowDown'); await p.press('#scs-input', 'Enter');
+    const chips = () => p.evaluate(() => [...document.querySelectorAll('#scs-chips .scs-chip')].map((c) => `${c.querySelector('.scs-name').textContent.trim()}|${c.querySelector('.scs-mode').textContent.trim()}`));
+    check('freccia + Invio: pillola "Mending", a volontà (è un trucchetto)', (await chips()).join() === 'Mending|∞');
+    await p.fill('#scs-level', '5');
+    check('livello 5: gli slot del livello compaiono in grigio (4/3/2)', await p.evaluate(() => [...document.querySelectorAll('#scs-slots-box [data-slot]')].slice(0, 4).map((i) => i.placeholder).join() === '4,3,2,0' && !document.getElementById('scs-slots-box').hidden));
+    await p.fill('#scs-input', 'fireball, FIREBALL , Silvery Barbs'); await p.press('#scs-input', 'Enter');
+    await p.evaluate((x) => { const i = document.getElementById('scs-input'); i.value = `Finto<img src=x ${x}>`; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); }, hit);
+    const list = await chips();
+    check('virgole = più incantesimi, doppioni scartati, nome del compendio, ordine degli statblock', list.filter((x) => !/Finto/.test(x)).join() === 'Mending|∞,Silvery Barbs|slot,Fireball|slot 3°', list);
+    check('un nome con HTML resta testo', list.length === 4 && await p.evaluate(() => !window.__xss && !document.querySelector('#scs-chips img')));
+    await p.evaluate(() => [...document.querySelectorAll('#scs-chips .scs-chip')].find((c) => /Finto/.test(c.textContent)).querySelector('.scs-x').click());
+    check('fuori dai compendi di sistema: tratteggiato, con avviso e livello a scelta', await p.evaluate(() => { const c = [...document.querySelectorAll('#scs-chips .scs-chip')].find((x) => /Silvery/.test(x.textContent)); return c.classList.contains('miss') && !!c.querySelector('.scs-lv') && !document.getElementById('scs-note').hidden; }));
+    a = await json();
+    const acts = (x) => Object.values(x.items.find((i) => i.type === 'feat').system.activities);
+    const tg = (act) => act.consumption.targets.map((t) => `${t.type}:${t.target || ''}`).join();
+    check('JSON: Fireball consuma uno slot di 3°, livello 5 e caratteristica automatica', acts(a).some((x) => tg(x) === 'spellSlots:3' && x.spell.level === 3) && a.system.attributes.spell.level === 5 && a.system.attributes.spellcasting === 'cha' && a.system.spells.spell3.value === 2 && a.system.spells.spell3.override === null);
+    await p.fill('#scs-slots-box [data-slot="2"]', '3');
+    a = await json();
+    check('slot di 3° scritto a mano → override', a.system.spells.spell3.value === 3 && a.system.spells.spell3.override === 3 && a.system.spells.spell1.override === null);
+    for (let i = 0; i < 3; i++) await p.evaluate(() => [...document.querySelectorAll('#scs-chips .scs-chip')].find((c) => /Fireball/.test(c.textContent)).querySelector('.scs-mode').click());
+    a = await json();
+    check('clic sul simbolo: slot → ∞ → 1/g → 2/g (usi + consumo nel JSON)', (await chips()).includes('Fireball|2/g') && acts(a).some((x) => x.uses.max === '2' && tg(x) === 'activityUses:'), await chips());
+    check('nei temi Studio la card tra le azioni rimanda alla sezione', await p.evaluate(() => !!document.querySelector('#items-list .sc-stub') && !document.querySelector('#items-list [data-f="spellList"]')));
+
+    // --- Stessi dati nei due design ---
+    await p.selectOption('#theme-picker', 'taf');
+    check('tema classico: stessi dati nei controlli di sempre', !(await shown(p, '#sec-spells')) && !(await shown(p, '#skills-pills')) && !(await shown(p, '#dmg-matrix')) && await shown(p, '#skills-grid') && await shown(p, '#chips-dr')
+      && await p.evaluate(() => document.querySelector('select[data-skill="prf"]').value === '0.5' && document.querySelector('#chips-di .chip[data-id="fire"]').classList.contains('on')
+        && /Trucchetti \(a volontà\): Mending/.test(document.querySelector('#items-list [data-f="spellList"]').value) && /2\/giorno: Fireball/.test(document.querySelector('#items-list [data-f="spellList"]').value)));
+    await p.evaluate(() => { document.querySelector('#chips-dr .chip[data-id="acid"]').click(); const s = document.querySelector('select[data-skill="arc"]'); s.value = '2'; s.dispatchEvent(new Event('input', { bubbles: true })); });
+    await p.selectOption('#theme-picker', 'studio');
+    check('modificato nel classico → il design Studio lo mostra', await st('acid') === 'r' && await p.evaluate(() => document.querySelector('[data-sk="arc"]').dataset.lv === '2') && (await chips()).length === 3);
+    await click('#scs-remove');
+    a = await json();
+    check('"Togli il blocco": niente più incantesimi nel JSON, livello a zero', !a.items.some((i) => i.type === 'feat') && a.system.attributes.spell.level === 0 && (await chips()).length === 0);
+
+    await p.evaluate(() => { for (const id of ['scs-ability', 'scs-level', 'scs-nomat']) document.getElementById(id).dispatchEvent(new Event('input', { bubbles: true })); });
+    check('toccare un campo lasciandolo vuoto non fa del mostro un incantatore', !(await json()).items.some((i) => i.type === 'feat') && await p.evaluate(() => document.getElementById('scs-remove').hidden));
+
+    // --- Dallo statblock ---
+    await p.evaluate(() => { document.getElementById('statblock-input').value = `Strega di Prova\nMedium Humanoid, Neutral Evil\nArmor Class 12\nHit Points 40 (9d8)\nSpeed 30 ft.\nSTR 9 (-1) DEX 14 (+2) CON 11 (+0) INT 10 (+0) WIS 17 (+3) CHA 11 (+0)\nSkills Stealth +6\nDamage Resistances cold; bludgeoning, piercing, and slashing from nonmagical attacks\nChallenge 4 (1,100 XP)\nInnate Spellcasting. The witch's innate spellcasting ability is Wisdom (spell save DC 13). She can innately cast the following spells, requiring no material components:\nAt will: light, mage hand\n2/day each: fireball\nActions\nDagger. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 4 (1d4 + 2) piercing damage.`; });
+    await click('#btn-parse-statblock', 2); // secondo clic = conferma (il form ha già dati)
+    await p.waitForTimeout(300);
+    check('statblock → sezione Incantesimi (Saggezza, senza materiali, ∞ e 2/g)', (await chips()).join() === 'light|∞,mage hand|∞,fireball|2/g' && await p.evaluate(() => document.getElementById('scs-ability').value === 'wis' && document.getElementById('scs-nomat').checked && /3 incantesimi · Saggezza/.test(document.getElementById('scs-summary').textContent)), await chips());
+    check('statblock → pallini e danni (Furtività, freddo e fisici resistenti, non magici)', await p.evaluate(() => document.querySelector('[data-sk="ste"]').dataset.lv !== '0' && ['cold', 'bludgeoning', 'piercing', 'slashing'].every((d) => document.querySelector(`[data-dm="${d}"]`).dataset.st === 'r') && document.querySelector('[data-bp="r:nonmagical"]').checked));
+
+    // --- Indice nascondibile ---
+    const formW = () => p.evaluate(() => Math.round(document.getElementById('npc-form').getBoundingClientRect().width));
+    const w0 = await formW();
+    await click('.section-nav-toggle');
+    check('indice nascosto: resta il pulsante, il form si allarga', await p.evaluate(() => getComputedStyle(document.querySelector('.section-nav a')).display === 'none' && document.querySelector('.section-nav-toggle').getAttribute('aria-expanded') === 'false') && (await formW()) > w0 + 60);
+    await p.reload(); await p.waitForSelector('.section-nav-toggle', { state: 'attached' });
+    check('la scelta è ricordata al ricaricamento', await p.evaluate(() => document.documentElement.dataset.nav === 'off'));
+    await click('.section-nav-toggle');
+    check('un clic e l\'indice torna', await p.evaluate(() => getComputedStyle(document.querySelector('.section-nav a')).display !== 'none'));
+    check('nessuno scroll orizzontale, nessun errore JS', await noHScroll(p) && p.errors.length === 0, p.errors);
+    await p.context().close();
+  }
+  for (const theme of ['studio', 'studio-light']) {
+    // Telefono: i controlli nuovi stanno dentro sezioni chiuse di default → si aprono tutte.
+    const p = await page(390, 844, theme);
+    await p.evaluate(() => document.querySelectorAll('#npc-form > fieldset.folded > legend').forEach((l) => l.click()));
+    await p.evaluate(() => { document.getElementById('scs-level').value = '9'; document.getElementById('scs-level').dispatchEvent(new Event('input', { bubbles: true })); });
+    await p.evaluate(() => { const i = document.getElementById('scs-input'); i.value = 'Fireball, Evard\'s Black Tentacles, Un Incantesimo Dal Nome Davvero Molto Lungo, Mage Hand'; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); });
+    await p.evaluate(() => { for (const d of ['bludgeoning', 'fire', 'poison']) document.querySelector(`[data-dm="${d}"]`).click(); });
+    check(`${theme} su telefono: abilità su 2 colonne, tutto entro i 390px`, await noHScroll(p) && await p.evaluate(() => new Set([...document.querySelectorAll('#skills-pills .sk-pill')].map((x) => Math.round(x.getBoundingClientRect().left))).size === 2 && document.querySelectorAll('#scs-chips .scs-chip').length === 4));
+    check(`${theme} su telefono: bersagli da dito (pillole ≥ 40px)`, await p.evaluate(() => [...document.querySelectorAll('.sk-pill, .dm-pill, .scs-chip')].every((x) => x.getBoundingClientRect().height >= 40)));
+    check(`${theme} su telefono: nessun errore JS`, p.errors.length === 0, p.errors);
     await p.context().close();
   }
 
