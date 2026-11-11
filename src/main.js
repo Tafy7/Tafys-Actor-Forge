@@ -6,10 +6,11 @@ import { buildNpc, validateNpc } from './builders/npc.js';
 import { validateActor } from './builders/validate.js';
 import { overlayActor } from './builders/actor-overlay.js';
 import { parseStatblock, emptyTemplate } from './parsers/statblock.js';
-import { importActor } from './parsers/actor-import.js';
+import { importActor, itemToDescriptor } from './parsers/actor-import.js';
+import { importItem, importSpell } from './parsers/item-import.js';
 import { initDprTab } from './ui/dpr-tab.js';
-import { initItemTab } from './ui/item-tab.js';
-import { initSpellTab } from './ui/spell-tab.js';
+import { initItemTab, editItemFromSheet, itemTabBusy } from './ui/item-tab.js';
+import { initSpellTab, editSpellFromSheet, spellTabBusy } from './ui/spell-tab.js';
 import { initInfoTab } from './ui/info-tab.js';
 import { initThemePicker } from './ui/theme.js';
 import { initSectionNav } from './ui/section-nav.js';
@@ -24,7 +25,7 @@ import { downloadJson } from './utils/download.js';
 import { esc } from './utils/html.js';
 import { armedConfirm } from './utils/confirm.js';
 import { ABILITIES, SIZES, CREATURE_TYPES } from './data/constants.js';
-import { initItemsEditor, getItems, setItems, refreshItems } from './ui/items-editor.js';
+import { initItemsEditor, getItems, setItems, refreshItems, addItem } from './ui/items-editor.js';
 import { createChipGroup } from './ui/chips.js';
 import { initMobile } from './ui/mobile.js';
 import {
@@ -218,7 +219,7 @@ function renderPreview() {
     renderValidation(cur.validation);
     renderReloadBanner(cur.ov);
     // Cartellino CR stimato (metodo DMG) — a lato dell'anteprima.
-    renderCR(data);
+    renderCR(calcView(data));
   } catch (err) {
     // Se qualcosa va storto lo mostriamo nell'anteprima invece di rompere la pagina.
     document.getElementById('preview').textContent = `Errore: ${err.message}`;
@@ -227,6 +228,51 @@ function renderPreview() {
     console.error(err);
   }
 }
+
+// ---------- Voci create nelle tab Oggetto / Incantesimo ----------
+// Entrano nel mostro così come sono (card 'raw' con il JSON completo): la
+// tab resta l'unico editor. Per i calcoli (CR stimato, DPR, Scontro) la
+// card porta anche la "lettura" del JSON fatta da itemToDescriptor.
+
+/** Dati per i calcoli: una voce 'raw' conta per ciò che è (attacco, tiro salvezza…). */
+function calcView(data) {
+  return { ...data, items: (data.items || []).map((it) => (it.kind === 'raw' ? { ...it, kind: it.rawKind || 'passive' } : it)) };
+}
+
+/**
+ * "Lettura" di un oggetto/incantesimo completo per i calcoli: gli stessi
+ * lettori del Ricarica da JSON (per un'arma mettono insieme il dado base e
+ * i danni extra); se il tipo non è tra quelli delle tab, la lettura generica.
+ */
+function readForCalc(json) {
+  const viaTab = json.type === 'spell' ? importSpell(structuredClone(json)).data : importItem(structuredClone(json)).data;
+  const d = viaTab || itemToDescriptor(json, { ok: [], warn: [], skipped: [] });
+  return { ...d, kind: ['attack', 'save', 'utility', 'passive'].includes(d.kind) ? d.kind : 'passive' };
+}
+
+const newRawId = () => `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
+/**
+ * Aggiunge (o aggiorna, se `id` è una voce ancora presente) un oggetto o un
+ * incantesimo completo tra le voci del mostro. Ritorna { id, updated, monster }.
+ */
+function addDocToSheet(doc, id) {
+  const json = structuredClone(doc);
+  const d = readForCalc(json);
+  const fields = { ...d, kind: 'raw', rawKind: d.kind, name: json.name || '', _raw: json };
+  delete fields._srcId;
+  let card = id ? getItems().find((c) => c.kind === 'raw' && c._rawId === id) : null;
+  const updated = Boolean(card);
+  if (card) Object.assign(card, fields);
+  else card = addItem({ ...fields, _rawId: newRawId() });
+  refreshItems();
+  syncSpellcastingSection();
+  schedulePreview();
+  autosave();
+  return { id: card._rawId, updated, monster: val('name').trim() };
+}
+
+const showTab = (name) => document.querySelector(`#tabs .tab[data-tab="${name}"]`)?.click();
 
 // ---------- Round-trip "campo toccato" del mostro ----------
 // Un mostro RICARICATO da JSON tiene l'originale ripulito (`source`) e la
@@ -258,9 +304,12 @@ function setLoadedActor(v) {
  */
 function buildCurrentActor(data) {
   const built = buildNpc(data);
-  if (!loadedActor) return { actor: built, validation: validateActor(built), formData: data, ov: null };
+  // Le voci create nelle tab Oggetto/Incantesimo hanno la LORO forma (già
+  // controllata lì): qui si guardano solo riferimenti e immagini.
+  const isRaw = (i) => data.items?.[i]?.kind === 'raw';
+  if (!loadedActor) return { actor: built, validation: validateActor(built, { itemMode: (it, i) => (isRaw(i) ? 'refs' : 'full') }), formData: data, ov: null };
   const ov = overlayActor(loadedActor.source, loadedActor.orig, data, built);
-  const mode = (it, i) => (ov.modes[i] === 'kept' ? 'none' : ov.modes[i] === 'patched' ? 'refs' : 'full');
+  const mode = (it, i) => (ov.modes[i] === 'kept' ? 'none' : ov.modes[i] === 'patched' || isRaw(i) ? 'refs' : 'full');
   const ch = new Set(ov.changed);
   const formData = {
     ...data,
@@ -674,6 +723,24 @@ initSpellcastingSection({
   abilities: () => ({ int: val('int'), wis: val('wis'), cha: val('cha') }),
   onChange: () => { schedulePreview(); autosave(); },
 });
+// "Crea nella tab Oggetto / Incantesimo": lì c'è "Aggiungi alla scheda del mostro".
+for (const id of ['btn-from-item', 'btn-from-spell']) {
+  document.getElementById(id).addEventListener('click', (ev) => showTab(ev.currentTarget.dataset.gotoTab));
+}
+// "Modifica nella tab…" su una voce creata lì: la riapre collegata alla card.
+document.addEventListener('forge:edit-raw', (ev) => {
+  const card = ev.detail?.card;
+  if (!card?._raw) return;
+  const isSpell = card._raw.type === 'spell';
+  const open = () => {
+    const ok = isSpell ? editSpellFromSheet(card._raw, card._rawId) : editItemFromSheet(card._raw, card._rawId);
+    if (ok) showTab(isSpell ? 'spell' : 'item');
+  };
+  const btn = document.querySelector(`#items-list [data-raw-edit="${getItems().indexOf(card)}"]`);
+  // La tab ha già un altro lavoro in corso: secondo clic per sostituirlo.
+  if (btn && (isSpell ? spellTabBusy(card._rawId) : itemTabBusy(card._rawId))) armedConfirm(btn, t('raw_edit_confirm'), open);
+  else open();
+});
 // Cambiando regole (2014/2024) cambia il compendio in cui cercare gli incantesimi.
 document.getElementById('rules').addEventListener('change', () => { refreshItems(); syncSpellcastingSection(); });
 // Il blocco Incantesimi si disegna in modo diverso nei due design; i controlli
@@ -784,18 +851,18 @@ document.getElementById('tabs').addEventListener('click', (ev) => {
   document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.id !== `tab-${tab}`; });
 });
 // Il calcolatore DPR legge il mostro corrente tramite readForm().
-initDprTab({ getData: readForm });
-initCRReadout(readForm); // input multiattacco del cartellino CR
+initDprTab({ getData: () => calcView(readForm()) });
+initCRReadout(() => calcView(readForm())); // input multiattacco del cartellino CR
 // Tab Scontro: legge il mostro in scheda e la collezione batch (per aggiungerli).
-initEncounterTab({ getData: readForm, getBatch: () => batch });
+initEncounterTab({ getData: () => calcView(readForm()), getBatch: () => batch });
 
 // Tab Oggetto: crea Item standalone. Condivide la collezione batch con la
 // tab NPC (la macro importer smista Actor vs Item in fase d'import).
-initItemTab({ onAddToBatch: pushDocToBatch });
+initItemTab({ onAddToBatch: pushDocToBatch, onAddToSheet: addDocToSheet });
 
 // Tab Incantesimo: le spell sono Item di tipo 'spell' → la macro le
 // smista già su Item.createDocuments, nessuna modifica alla macro.
-initSpellTab({ onAddToBatch: pushDocToBatch });
+initSpellTab({ onAddToBatch: pushDocToBatch, onAddToSheet: addDocToSheet });
 
 // Tab Info: mini-guida + preset di macro copiabili.
 initInfoTab();

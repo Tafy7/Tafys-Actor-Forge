@@ -1225,3 +1225,9 @@ legend.fold-toggle:focus-visible { outline: 2px solid var(--accent); outline-off
 .sc-chip { font-size: 0.78rem; padding: 0.1rem 0.45rem; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
 .sc-chip.ok { color: var(--ok, #6fbf73); border-color: currentColor; }
 .sc-chip.miss { color: var(--accent-2); border-style: dashed; }
+
+/* ---------- Voci create nelle tab Oggetto / Incantesimo (v0.48) ---------- */
+.add-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.raw-body { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.9rem; }
+.raw-info { overflow-wrap: anywhere; }
+.raw-body > .hint { flex: 1 1 14rem; }

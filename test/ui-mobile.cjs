@@ -332,6 +332,54 @@ function serve() {
     await p.context().close();
   }
 
+  console.log('\n— Voci del mostro create nelle tab Oggetto / Incantesimo —');
+  for (const theme of ['taf', 'studio']) {
+    const p = await page(1366, 900, theme);
+    const json = () => p.evaluate(() => new Promise((r) => setTimeout(() => r(JSON.parse(document.getElementById('preview').textContent)), 220)));
+    const tabShown = (n) => p.evaluate((x) => !document.getElementById('tab-' + x).hidden, n);
+    const setF = (form, f, v) => p.evaluate(([a, b, c]) => { const el = document.querySelector(`#${a}-form-body [data-f="${b}"]`); el.value = c; el.dispatchEvent(new Event('input', { bubbles: true })); }, [form, f, v]);
+    const cards = () => p.evaluate(() => [...document.querySelectorAll('#items-list .item-card')].map((c) => (c.classList.contains('raw-card') ? 'raw:' : 'card:') + c.querySelector('.item-card-head strong').textContent.replace(/^#\d+ · /, '')));
+    const hit = 'onerror="window.__xss=(window.__xss||0)+1"';
+    await p.fill('#name', 'Custode di Prova'); await p.fill('#hpMax', '90');
+    await p.click('#btn-from-item');
+    check(`${theme}: "Crea nella tab Oggetto" porta alla tab`, await tabShown('item') && !(await tabShown('npc')));
+    await p.click('#item-sheet');
+    check(`${theme}: senza nome non si aggiunge (stessi controlli della collezione)`, /⛔/.test(await p.textContent('#item-warn')) && (await cards()).length === 0);
+    await setF('item', 'name', `Spadone<img src=x ${hit}>`); await setF('item', 'damage', '2d8 + @mod slashing, 4d8 necrotic');
+    await p.click('#item-sheet');
+    check(`${theme}: aggiunto alla scheda, con il nome del mostro nel messaggio`, /aggiunto alla scheda di «Custode di Prova»/.test(await p.textContent('#item-warn')) && (await p.textContent('#item-sheet')).includes('Aggiungi'));
+    await p.click('#item-warn [data-goto-tab]');
+    let list = await cards();
+    check(`${theme}: "Vai al mostro" → la voce è tra le azioni, come testo (niente HTML iniettato)`, await tabShown('npc') && list.length === 1 && /^raw:Spadone<img/.test(list[0]) && await p.evaluate(() => !window.__xss && !document.querySelector('#items-list img')));
+    let a = await json();
+    check(`${theme}: nel JSON del mostro c'è l'oggetto intero (tipo, danni, attività)`, a.items.length === 1 && a.items[0].type === 'weapon' && Object.keys(a.items[0].system.activities).length === 1 && /^[A-Za-z0-9]{16}$/.test(a.items[0]._id));
+    check(`${theme}: struttura valida (l'export non è bloccato) e il CR conta l'attacco`, await p.evaluate(() => !document.getElementById('validation').classList.contains('has-error') && /\d/.test(document.getElementById('cr-readout').textContent)));
+    // seconda voce uguale: NON sostituisce la prima
+    await p.click('#btn-from-item'); await setF('item', 'name', 'Artiglio'); await p.click('#item-sheet');
+    check(`${theme}: un'altra aggiunta crea una seconda voce`, (await cards()).join('|').replace(/<img[^>]*>/, '') === 'raw:Spadone|raw:Artiglio', await cards());
+    // modifica dalla card: la tab ha altro lavoro → secondo clic
+    await p.click('.tab[data-tab="npc"]');
+    await p.click('#items-list [data-raw-edit="0"]');
+    check(`${theme}: "Modifica nella tab" chiede conferma se la tab ha altro lavoro`, await tabShown('npc') && /clicca di nuovo/.test(await p.textContent('#items-list [data-raw-edit="0"]')));
+    await p.click('#items-list [data-raw-edit="0"]');
+    check(`${theme}: secondo clic → la voce si riapre nella tab, collegata ("Aggiorna")`, await tabShown('item') && /^Spadone/.test(await p.inputValue('#item-form-body [data-f="name"]')) && /Aggiorna/.test(await p.textContent('#item-sheet')));
+    await setF('item', 'name', 'Spadone di Brace'); await p.click('#item-sheet');
+    check(`${theme}: "Aggiorna sulla scheda" cambia QUELLA voce, non ne aggiunge`, /aggiornato/.test(await p.textContent('#item-warn')) && (await cards()).join('|') === 'raw:Spadone di Brace|raw:Artiglio', await cards());
+    // incantesimo
+    await p.click('.tab[data-tab="npc"]'); await p.click('#btn-from-spell');
+    await setF('spell', 'name', 'Dardo di Brace'); await p.click('#spell-sheet');
+    a = await json();
+    check(`${theme}: incantesimo aggiunto come incantesimo vero`, await tabShown('spell') && a.items.length === 3 && a.items[2].type === 'spell' && a.items[2].name === 'Dardo di Brace' && (await cards())[2] === 'raw:Dardo di Brace');
+    // duplica e ricarica della pagina
+    await p.click('.tab[data-tab="npc"]');
+    await p.click('#items-list [data-dup="1"]');
+    check(`${theme}: duplicare una voce delle tab → copia con il suo nome`, (await cards())[2] === 'raw:Artiglio (copia)' && (await json()).items[2].name === 'Artiglio (copia)');
+    await p.waitForTimeout(600); await p.reload(); await p.waitForSelector('#tab-npc .m-bar', { state: 'attached' });
+    check(`${theme}: dopo un ricaricamento della pagina le voci ci sono ancora`, (await cards()).length === 4 && (await json()).items.length === 4);
+    check(`${theme}: nessun errore JS, nessuno scroll orizzontale`, p.errors.length === 0 && await noHScroll(p), p.errors);
+    await p.context().close();
+  }
+
   console.log('\n— Sicurezza: un JSON importato non esegue codice —');
   {
     // Chi condivide un JSON può scriverci dentro dell'HTML: caricandolo nel

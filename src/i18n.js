@@ -257,6 +257,16 @@ export const UI = {
     sc_summary: '{n} incantesimi, {ok} collegati ai compendi di sistema',
     sc_missing_hint: 'quelli con ✗ li cerca la macro del Forge negli altri compendi al momento dell\'import',
     sc_missing_title: 'Non è nei compendi di sistema (SRD): la macro lo cerca nei compendi del tuo mondo',
+    // Voci del mostro create nelle tab Oggetto / Incantesimo.
+    sheet_add: '🐲 Aggiungi alla scheda del mostro', sheet_update: '🔄 Aggiorna sulla scheda del mostro',
+    sheet_added: '✔ «{name}» aggiunto alla scheda {who}.', sheet_updated: '✔ «{name}» aggiornato sulla scheda {who}.',
+    sheet_of: 'di «{name}»', sheet_unnamed: 'del mostro', sheet_goto: 'Vai al mostro →',
+    act_from_item: '🎒 Crea nella tab Oggetto', act_from_spell: '✨ Crea nella tab Incantesimo',
+    act_from_hint: 'Crea la voce con tutti i campi della tab, poi «Aggiungi alla scheda del mostro»',
+    raw_type_weapon: 'Arma', raw_type_equipment: 'Equipaggiamento', raw_type_consumable: 'Consumabile', raw_type_feat: 'Tratto / capacità', raw_type_spell: 'Incantesimo', raw_type_other: 'Oggetto',
+    raw_level: 'livello {n}', raw_hint_item: 'Creato nella tab Oggetto: entra nel mostro così com\'è.', raw_hint_spell: 'Creato nella tab Incantesimo: entra nel mostro così com\'è.',
+    raw_edit_item: '✏️ Modifica nella tab Oggetto', raw_edit_spell: '✏️ Modifica nella tab Incantesimo',
+    raw_edit_confirm: '⚠ Sostituisce ciò che c\'è nella tab — clicca di nuovo',
     // Design Studio: sezione Incantesimi, competenze e danni "a clic".
     scs_legend: 'Incantesimi', scs_stub: 'Caratteristica, slot e lista si modificano nella sezione «Incantesimi» in alto.', scs_goto: '✨ Modifica gli incantesimi',
     scs_auto: 'Automatica', scs_auto_hint: 'automatica = la più alta tra INT, SAG e CAR', scs_level_hint: 'vuoto = solo incantesimi innati',
@@ -556,6 +566,16 @@ export const UI = {
     sc_summary: '{n} spells, {ok} linked to the system compendiums',
     sc_missing_hint: 'the ones marked ✗ are looked up by the Forge macro in your other compendiums at import time',
     sc_missing_title: 'Not in the system compendiums (SRD): the macro looks for it in your world\'s compendiums',
+    // Monster entries created in the Item / Spell tabs.
+    sheet_add: '🐲 Add to the monster sheet', sheet_update: '🔄 Update on the monster sheet',
+    sheet_added: '✔ “{name}” added to {who} sheet.', sheet_updated: '✔ “{name}” updated on {who} sheet.',
+    sheet_of: '“{name}”\'s', sheet_unnamed: 'the monster\'s', sheet_goto: 'Go to the monster →',
+    act_from_item: '🎒 Create in the Item tab', act_from_spell: '✨ Create in the Spell tab',
+    act_from_hint: 'Create the entry with all the fields of that tab, then “Add to the monster sheet”',
+    raw_type_weapon: 'Weapon', raw_type_equipment: 'Equipment', raw_type_consumable: 'Consumable', raw_type_feat: 'Feature', raw_type_spell: 'Spell', raw_type_other: 'Item',
+    raw_level: 'level {n}', raw_hint_item: 'Created in the Item tab: it goes into the monster as is.', raw_hint_spell: 'Created in the Spell tab: it goes into the monster as is.',
+    raw_edit_item: '✏️ Edit in the Item tab', raw_edit_spell: '✏️ Edit in the Spell tab',
+    raw_edit_confirm: '⚠ Replaces what is in that tab — click again',
     // Studio design: Spells section, click-through skills and damage traits.
     scs_legend: 'Spells', scs_stub: 'Ability, slots and list are edited in the “Spells” section above.', scs_goto: '✨ Edit spells',
     scs_auto: 'Automatic', scs_auto_hint: 'automatic = highest of INT, WIS and CHA', scs_level_hint: 'empty = innate spells only',

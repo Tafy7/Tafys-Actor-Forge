@@ -536,6 +536,63 @@ check('formato 2024 ("Attack Roll:", "Saving Throw: DC") → 2024', s9.rules ===
 check('resoconto: le regole rilevate sono dichiarate', r9.ok.some(x => /^Regole: 2024/.test(x)) && r1.ok.some(x => /^Regole: 2014/.test(x)));
 check('testo senza indizi → regole non toccate', parseStatblock('Coso\nMedium beast, unaligned\nArmor Class 10\nHit Points 5 (1d8)').state.rules === undefined);
 
+// ------------------------------------------------------------
+// Fixture — statblock italiano "da manuale" (dati inventati): le forme che
+// il parser non capiva (v0.47 → v0.48). Righe spezzate come in un PDF.
+// ------------------------------------------------------------
+{
+  const it = parseStatblock(`Custode della Brace
+Umanoide Grande, caotico malvagio
+Classe Armatura 18 (armatura naturale)
+Punti Ferita 200 (16d12 + 96)
+Velocità 12 m, volare 18 m
+FOR DES COS INT SAG CAR
+24 (+7) 18 (+4) 22 (+6) 14 (+2) 16 (+3) 20 (+5)
+Sfida 20 (25,000 PE) Bonus di competenza +6
+Rigenerazione. All’inizio di ogni suo turno il custode
+recupera 20 punti ferita.
+Disperazione dell’Abisso. Ogni creatura entro 9 m dal custode
+subisce svantaggio a tutti i tiri salvezza.
+Soffio d’Ombra. Il custode vede nell’oscurità magica.
+Azioni
+Spadone di Brace. Attacco con Arma da
+Mischia: +13 al tiro per colpire, portata 3 m, un bersaglio.
+Colpito: 20 (2d8 + 7) danni taglienti più 18 (4d8) danni
+necrotici.
+Impulso Cupo (Ricarica 6 - si attiva da solo
+quando tutti i sigilli sono rotti). Ogni creatura entro 9 m
+deve effettuare un tiro salvezza su Costituzione con CD
+20. In caso di fallimento, le creature subiscono 54 (12d8) danni
+necrotici e sono stordite fino alla fine del loro prossimo turno.
+In caso di successo, subiscono la metà di quei danni.
+Incantesimi. Il custode lancia uno dei seguenti
+incantesimi, che non richiedono alcuna componente materiale,
+utilizzando Carisma come caratteristica da incantatore (tiro
+salvezza degli incantesimi CD 20, +12 al tiro per colpire con
+incantesimo)
+A volontà: light
+1/giorno ciascuno: fireball
+Azioni Bonus
+Marchio di Brace. Il bersaglio deve superare un tiro salvezza
+su Saggezza con CD 19 o venire marchiato per 1 minuto, subendo 10 (3d6) danni
+necrotici.`);
+  const by = (n) => it.state.items.find(x => x.name === n);
+  const sword = by('Spadone di Brace');
+  check('IT: "Attacco con Arma da Mischia: +13 al tiro per colpire" → attacco (non utility)', sword?.kind === 'attack' && sword.attackType === 'melee' && sword.ability === 'str' && sword.reach === '10');
+  check('IT: due parti di danno, tipi tradotti', sword?.damage === '2d8 + 7 slashing, 4d8 necrotic');
+  check('IT: nome con articolo eliso ("dell\'Abisso", "d\'Ombra") → tratti a sé', by("Disperazione dell'Abisso")?.kind === 'passive' && by("Soffio d'Ombra")?.kind === 'passive' && !/Disperazione/.test(by('Rigenerazione').description));
+  const pulse = by('Impulso Cupo');
+  check('IT: titolo con la parentesi degli usi spezzata su due righe → voce a sé, ricarica 6', pulse?.usesMode === 'recharge' && pulse.usesValue === '6' && !/Impulso/.test(sword.description));
+  check('IT: "tiro salvezza su Costituzione con CD 20" → TS, metà danni, condizione al plurale, 1 round', pulse?.kind === 'save' && pulse.saveAbility === 'con' && pulse.dc === '20' && pulse.damage === '12d8 necrotic' && pulse.onSave === 'half' && pulse.condition === 'stunned' && pulse.condRounds === '1');
+  const mark = by('Marchio di Brace');
+  check('IT: azione bonus con TS su Saggezza', mark?.kind === 'save' && mark.activation === 'bonus' && mark.saveAbility === 'wis' && mark.dc === '19' && mark.damage === '3d6 necrotic');
+  const sc = it.state.items.find(x => x.kind === 'spellcasting');
+  check('IT: incantesimi "che non richiedono alcuna componente materiale", "+12 … per colpire con incantesimo"', sc?.scNoMaterial === true && sc.scAttack === '12' && sc.scDc === '20' && sc.scAbility === 'cha');
+  check('una frase qualsiasi con una parentesi aperta NON diventa un titolo', parseStatblock('Coso\nMedium beast, unaligned\nArmor Class 10\nHit Points 5 (1d8)\nActions\nMorso. Il coso morde (di solito piano\ne senza cattiveria). Fine.').state.items.length === 1);
+  const noAb = parseStatblock('Coso\nMedium beast, unaligned\nArmor Class 10\nHit Points 5 (1d8)\nActions\nSpellcasting. The thing casts one of the following spells:\nAt will: light').state.items[0];
+  check('incantesimi senza caratteristica nel testo → automatica (non più Intelligenza fissa)', noAb.kind === 'spellcasting' && noAb.scAbility === '');
+}
+
 if (failures) {
   console.error(`\n${failures} test falliti.`);
   process.exit(1);

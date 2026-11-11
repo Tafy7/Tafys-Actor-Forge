@@ -16,6 +16,7 @@ import { importSpell, ITEM_TYPES } from '../parsers/item-import.js';
 import { overlaySpell } from '../builders/overlay.js';
 import { initJsonReload, jsonReloadHtml } from './json-reload.js';
 import { draftStore } from './tab-draft.js';
+import { initSheetLink } from './sheet-link.js';
 import { t, getLang } from '../i18n.js';
 import { esc } from '../utils/html.js';
 
@@ -30,6 +31,8 @@ let addToBatch = () => {};
 const draft = draftStore('tafys-forge-spell-draft');
 // Incantesimo RICARICATO da JSON (vedi item-tab): null = incantesimo nuovo.
 let loaded = null;
+// Collegamento con una voce della scheda del mostro (vedi sheet-link.js).
+let sheet = { get: () => null, set: () => {} };
 
 function buildCurrent() {
   const built = buildSpell(state);
@@ -197,10 +200,10 @@ function renderPreview() {
   } catch (err) {
     document.getElementById('spell-preview').textContent = 'Errore: ' + err.message;
   }
-  draft.save(() => ({ v: 1, state, loaded }));
+  draft.save(() => ({ v: 1, state, loaded, sheetId: sheet.get() }));
 }
 
-export function initSpellTab({ onAddToBatch }) {
+export function initSpellTab({ onAddToBatch, onAddToSheet }) {
   addToBatch = onAddToBatch || (() => {});
   const body = document.getElementById('spell-form-body');
 
@@ -218,12 +221,14 @@ export function initSpellTab({ onAddToBatch }) {
       // stato: così il solo ridisegno non li fa risultare "modificati".
       state = { ...defaultSpell(), ...data, effects: (data.effects || []).map(normalizeEffect) };
       loaded = { source, orig: structuredClone(state) };
+      sheet.set(null); // un JSON caricato a mano non è la voce della scheda
       render();
     },
   });
   // Ricomincia da zero: dal riquadro "Stai modificando…" o dal pulsante Nuovo.
   const reset = (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
     loaded = null;
+    sheet.set(null);
     state = defaultSpell();
     draft.clear();
     document.getElementById('spell-import-report').hidden = true;
@@ -233,11 +238,21 @@ export function initSpellTab({ onAddToBatch }) {
   document.getElementById('spell-reset').addEventListener('click', reset);
   document.getElementById('spell-new').addEventListener('click', reset);
 
+  // Aggiungi / aggiorna sulla scheda del mostro.
+  sheet = initSheetLink({
+    prefix: 'spell',
+    getItem: () => buildCurrent().item,
+    getWarnings: currentWarnings,
+    onAddToSheet: onAddToSheet || (() => ({ id: null, updated: false, monster: '' })),
+    onLinkChange: () => renderPreview(),
+  });
+
   // Bozza automatica: si riparte da dove si era rimasti.
   const saved = draft.load();
   if (saved?.state) {
     state = { ...defaultSpell(), ...saved.state };
     loaded = saved.loaded?.source && saved.loaded?.orig ? saved.loaded : null;
+    sheet.set(saved.sheetId || null);
   }
 
   body.addEventListener('input', (ev) => {
@@ -291,4 +306,25 @@ function exportSpell() {
   const spell = buildCurrent().item;
   const slug = spell.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   downloadJson(spell, `fvttSpell-${slug}.json`);
+}
+
+/** La tab ha un lavoro in corso che NON è la voce `id` della scheda? (per chiedere conferma prima di sostituirlo) */
+export function spellTabBusy(id) {
+  return Boolean(String(state.name || '').trim() || loaded) && sheet.get() !== id;
+}
+
+/**
+ * Apre nella tab una voce della scheda del mostro (card "così com'è"): stessa
+ * strada del "Ricarica da JSON", più il collegamento alla voce. Ritorna
+ * false se il JSON non è di questa tab.
+ */
+export function editSpellFromSheet(json, id) {
+  const { data, source } = importSpell(structuredClone(json));
+  if (!data) return false;
+  state = { ...defaultSpell(), ...data, effects: (data.effects || []).map(normalizeEffect) };
+  loaded = { source, orig: structuredClone(state) };
+  sheet.set(id);
+  document.getElementById('spell-warn').textContent = '';
+  render();
+  return true;
 }

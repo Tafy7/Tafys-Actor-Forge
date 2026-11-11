@@ -16,6 +16,7 @@ import { buildItem, parseDamageParts } from './item.js';
 import { buildSpellcastingItem } from './spellcasting.js';
 import { effectiveSlots } from '../parsers/spellcasting.js';
 import { cleanImagePath, hasValidImageExt } from '../utils/img.js';
+import { randomID } from '../utils/id.js';
 
 /**
  * Divide una stringa "fire, cold, fuoco magico" negli id riconosciuti
@@ -58,6 +59,21 @@ function splitDamageTrait(input) {
     else custom.push(token);
   }
   return { value, bypasses, custom: custom.join('; ') };
+}
+
+/**
+ * Oggetto o incantesimo completo (creato in un'altra tab) → voce del mostro.
+ * Resta identico; cambiano solo l'id (ogni voce ha il suo) e, per un
+ * incantesimo "a slot", la preparazione: sulla scheda di un mostro un
+ * incantesimo non preparato non servirebbe a nulla.
+ */
+export function embedRawItem(raw) {
+  const item = structuredClone(raw);
+  item._id = randomID();
+  if (item.type === 'spell' && item.system && item.system.method === 'spell' && Number(item.system.level) > 0 && !item.system.prepared) {
+    item.system.prepared = 1;
+  }
+  return item;
 }
 
 /** Caratteristica da incantatore "automatica": la più alta tra INT, SAG e CAR. */
@@ -179,7 +195,10 @@ export function buildNpc(data) {
   // --- Item embedded: attacchi, azioni, tratti (Fase 2) ---
   // Il blocco Incantesimi ha un builder suo (attività "cast", compendio
   // scelto in base alle regole del mostro).
-  actor.items = (data.items || []).map((d) => (d.kind === 'spellcasting' ? buildSpellcastingItem(d, data.rules) : buildItem(d)));
+  // Le voci "così come sono" (kind 'raw') arrivano già complete dalle tab
+  // Oggetto / Incantesimo: entrano nel mostro senza essere ricostruite.
+  actor.items = (data.items || []).map((d) => (d.kind === 'spellcasting' ? buildSpellcastingItem(d, data.rules)
+    : d.kind === 'raw' && d._raw ? embedRawItem(d._raw) : buildItem(d)));
 
   // --- Incantatore: caratteristica, livello e slot (dal primo blocco) ---
   const sc = (data.items || []).find((d) => d.kind === 'spellcasting');

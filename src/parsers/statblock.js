@@ -105,12 +105,12 @@ const DAMAGE_LIST_IT = { ...DAMAGE_IT, ...DAMAGE_ADJ_IT };
 // Condizioni nelle clausole "…saving throw or be X" / "…tiro salvezza o è X".
 const CONDITION_PATTERNS = [
   [/knocked prone|cade a terra|a terra prono/i, 'prone'], [/\bprono\b/i, 'prone'],
-  [/\bblinded\b|\baccecat[oa]\b/i, 'blinded'], [/\bcharmed\b|\baffascinat[oa]\b/i, 'charmed'],
-  [/\bdeafened\b|\bassordat[oa]\b/i, 'deafened'], [/\bfrightened\b|\bspaventat[oa]\b/i, 'frightened'],
-  [/\bgrappled\b|\bafferrat[oa]\b/i, 'grappled'], [/\bincapacitated\b|\bincapacitat[oa]\b/i, 'incapacitated'],
-  [/\bparalyzed\b|\bparalizzat[oa]\b/i, 'paralyzed'], [/\bpetrified\b|\bpietrificat[oa]\b/i, 'petrified'],
-  [/\bpoisoned\b|\bavvelenat[oa]\b/i, 'poisoned'], [/\brestrained\b|\btrattenut[oa]\b/i, 'restrained'],
-  [/\bstunned\b|\bstordit[oa]\b/i, 'stunned'], [/\bunconscious\b|privo di sensi|\bincosciente\b/i, 'unconscious'],
+  [/\bblinded\b|\baccecat[oaie]\b/i, 'blinded'], [/\bcharmed\b|\baffascinat[oaie]\b/i, 'charmed'],
+  [/\bdeafened\b|\bassordat[oaie]\b/i, 'deafened'], [/\bfrightened\b|\bspaventat[oaie]\b/i, 'frightened'],
+  [/\bgrappled\b|\bafferrat[oaie]\b/i, 'grappled'], [/\bincapacitated\b|\bincapacitat[oaie]\b/i, 'incapacitated'],
+  [/\bparalyzed\b|\bparalizzat[oaie]\b/i, 'paralyzed'], [/\bpetrified\b|\bpietrificat[oaie]\b/i, 'petrified'],
+  [/\bpoisoned\b|\bavvelenat[oaie]\b/i, 'poisoned'], [/\brestrained\b|\btrattenut[oaie]\b/i, 'restrained'],
+  [/\bstunned\b|\bstordit[oaie]\b/i, 'stunned'], [/\bunconscious\b|privo di sensi|\bincosciente\b/i, 'unconscious'],
 ];
 
 const ALIGN_IT = {
@@ -199,8 +199,15 @@ const SECTION_RE = /^(Actions?|Legendary Actions?|Reactions?|Bonus Actions?|Lair
 const UP = "[A-ZÀ-ÖØ-Þ]";
 const WCH = "[\\wÀ-ÖØ-öø-ÿ'-]";
 const STOP = "(?:of|the|and|or|with|in|to|a|an|its|di|da|del|della|dello|dei|delle|degli|con|la|le|lo|il|gli|i|e|o|per|su|un|una|uno|al|alla|allo|ai|agli|alle)";
-const WORD = `(?:${UP}${WCH}*|${STOP})`;
-const ENTRY_RE = new RegExp(`^(${UP}${WCH}*(?: ${WORD}){0,7})(\\s*\\([^)]{1,40}\\))?\\.\\s+\\S`);
+// Anche con l'articolo eliso davanti: "Disperazione dell'Abisso", "Soffio d'Ombra".
+const WORD = `(?:(?:[a-zà-ÿ]{1,5}')?${UP}${WCH}*|${STOP})`;
+const ENTRY_NAME = `${UP}${WCH}*(?: ${WORD}){0,7}`;
+const ENTRY_RE = new RegExp(`^(${ENTRY_NAME})(\\s*\\([^)]{1,120}\\))?\\.\\s+\\S`);
+// Titolo con la parentesi degli usi che continua a capo nel PDF:
+// "Impulso Cupo (Ricarica 6 - si attiva da solo" + riga dopo "quando…). Testo".
+// Vale solo se la parentesi comincia come una nota d'uso, per non scambiare
+// una frase qualsiasi per un titolo.
+const ENTRY_OPEN_RE = new RegExp(`^(${ENTRY_NAME})\\s*\\((?:Ricarica|Recharge|\\d+\\s*/\\s*(?:Giorno|Day)|Costa|Costs)\\b[^)]*$`, 'i');
 
 /**
  * Ricompone il testo in "entry" logiche: le righe spezzate dal PDF
@@ -215,7 +222,7 @@ function toEntries(text) {
   const push = () => { if (current) entries.push(current); current = null; };
 
   for (const line of lines) {
-    const isNew = isLabelLine(line) || SECTION_RE.test(line) || ENTRY_RE.test(line)
+    const isNew = isLabelLine(line) || SECTION_RE.test(line) || ENTRY_RE.test(line) || ENTRY_OPEN_RE.test(line)
       || entries.length < 2; // le prime due righe (nome + tipo/taglia) sono sempre entry
 
     if (isNew || !current) {
@@ -562,7 +569,8 @@ function findSave(body) {
   // 2014 EN: "DC 13 Dexterity saving throw".
   m = body.match(new RegExp(`DC\\s+(\\d+)\\s+(${ABILITY_WORDS})\\s+saving throw`, 'i'));
   if (m) return { dc: m[1], ability: ABILITY_MAP[m[2].toLowerCase()] };
-  m = body.match(new RegExp(`tiro salvezza (?:su|di)\\s+(${ABILITY_WORDS})\\s+(?:DC|CD)\\s*(\\d+)`, 'i'));
+  // "tiro salvezza su Costituzione CD 12" e "…su Costituzione con CD 12".
+  m = body.match(new RegExp(`tiro salvezza (?:su|di)\\s+(${ABILITY_WORDS})\\s+(?:con\\s+)?(?:DC|CD)\\s*(\\d+)`, 'i'));
   if (m) return { dc: m[2], ability: ABILITY_MAP[m[1].toLowerCase()] };
   m = body.match(new RegExp(`(?:DC|CD)\\s*(\\d+)\\s+(?:su\\s+)?(${ABILITY_WORDS})`, 'i'));
   if (m) return { dc: m[1], ability: ABILITY_MAP[m[2].toLowerCase()] };
@@ -581,7 +589,7 @@ function extractCondition(text) {
 
 /** Durata: "for 1 minute"/"per 1 minuto" → 10 round; "next turn"/"prossimo turno" → 1. */
 function extractRounds(body) {
-  if (/until the end of (its|the target's) next turn|fino alla fine del (?:suo )?(?:prossimo turno|turno successivo)/i.test(body)) return '1';
+  if (/until the end of (its|the target's) next turn|fino alla fine del (?:suo |loro |proprio )?(?:prossimo turno|turno successivo)/i.test(body)) return '1';
   const min = body.match(/(?:for|per)\s+(\d+)\s+minut/i);
   if (min) return String(Number(min[1]) * 10);
   return '';
@@ -599,7 +607,8 @@ function findAttack(body) {
     };
   }
   // "per colpire" / "a colpire": entrambe le traduzioni circolano.
-  m = body.match(/Attacco con (arma|incantesim[oi])(?:\s+(da mischia o a distanza|da mischia|a distanza))?:\s*([+-]\d+)\s+(?:per|a) colpire/i);
+  // Anche "+14 al tiro per colpire" (la forma dei manuali italiani).
+  m = body.match(/Attacco con (arma|incantesim[oi])(?:\s+(da mischia o a distanza|da mischia|a distanza))?:\s*([+-]\d+)\s+(?:al tiro\s+)?(?:per|a) colpire/i);
   if (m) {
     const kind = (m[2] || 'da mischia').toLowerCase();
     return {
@@ -673,7 +682,7 @@ function entryToItem(parsed, activation, state, report) {
       }
       return {
         ...base, kind: 'spellcasting',
-        scAbility: head.ability || 'int', scDc: head.dc, scAttack: head.attack, scLevel: head.casterLevel,
+        scAbility: head.ability || '', scDc: head.dc, scAttack: head.attack, scLevel: head.casterLevel,
         scNoMaterial: head.noMaterial, spellList: formatSpellGroups(groups, getLang()),
       };
     }

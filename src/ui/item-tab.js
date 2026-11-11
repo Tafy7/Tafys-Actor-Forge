@@ -16,6 +16,7 @@ import { importItem, ITEM_TYPES } from '../parsers/item-import.js';
 import { overlayItem } from '../builders/overlay.js';
 import { initJsonReload, jsonReloadHtml } from './json-reload.js';
 import { draftStore } from './tab-draft.js';
+import { initSheetLink } from './sheet-link.js';
 import { t, getLang } from '../i18n.js';
 import { esc } from '../utils/html.js';
 
@@ -31,6 +32,8 @@ const draft = draftStore('tafys-forge-item-draft');
 // Oggetto RICARICATO da JSON: originale ripulito + stato del form appena
 // caricato (per sapere quali campi l'utente ha toccato). null = nuovo oggetto.
 let loaded = null;
+// Collegamento con una voce della scheda del mostro (vedi sheet-link.js).
+let sheet = { get: () => null, set: () => {} };
 
 /**
  * JSON da esportare: nuovo oggetto → builder; oggetto ricaricato →
@@ -210,11 +213,11 @@ function renderPreview() {
   } catch (err) {
     document.getElementById('item-preview').textContent = 'Errore: ' + err.message;
   }
-  draft.save(() => ({ v: 1, state, loaded }));
+  draft.save(() => ({ v: 1, state, loaded, sheetId: sheet.get() }));
 }
 
 
-export function initItemTab({ onAddToBatch }) {
+export function initItemTab({ onAddToBatch, onAddToSheet }) {
   addToBatch = onAddToBatch || (() => {});
   const body = document.getElementById('item-form-body');
 
@@ -232,12 +235,14 @@ export function initItemTab({ onAddToBatch }) {
       // stato: così il solo ridisegno non li fa risultare "modificati".
       state = { ...defaultItem(), ...data, effects: (data.effects || []).map(normalizeEffect) };
       loaded = { source, orig: structuredClone(state) };
+      sheet.set(null); // un JSON caricato a mano non è la voce della scheda
       render();
     },
   });
   // Ricomincia da zero: dal riquadro "Stai modificando…" o dal pulsante Nuovo.
   const reset = (ev) => armed(ev.currentTarget, t('ii_reset_confirm'), () => {
     loaded = null;
+    sheet.set(null);
     state = defaultItem();
     draft.clear();
     document.getElementById('item-import-report').hidden = true;
@@ -247,11 +252,21 @@ export function initItemTab({ onAddToBatch }) {
   document.getElementById('item-reset').addEventListener('click', reset);
   document.getElementById('item-new').addEventListener('click', reset);
 
+  // Aggiungi / aggiorna sulla scheda del mostro.
+  sheet = initSheetLink({
+    prefix: 'item',
+    getItem: () => buildCurrent().item,
+    getWarnings: currentWarnings,
+    onAddToSheet: onAddToSheet || (() => ({ id: null, updated: false, monster: '' })),
+    onLinkChange: () => renderPreview(),
+  });
+
   // Bozza automatica: si riparte da dove si era rimasti.
   const saved = draft.load();
   if (saved?.state) {
     state = { ...defaultItem(), ...saved.state };
     loaded = saved.loaded?.source && saved.loaded?.orig ? saved.loaded : null;
+    sheet.set(saved.sheetId || null);
   }
 
   body.addEventListener('input', (ev) => {
@@ -307,4 +322,25 @@ function exportItem() {
   const { item } = buildCurrent();
   const slug = item.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   downloadJson(item, `fvttItem-${slug}.json`);
+}
+
+/** La tab ha un lavoro in corso che NON è la voce `id` della scheda? (per chiedere conferma prima di sostituirlo) */
+export function itemTabBusy(id) {
+  return Boolean(String(state.name || '').trim() || loaded) && sheet.get() !== id;
+}
+
+/**
+ * Apre nella tab una voce della scheda del mostro (card "così com'è"): stessa
+ * strada del "Ricarica da JSON", più il collegamento alla voce. Ritorna
+ * false se il JSON non è di questa tab.
+ */
+export function editItemFromSheet(json, id) {
+  const { data, source } = importItem(structuredClone(json));
+  if (!data) return false;
+  state = { ...defaultItem(), ...data, effects: (data.effects || []).map(normalizeEffect) };
+  loaded = { source, orig: structuredClone(state) };
+  sheet.set(id);
+  document.getElementById('item-warn').textContent = '';
+  render();
+  return true;
 }

@@ -102,11 +102,12 @@ export function parseSpellcastingHeader(text) {
   if (m) out.ability = ABILITY_WORD[m[1].toLowerCase()] || '';
   m = s.match(/spell\s+save\s+DC\s*(\d+)|(?:CD|DC)\s+(?:del\s+)?(?:tiro\s+salvezza\s+(?:degli|contro\s+(?:i|gli))\s+incantesimi\s*)?(\d+)/i);
   if (m) out.dc = m[1] || m[2] || '';
-  m = s.match(/([+-]\d+)\s+to hit with spell attacks|([+-]\d+)\s+(?:al tiro per colpire|per colpire)\s+con\s+(?:gli\s+)?attacchi\s+(?:con|di)\s+incantesimo/i);
+  // IT: "+5 al tiro per colpire con gli attacchi con incantesimo" e la forma breve "…per colpire con incantesimo".
+  m = s.match(/([+-]\d+)\s+to hit with spell attacks|([+-]\d+)\s+(?:al tiro per colpire|per colpire)\s+con\s+(?:(?:gli\s+)?attacchi\s+(?:con|di)\s+)?incantesim[oi]/i);
   if (m) out.attack = (m[1] || m[2] || '').replace('+', '');
   m = s.match(/(\d+)(?:st|nd|rd|th)[\s-]+level\s+spellcaster|incantatore\s+di\s+(\d+)°?\s*livello/i);
   if (m) out.casterLevel = m[1] || m[2] || '';
-  out.noMaterial = /(?:requiring|requires|without|needing)\s+no\s+material\s+components|no\s+material\s+components|senza\s+(?:bisogno\s+di\s+)?componenti\s+material/i.test(s);
+  out.noMaterial = /(?:requiring|requires|without|needing)\s+no\s+material\s+components|no\s+material\s+components|senza\s+(?:bisogno\s+di\s+)?componenti\s+material|non\s+richied\w+\s+(?:alcuna\s+|nessuna\s+)?component[ei]\s+material/i.test(s);
   return out;
 }
 

@@ -126,8 +126,36 @@ function scResolveHtml(item) {
   return `<div class="hint">${t('sc_summary', { n: list.length, ok: list.length - missing })}${missing ? ' · ' + t('sc_missing_hint') : ''}</div><div class="sc-chips">${chips}</div>`;
 }
 
+/** Card di una voce "così com'è": creata nella tab Oggetto o Incantesimo, si modifica lì. */
+function rawCardHtml(item, idx) {
+  const raw = item._raw || {};
+  const isSpell = raw.type === 'spell';
+  const type = t(`raw_type_${['weapon', 'equipment', 'consumable', 'feat', 'spell'].includes(raw.type) ? raw.type : 'other'}`);
+  const bits = [];
+  if (isSpell) bits.push(Number(raw.system?.level) > 0 ? t('raw_level', { n: raw.system.level }) : t('scs_cantrip'));
+  if (item.rawKind === 'attack') bits.push(t('opt_attack'));
+  if (item.rawKind === 'save') bits.push(t('opt_save'));
+  if (item.damage) bits.push(item.damage);
+  return `
+  <div class="item-card raw-card" data-idx="${idx}">
+    <div class="item-card-head">
+      <strong>#${idx + 1}${raw.name ? ' · ' + esc(raw.name) : ''}</strong>
+      <span>
+        <button type="button" class="remove" data-dup="${idx}" title="${t('ed_dup')}">⧉</button>
+        <button type="button" class="remove" data-remove="${idx}" title="${t('ed_remove')}">✖</button>
+      </span>
+    </div>
+    <div class="raw-body">
+      <span class="raw-info"><b>${isSpell ? '✨' : '🎒'} ${esc(type)}</b>${bits.length ? ' · ' + esc(bits.join(' · ')) : ''}</span>
+      <span class="hint">${t(isSpell ? 'raw_hint_spell' : 'raw_hint_item')}</span>
+      <button type="button" class="secondary small" data-raw-edit="${idx}">${t(isSpell ? 'raw_edit_spell' : 'raw_edit_item')}</button>
+    </div>
+  </div>`;
+}
+
 /** HTML di una singola card. I data-attribute legano input ↔ stato. */
 function cardHtml(item, idx) {
+  if (item.kind === 'raw') return rawCardHtml(item, idx);
   const isAttack = item.kind === 'attack';
   const isSave = item.kind === 'save';
   const hasDamage = isAttack || isSave;
@@ -413,12 +441,23 @@ export function initItemsEditor({ listEl, addBtn, onChange, rules }) {
       return;
     }
 
+    // --- Voce creata in un'altra tab: si riapre lì ---
+    const rawEdit = ev.target.closest('[data-raw-edit]');
+    if (rawEdit) {
+      document.dispatchEvent(new CustomEvent('forge:edit-raw', { detail: { card: itemsState[Number(rawEdit.dataset.rawEdit)] } }));
+      return;
+    }
     const { remove, dup } = ev.target.dataset;
     if (dup !== undefined) {
       // Duplica: copia profonda della card, inserita subito dopo l'originale.
       const copy = structuredClone(itemsState[Number(dup)]);
       copy.name = copy.name ? `${copy.name} (copia)` : '';
       delete copy._srcId; // la copia è una voce NUOVA, non l'originale ricaricato
+      if (copy.kind === 'raw' && copy._raw) {
+        // Voce "così com'è": il nome vero sta nel JSON; la copia ha un'identità sua.
+        copy._raw.name = `${copy._raw.name || ''} (copia)`.trim();
+        copy._rawId = `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      }
       itemsState.splice(Number(dup) + 1, 0, copy);
     } else if (remove !== undefined) {
       itemsState.splice(Number(remove), 1);

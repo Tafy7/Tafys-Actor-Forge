@@ -19,7 +19,7 @@
     <div class="header-row">
       <div>
         <h1>⚒️ Tafy's Actor Forge</h1>
-        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span><span class="ver">v0.47</span></p>
+        <p class="subtitle"><span data-i18n="subtitle">Generatore di Actor per Foundry VTT 13 · dnd5e 5.3.3</span><span class="ver">v0.48</span></p>
       </div>
       <div class="header-controls">
         <select id="theme-picker" class="theme-picker" data-i18n-title="theme_label" title="Tema"></select>
@@ -178,7 +178,11 @@
       <fieldset>
         <legend data-i18n="act_legend">Azioni, attacchi e tratti</legend>
         <div id="items-list"><!-- card generate da items-editor.js --></div>
-        <button type="button" id="btn-add-item" class="secondary" data-i18n="act_add">➕ Aggiungi azione / tratto</button>
+        <div class="btn-row add-row">
+          <button type="button" id="btn-add-item" class="secondary" data-i18n="act_add">➕ Aggiungi azione / tratto</button>
+          <button type="button" id="btn-from-item" class="secondary" data-goto-tab="item" data-i18n="act_from_item" data-i18n-title="act_from_hint" title="">🎒 Crea nella tab Oggetto</button>
+          <button type="button" id="btn-from-spell" class="secondary" data-goto-tab="spell" data-i18n="act_from_spell" data-i18n-title="act_from_hint" title="">✨ Crea nella tab Incantesimo</button>
+        </div>
       </fieldset>
 
       <fieldset>
@@ -268,6 +272,7 @@
         <div class="aside-fixed">
           <div class="btn-row main-actions">
             <button type="button" id="item-export" data-i18n="it_export">⬇️ Esporta oggetto</button>
+            <button type="button" id="item-sheet" class="secondary small" data-i18n="sheet_add">🐲 Aggiungi alla scheda del mostro</button>
             <button type="button" id="item-batch" class="secondary small" data-i18n="it_batch">➕ Aggiungi alla collezione</button>
             <button type="button" id="item-new" class="secondary small" data-i18n="tab_new">🧹 Nuovo</button>
           </div>
@@ -293,6 +298,7 @@
         <div class="aside-fixed">
           <div class="btn-row main-actions">
             <button type="button" id="spell-export" data-i18n="sp_export">⬇️ Esporta incantesimo</button>
+            <button type="button" id="spell-sheet" class="secondary small" data-i18n="sheet_add">🐲 Aggiungi alla scheda del mostro</button>
             <button type="button" id="spell-batch" class="secondary small" data-i18n="sp_batch">➕ Aggiungi alla collezione</button>
             <button type="button" id="spell-new" class="secondary small" data-i18n="tab_new">🧹 Nuovo</button>
           </div>
