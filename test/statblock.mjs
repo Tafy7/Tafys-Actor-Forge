@@ -588,6 +588,8 @@ necrotici.`);
   check('IT: azione bonus con TS su Saggezza', mark?.kind === 'save' && mark.activation === 'bonus' && mark.saveAbility === 'wis' && mark.dc === '19' && mark.damage === '3d6 necrotic');
   const sc = it.state.items.find(x => x.kind === 'spellcasting');
   check('IT: incantesimi "che non richiedono alcuna componente materiale", "+12 … per colpire con incantesimo"', sc?.scNoMaterial === true && sc.scAttack === '12' && sc.scDc === '20' && sc.scAbility === 'cha');
+  const sk = parseStatblock('Coso\nUmanoide Medio, neutrale\nClasse Armatura 10\nPunti Ferita 5 (1d8)\nFOR DES COS INT SAG CAR\n10 (+0) 10 (+0) 10 (+0) 10 (+0) 10 (+0) 14 (+2)\nAbilità Ingannare +4, Intimidazione +4, Investigare +2\nSfida 1 (200 PE)').state.skills;
+  check('abilità: varianti homebrew dei nomi ("Ingannare", "Intimidazione", "Investigare") riconosciute', sk.dec === '1' && sk.itm === '1' && sk.inv === '1', sk);
   check('una frase qualsiasi con una parentesi aperta NON diventa un titolo', parseStatblock('Coso\nMedium beast, unaligned\nArmor Class 10\nHit Points 5 (1d8)\nActions\nMorso. Il coso morde (di solito piano\ne senza cattiveria). Fine.').state.items.length === 1);
   const noAb = parseStatblock('Coso\nMedium beast, unaligned\nArmor Class 10\nHit Points 5 (1d8)\nActions\nSpellcasting. The thing casts one of the following spells:\nAt will: light').state.items[0];
   check('incantesimi senza caratteristica nel testo → automatica (non più Intelligenza fissa)', noAb.kind === 'spellcasting' && noAb.scAbility === '');

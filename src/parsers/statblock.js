@@ -80,6 +80,8 @@ const SKILL_MAP = {
   'indagare': 'inv', 'medicina': 'med', 'natura': 'nat', 'percezione': 'prc',
   'intrattenere': 'prf', 'persuasione': 'per', 'religione': 'rel',
   'rapidità di mano': 'slt', 'furtività': 'ste', 'sopravvivenza': 'sur',
+  // varianti che circolano negli statblock homebrew (il nome ufficiale resta quello sopra)
+  'ingannare': 'dec', 'raggirare': 'dec', 'intimidazione': 'itm', 'investigare': 'inv', 'investigazione': 'inv',
 };
 
 // Aggettivi italiani dei danni nelle azioni ("danni taglienti", "danni acidi"):
